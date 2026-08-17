@@ -143,7 +143,7 @@ create table public.meal_item_corrections (
 );
 
 create index foods_canonical_name_idx on public.foods (canonical_name);
-create index foods_embedding_hnsw_idx on public.foods using hnsw (embedding vector_cosine_ops) where embedding is not null;
+create index foods_embedding_hnsw_idx on public.foods using hnsw (embedding extensions.vector_cosine_ops) where embedding is not null;
 create index food_aliases_alias_idx on public.food_aliases (alias, locale);
 create index analysis_runs_user_created_idx on public.analysis_runs (user_id, created_at desc);
 create index analysis_candidates_run_idx on public.analysis_candidates (analysis_run_id, item_key, rank);
