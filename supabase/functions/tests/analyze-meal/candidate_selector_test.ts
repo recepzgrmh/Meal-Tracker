@@ -21,6 +21,7 @@ Deno.test('selector retries 429 and accepts only allow-listed candidate IDs', as
     apiKey: 'test',
     locale: 'tr-TR',
     input: 'beyaz peynr',
+    model: 'test-model',
     candidates: [candidate],
     maxAttempts: 2,
     fetcher: (() => {
@@ -46,6 +47,7 @@ Deno.test('selector drops IDs outside the server allow-list', async () => {
     apiKey: 'test',
     locale: 'tr-TR',
     input: 'uydurma',
+    model: 'test-model',
     candidates: [candidate],
     maxAttempts: 1,
     fetcher: (() =>
@@ -70,6 +72,7 @@ Deno.test('selector surfaces model refusal for deterministic fallback', async ()
         apiKey: 'test',
         locale: 'tr-TR',
         input: 'test',
+        model: 'test-model',
         candidates: [candidate],
         maxAttempts: 1,
         fetcher: (() =>

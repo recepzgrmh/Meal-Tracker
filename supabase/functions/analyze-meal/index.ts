@@ -16,7 +16,11 @@ import {
 } from './deterministic.ts'
 import { parseAnalyzeMealRequest, RequestValidationError } from './request.ts'
 import { reconcileModalities } from './reconcile.ts'
-import { extractFoodsFromPhoto } from './vision.ts'
+import {
+  extractFoodsFromPhoto,
+  extractVisionWithTextFallback,
+  VisionProviderError,
+} from './vision.ts'
 import {
   CANDIDATE_SELECTION_PROMPT_VERSION,
   type CandidateSelectionResult,
@@ -108,14 +112,19 @@ export default {
         inputKind: body.inputKind ?? 'text',
       })
 
-      const vision = body.photo
-        ? await extractFoodsFromPhoto(
-          context.supabaseAdmin,
-          body.photo,
-          body.locale ?? 'tr-TR',
+      const visionAttempt = body.photo
+        ? await extractVisionWithTextFallback(
           body.input,
+          () =>
+            extractFoodsFromPhoto(
+              context.supabaseAdmin,
+              body.photo!,
+              body.locale ?? 'tr-TR',
+              body.input,
+            ),
         )
-        : null
+        : { extraction: null, fallbackReason: null }
+      const vision = visionAttempt.extraction
       const catalog = await loadCatalog(context, body.locale ?? 'tr-TR')
       const textAnalysis = analyzeDeterministically(body.input, catalog)
       const visionAnalysis = vision
@@ -172,6 +181,7 @@ export default {
         Math.round(performance.now() - startedAt),
         grounding,
         vision,
+        visionAttempt.fallbackReason,
       )
 
       redactedLog('info', 'analysis_completed', {
@@ -181,13 +191,16 @@ export default {
         inputLength: body.input.length,
         hasPhoto: Boolean(body.photo),
         visionModel: vision?.model ?? null,
+        visionFallbackReason: visionAttempt.fallbackReason,
         itemCount: output.items.length,
         unmatchedCount: output.unmatchedText.length,
         latencyMs: Math.round(performance.now() - startedAt),
       })
       return jsonResponse(output)
     } catch (error) {
-      if (run) await markRunFailed(context, run.id, 'INTERNAL_ERROR', safeErrorMessage(error))
+      const providerFailure = error instanceof VisionProviderError
+      const errorCode = providerFailure ? 'PROVIDER_UNAVAILABLE' : 'INTERNAL_ERROR'
+      if (run) await markRunFailed(context, run.id, errorCode, safeErrorMessage(error))
       redactedLog('error', 'analysis_failed', {
         traceId: run?.trace_id ?? requestTraceId,
         analysisRunId: run?.id ?? null,
@@ -195,10 +208,12 @@ export default {
         errorType: error instanceof Error ? error.name : 'UnknownError',
       })
       return errorResponse(
-        'INTERNAL_ERROR',
-        'Analiz şu anda tamamlanamadı',
+        errorCode,
+        providerFailure
+          ? 'Fotoğraf analizi şu anda kullanılamıyor, lütfen tekrar deneyin'
+          : 'Analiz şu anda tamamlanamadı',
         run?.trace_id ?? requestTraceId,
-        500,
+        providerFailure ? 503 : 500,
         true,
       )
     }
@@ -305,7 +320,8 @@ async function persistResult(
   output: AnalyzeMealResponse,
   latencyMs: number,
   grounding: GroundingResult | null,
-  vision: { inputTokens: number; outputTokens: number } | null,
+  vision: { inputTokens: number; outputTokens: number; attempts: number } | null,
+  visionFallbackReason: string | null,
 ): Promise<void> {
   const candidates = output.items.map((item) => ({
     analysis_run_id: runId,
@@ -339,7 +355,8 @@ async function persistResult(
       provider_output_tokens: (grounding?.selection.outputTokens ?? 0) +
         (vision?.outputTokens ?? 0),
       embedding_input_tokens: grounding?.embeddingPromptTokens ?? 0,
-      provider_attempts: grounding?.selection.attempts ?? null,
+      provider_attempts: (grounding?.selection.attempts ?? 0) + (vision?.attempts ?? 0) || null,
+      vision_fallback_reason: visionFallbackReason,
       retrieval_cache_hit: grounding?.cacheHit ?? null,
       response_cache_hit: grounding?.selection.cacheHit ?? null,
       estimated_cost_micros: estimateCostMicros({

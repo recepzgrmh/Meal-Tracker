@@ -66,6 +66,7 @@ export interface ApiErrorBody {
       | 'ANALYSIS_IN_PROGRESS'
       | 'FORBIDDEN'
       | 'CONFLICT'
+      | 'PROVIDER_UNAVAILABLE'
       | 'INTERNAL_ERROR'
     message: string
     traceId: string
