@@ -40,5 +40,13 @@
   "macroCarbs": "Karbonhidrat",
   "macroFat": "Yağ",
   "mealLog": "Öğünü kaydet",
-  "mealReviewPoints": "{count} noktayı kontrol et"
+  "mealReviewPoints": "{count} noktayı kontrol et",
+  "mealAddPhoto": "Öğün fotoğrafı ekle",
+  "mealCamera": "Fotoğraf çek",
+  "mealGallery": "Galeriden seç",
+  "mealPhotoSelected": "Öğün fotoğrafı seçildi",
+  "mealRemovePhoto": "Fotoğrafı kaldır",
+  "mealPhotoHint": "Net ve üstten çekilmiş bir fotoğraf ekle. Kısa bir açıklama doğruluğu artırır.",
+  "mealPhotoError": "Bu fotoğrafı açamadık. Başka bir fotoğraf dene.",
+  "mealPhotoTooLarge": "Fotoğraf çok büyük. 8 MB'den küçük bir fotoğraf seç."
 }

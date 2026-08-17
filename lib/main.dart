@@ -13,6 +13,7 @@ import 'src/local/meal_dao.dart';
 import 'src/local/outbox_dao.dart';
 import 'src/meals/data/cached_meal_repository.dart';
 import 'src/meals/data/supabase_meal_remote_data_source.dart';
+import 'src/media/meal_photo_storage.dart';
 import 'src/onboarding/data/shared_preferences_onboarding_repository.dart';
 import 'src/onboarding/data/supabase_profile_repository.dart';
 import 'src/sync/outbox_worker.dart';
@@ -34,6 +35,7 @@ Future<void> main() async {
         profileRepository: SupabaseProfileRepository(client),
         analysisRepository: SupabaseMealAnalysisRepository(
           remote: SupabaseAnalysisRemoteDataSource(client),
+          photoStorage: SupabaseMealPhotoStorage(client),
         ),
         mealRepository: CachedMealRepository(
           local: mealDao,

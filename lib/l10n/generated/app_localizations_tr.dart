@@ -144,4 +144,31 @@ class AppLocalizationsTr extends AppLocalizations {
   String mealReviewPoints(int count) {
     return '$count noktayı kontrol et';
   }
+
+  @override
+  String get mealAddPhoto => 'Öğün fotoğrafı ekle';
+
+  @override
+  String get mealCamera => 'Fotoğraf çek';
+
+  @override
+  String get mealGallery => 'Galeriden seç';
+
+  @override
+  String get mealPhotoSelected => 'Öğün fotoğrafı seçildi';
+
+  @override
+  String get mealRemovePhoto => 'Fotoğrafı kaldır';
+
+  @override
+  String get mealPhotoHint =>
+      'Net ve üstten çekilmiş bir fotoğraf ekle. Kısa bir açıklama doğruluğu artırır.';
+
+  @override
+  String get mealPhotoError =>
+      'Bu fotoğrafı açamadık. Başka bir fotoğraf dene.';
+
+  @override
+  String get mealPhotoTooLarge =>
+      'Fotoğraf çok büyük. 8 MB\'den küçük bir fotoğraf seç.';
 }

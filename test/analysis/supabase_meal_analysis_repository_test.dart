@@ -1,8 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meal_clarity/src/analysis/data/analysis_remote_data_source.dart';
 import 'package:meal_clarity/src/analysis/data/supabase_meal_analysis_repository.dart';
 import 'package:meal_clarity/src/data/meal_repository.dart';
+import 'package:meal_clarity/src/domain/meal_analysis_input.dart';
 import 'package:meal_clarity/src/domain/models.dart';
+import 'package:meal_clarity/src/media/meal_photo_storage.dart';
 
 void main() {
   test(
@@ -15,7 +19,7 @@ void main() {
         clock: () => DateTime(2026, 8, 17, 8),
       );
 
-      final draft = await repository.analyze('2 yumurta ve peynir');
+      final draft = await repository.analyze(_input('2 yumurta ve peynir'));
 
       expect(remote.clientRequestId, 'request-id');
       expect(draft.mealName, 'Kahvaltı');
@@ -36,7 +40,7 @@ void main() {
     );
 
     expect(
-      repository.analyze('yumurta'),
+      repository.analyze(_input('yumurta')),
       throwsA(
         isA<MealAnalysisException>().having(
           (error) => error.kind,
@@ -59,7 +63,7 @@ void main() {
     );
 
     expect(
-      repository.analyze('avokado'),
+      repository.analyze(_input('avokado')),
       throwsA(
         isA<MealAnalysisException>()
             .having(
@@ -70,6 +74,30 @@ void main() {
             .having((error) => error.retryable, 'retryable', false),
       ),
     );
+  });
+
+  test('uploads a mixed input photo before invoking analysis', () async {
+    final remote = _FakeRemote(_response());
+    final storage = _FakePhotoStorage();
+    final repository = SupabaseMealAnalysisRepository(
+      remote: remote,
+      photoStorage: storage,
+      requestIdFactory: () => '018f6a5e-3528-7b52-a47d-2d5efc3b2f66',
+    );
+    final photo = MealPhotoAttachment(
+      bytes: Uint8List.fromList([1, 2, 3]),
+      fileName: 'meal.jpg',
+      mimeType: 'image/jpeg',
+    );
+
+    await repository.analyze(
+      MealAnalysisInput(text: 'some cheese', locale: 'en-US', photo: photo),
+    );
+
+    expect(storage.requestId, '018f6a5e-3528-7b52-a47d-2d5efc3b2f66');
+    expect(remote.inputKind, 'mixed');
+    expect(remote.locale, 'en-US');
+    expect(remote.photo?.path, contains('/source.jpg'));
   });
 }
 
@@ -132,13 +160,22 @@ class _FakeRemote implements AnalysisRemoteDataSource {
 
   final Map<String, dynamic> response;
   String? clientRequestId;
+  String? inputKind;
+  String? locale;
+  StoredMealPhoto? photo;
 
   @override
   Future<Map<String, dynamic>> analyze({
     required String clientRequestId,
     required String input,
+    required String inputKind,
+    required String locale,
+    StoredMealPhoto? photo,
   }) async {
     this.clientRequestId = clientRequestId;
+    this.inputKind = inputKind;
+    this.locale = locale;
+    this.photo = photo;
     return response;
   }
 }
@@ -152,7 +189,30 @@ class _ThrowingRemote implements AnalysisRemoteDataSource {
   Future<Map<String, dynamic>> analyze({
     required String clientRequestId,
     required String input,
+    required String inputKind,
+    required String locale,
+    StoredMealPhoto? photo,
   }) async {
     throw error;
+  }
+}
+
+MealAnalysisInput _input(String text) =>
+    MealAnalysisInput(text: text, locale: 'tr-TR');
+
+class _FakePhotoStorage implements MealPhotoStorage {
+  String? requestId;
+
+  @override
+  Future<StoredMealPhoto> upload({
+    required String requestId,
+    required MealPhotoAttachment photo,
+  }) async {
+    this.requestId = requestId;
+    return StoredMealPhoto(
+      bucket: 'meal-photos',
+      path: 'user/$requestId/source.jpg',
+      mimeType: photo.mimeType,
+    );
   }
 }

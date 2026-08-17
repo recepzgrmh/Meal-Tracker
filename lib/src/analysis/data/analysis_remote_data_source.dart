@@ -1,9 +1,14 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../media/meal_photo_storage.dart';
+
 abstract interface class AnalysisRemoteDataSource {
   Future<Map<String, dynamic>> analyze({
     required String clientRequestId,
     required String input,
+    required String inputKind,
+    required String locale,
+    StoredMealPhoto? photo,
   });
 }
 
@@ -28,6 +33,9 @@ class SupabaseAnalysisRemoteDataSource implements AnalysisRemoteDataSource {
   Future<Map<String, dynamic>> analyze({
     required String clientRequestId,
     required String input,
+    required String inputKind,
+    required String locale,
+    StoredMealPhoto? photo,
   }) async {
     try {
       final response = await _client.functions.invoke(
@@ -35,8 +43,9 @@ class SupabaseAnalysisRemoteDataSource implements AnalysisRemoteDataSource {
         body: {
           'clientRequestId': clientRequestId,
           'input': input,
-          'inputKind': 'text',
-          'locale': 'tr-TR',
+          'inputKind': inputKind,
+          'locale': locale,
+          if (photo != null) 'photo': photo.toJson(),
         },
       );
       final data = response.data;

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../data/meal_repository.dart';
+import '../domain/meal_analysis_input.dart';
 import '../domain/models.dart';
 
 enum MealFlowStep { compose, analyzing, review }
@@ -19,14 +20,18 @@ class MealFlowViewModel extends ChangeNotifier {
   MealDraft? get draft => _draft;
   String? get error => _error;
 
-  Future<void> analyze(String input) async {
-    final trimmed = input.trim();
-    if (trimmed.isEmpty || _step == MealFlowStep.analyzing) return;
+  Future<void> analyze(MealAnalysisInput input) async {
+    if (input.isEmpty || _step == MealFlowStep.analyzing) return;
+    final normalized = MealAnalysisInput(
+      text: input.text.trim(),
+      locale: input.locale,
+      photo: input.photo,
+    );
     _step = MealFlowStep.analyzing;
     _error = null;
     notifyListeners();
     try {
-      _draft = await _repository.analyze(trimmed);
+      _draft = await _repository.analyze(normalized);
       _step = MealFlowStep.review;
     } on MealAnalysisException catch (error) {
       _error = _messageFor(error.kind);

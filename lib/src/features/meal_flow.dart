@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/l10n.dart';
 import '../data/meal_repository.dart';
+import '../domain/meal_analysis_input.dart';
 import '../domain/models.dart';
+import '../media/meal_photo_picker.dart';
 import '../theme/app_theme.dart';
 import '../view_models/meal_flow_view_model.dart';
 
 class MealFlow extends StatefulWidget {
-  const MealFlow({super.key, required this.repository});
+  const MealFlow({super.key, required this.repository, this.photoPicker});
 
   final MealRepository repository;
+  final MealPhotoPicker? photoPicker;
 
   @override
   State<MealFlow> createState() => _MealFlowState();
@@ -19,15 +22,20 @@ class _MealFlowState extends State<MealFlow> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
   late final MealFlowViewModel _viewModel;
+  late final MealPhotoPicker _photoPicker;
+  MealPhotoAttachment? _photo;
+  String? _photoError;
 
   @override
   void initState() {
     super.initState();
     _viewModel = MealFlowViewModel(repository: widget.repository);
+    _photoPicker = widget.photoPicker ?? ImagePickerMealPhotoPicker();
     _controller.addListener(_refresh);
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => _focusNode.requestFocus(),
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+      _recoverLostPhoto();
+    });
   }
 
   @override
@@ -43,9 +51,74 @@ class _MealFlowState extends State<MealFlow> {
   void _refresh() => setState(() {});
 
   Future<void> _analyze() async {
-    if (_controller.text.trim().isEmpty) return;
+    if (_controller.text.trim().isEmpty && _photo == null) return;
     FocusScope.of(context).unfocus();
-    await _viewModel.analyze(_controller.text);
+    final language = Localizations.localeOf(context).languageCode;
+    await _viewModel.analyze(
+      MealAnalysisInput(
+        text: _controller.text.trim(),
+        locale: language == 'en' ? 'en-US' : 'tr-TR',
+        photo: _photo,
+      ),
+    );
+  }
+
+  Future<void> _recoverLostPhoto() async {
+    try {
+      final photo = await _photoPicker.recoverLost();
+      if (photo != null && mounted) _setPhoto(photo);
+    } catch (_) {
+      // Recovery is best-effort and should never block text meal logging.
+    }
+  }
+
+  Future<void> _pickPhoto(MealPhotoSource source) async {
+    try {
+      final photo = await _photoPicker.pick(source);
+      if (photo != null && mounted) _setPhoto(photo);
+    } catch (_) {
+      if (mounted) setState(() => _photoError = context.l10n.mealPhotoError);
+    }
+  }
+
+  void _setPhoto(MealPhotoAttachment photo) {
+    setState(() {
+      if (photo.byteLength > 8 * 1024 * 1024) {
+        _photo = null;
+        _photoError = context.l10n.mealPhotoTooLarge;
+      } else {
+        _photo = photo;
+        _photoError = null;
+      }
+    });
+  }
+
+  Future<void> _showPhotoSourceSheet() async {
+    final source = await showModalBottomSheet<MealPhotoSource>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: Text(context.l10n.mealCamera),
+                onTap: () => Navigator.pop(context, MealPhotoSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: Text(context.l10n.mealGallery),
+                onTap: () => Navigator.pop(context, MealPhotoSource.gallery),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (source != null && mounted) await _pickPhoto(source);
   }
 
   Future<void> _reviewItem(MealItem item) async {
@@ -211,6 +284,10 @@ class _MealFlowState extends State<MealFlow> {
                 controller: _controller,
                 focusNode: _focusNode,
                 error: _viewModel.error,
+                photoError: _photoError,
+                photo: _photo,
+                onAddPhoto: _showPhotoSourceSheet,
+                onRemovePhoto: () => setState(() => _photo = null),
                 onAnalyze: _analyze,
               ),
               MealFlowStep.analyzing => const _Analyzing(
@@ -236,12 +313,20 @@ class _Composer extends StatelessWidget {
     required this.controller,
     required this.focusNode,
     required this.error,
+    required this.photoError,
+    required this.photo,
+    required this.onAddPhoto,
+    required this.onRemovePhoto,
     required this.onAnalyze,
   });
 
   final TextEditingController controller;
   final FocusNode focusNode;
   final String? error;
+  final String? photoError;
+  final MealPhotoAttachment? photo;
+  final VoidCallback onAddPhoto;
+  final VoidCallback onRemovePhoto;
   final VoidCallback onAnalyze;
 
   @override
@@ -289,6 +374,57 @@ class _Composer extends StatelessWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+                if (photo == null)
+                  OutlinedButton.icon(
+                    key: const Key('add-photo-button'),
+                    onPressed: onAddPhoto,
+                    icon: const Icon(Icons.add_a_photo_outlined),
+                    label: Text(context.l10n.mealAddPhoto),
+                  )
+                else
+                  Semantics(
+                    label: context.l10n.mealPhotoSelected,
+                    image: true,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(18),
+                      child: Stack(
+                        children: [
+                          AspectRatio(
+                            aspectRatio: 16 / 9,
+                            child: Image.memory(
+                              photo!.bytes,
+                              key: const Key('meal-photo-preview'),
+                              fit: BoxFit.cover,
+                              gaplessPlayback: true,
+                            ),
+                          ),
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: IconButton.filled(
+                              key: const Key('remove-photo-button'),
+                              tooltip: context.l10n.mealRemovePhoto,
+                              onPressed: onRemovePhoto,
+                              icon: const Icon(Icons.close_rounded),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                Text(
+                  context.l10n.mealPhotoHint,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                if (photoError != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    photoError!,
+                    style: const TextStyle(color: Color(0xFFD93025)),
+                  ),
+                ],
                 if (error != null) ...[
                   const SizedBox(height: 12),
                   Text(
@@ -321,7 +457,9 @@ class _Composer extends StatelessWidget {
                 const Spacer(),
                 FilledButton(
                   key: const Key('analyze-button'),
-                  onPressed: controller.text.trim().isEmpty ? null : onAnalyze,
+                  onPressed: controller.text.trim().isEmpty && photo == null
+                      ? null
+                      : onAnalyze,
                   child: Text(context.l10n.mealAnalyze),
                 ),
               ],

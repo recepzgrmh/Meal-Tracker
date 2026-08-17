@@ -1,7 +1,8 @@
 import '../domain/models.dart';
+import '../domain/meal_analysis_input.dart';
 
 abstract interface class MealRepository {
-  Future<MealDraft> analyze(String input);
+  Future<MealDraft> analyze(MealAnalysisInput input);
 }
 
 enum MealAnalysisFailureKind {
@@ -28,8 +29,9 @@ class MealAnalysisException implements Exception {
 
 class MockMealRepository implements MealRepository {
   @override
-  Future<MealDraft> analyze(String input) async {
+  Future<MealDraft> analyze(MealAnalysisInput request) async {
     await Future<void>.delayed(const Duration(milliseconds: 900));
+    final input = request.text;
     final normalized = input.toLowerCase();
     final items = <MealItem>[];
 

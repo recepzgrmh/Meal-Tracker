@@ -343,6 +343,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =1{Review 1 detail} other{Review {count} details}}'**
   String mealReviewPoints(int count);
+
+  /// No description provided for @mealAddPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add meal photo'**
+  String get mealAddPhoto;
+
+  /// No description provided for @mealCamera.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get mealCamera;
+
+  /// No description provided for @mealGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from library'**
+  String get mealGallery;
+
+  /// No description provided for @mealPhotoSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal photo selected'**
+  String get mealPhotoSelected;
+
+  /// No description provided for @mealRemovePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove photo'**
+  String get mealRemovePhoto;
+
+  /// No description provided for @mealPhotoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a clear overhead photo. A short description improves accuracy.'**
+  String get mealPhotoHint;
+
+  /// No description provided for @mealPhotoError.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn’t open that photo. Try another one.'**
+  String get mealPhotoError;
+
+  /// No description provided for @mealPhotoTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'That photo is too large. Choose one under 8 MB.'**
+  String get mealPhotoTooLarge;
 }
 
 class _AppLocalizationsDelegate

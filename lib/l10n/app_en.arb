@@ -44,5 +44,13 @@
   "macroFat": "Fat",
   "mealLog": "Log meal",
   "mealReviewPoints": "{count, plural, =1{Review 1 detail} other{Review {count} details}}",
-  "@mealReviewPoints": {"placeholders": {"count": {"type": "int"}}}
+  "@mealReviewPoints": {"placeholders": {"count": {"type": "int"}}},
+  "mealAddPhoto": "Add meal photo",
+  "mealCamera": "Take photo",
+  "mealGallery": "Choose from library",
+  "mealPhotoSelected": "Meal photo selected",
+  "mealRemovePhoto": "Remove photo",
+  "mealPhotoHint": "Add a clear overhead photo. A short description improves accuracy.",
+  "mealPhotoError": "We couldn’t open that photo. Try another one.",
+  "mealPhotoTooLarge": "That photo is too large. Choose one under 8 MB."
 }

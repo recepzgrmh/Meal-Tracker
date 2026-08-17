@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meal_clarity/src/data/meal_repository.dart';
+import 'package:meal_clarity/src/domain/meal_analysis_input.dart';
 import 'package:meal_clarity/src/domain/models.dart';
 import 'package:meal_clarity/src/view_models/meal_detail_view_model.dart';
 import 'package:meal_clarity/src/view_models/meal_flow_view_model.dart';
@@ -73,7 +74,7 @@ void main() {
         final repository = _ControllableRepository();
         final viewModel = MealFlowViewModel(repository: repository);
 
-        final operation = viewModel.analyze('  peynir  ');
+        final operation = viewModel.analyze(_input('  peynir  '));
 
         expect(viewModel.step, MealFlowStep.analyzing);
         expect(repository.receivedInput, 'peynir');
@@ -95,7 +96,7 @@ void main() {
       () async {
         final viewModel = MealFlowViewModel(repository: _ThrowingRepository());
 
-        await viewModel.analyze('peynir');
+        await viewModel.analyze(_input('peynir'));
 
         expect(viewModel.step, MealFlowStep.compose);
         expect(viewModel.error, isNotEmpty);
@@ -114,7 +115,7 @@ void main() {
         ),
       );
 
-      await viewModel.analyze('avokado');
+      await viewModel.analyze(_input('avokado'));
 
       expect(viewModel.step, MealFlowStep.compose);
       expect(viewModel.error, contains('katalogda güvenle eşleştiremedik'));
@@ -143,8 +144,8 @@ class _ControllableRepository implements MealRepository {
   String? receivedInput;
 
   @override
-  Future<MealDraft> analyze(String input) {
-    receivedInput = input;
+  Future<MealDraft> analyze(MealAnalysisInput input) {
+    receivedInput = input.text;
     return _completer.future;
   }
 
@@ -153,7 +154,7 @@ class _ControllableRepository implements MealRepository {
 
 class _ThrowingRepository implements MealRepository {
   @override
-  Future<MealDraft> analyze(String input) async {
+  Future<MealDraft> analyze(MealAnalysisInput input) async {
     throw StateError('network unavailable');
   }
 }
@@ -164,5 +165,8 @@ class _DomainFailureRepository implements MealRepository {
   final MealAnalysisException error;
 
   @override
-  Future<MealDraft> analyze(String input) async => throw error;
+  Future<MealDraft> analyze(MealAnalysisInput input) async => throw error;
 }
+
+MealAnalysisInput _input(String text) =>
+    MealAnalysisInput(text: text, locale: 'tr-TR');

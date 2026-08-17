@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Meal Clarity uses the camera when you choose to photograph a meal for food and portion analysis.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Meal Clarity accesses only the meal photo you choose for food and portion analysis.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

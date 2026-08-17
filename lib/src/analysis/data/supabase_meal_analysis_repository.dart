@@ -1,7 +1,9 @@
 import 'package:uuid/uuid.dart';
 
 import '../../data/meal_repository.dart';
+import '../../domain/meal_analysis_input.dart';
 import '../../domain/models.dart';
+import '../../media/meal_photo_storage.dart';
 import 'analysis_remote_data_source.dart';
 import 'analysis_response_dto.dart';
 
@@ -11,26 +13,36 @@ typedef AnalysisClock = DateTime Function();
 class SupabaseMealAnalysisRepository implements MealRepository {
   SupabaseMealAnalysisRepository({
     required AnalysisRemoteDataSource remote,
+    MealPhotoStorage? photoStorage,
     AnalysisRequestIdFactory? requestIdFactory,
     AnalysisClock? clock,
   }) : _remote = remote,
+       _photoStorage = photoStorage,
        _requestIdFactory = requestIdFactory ?? const Uuid().v4,
        _clock = clock ?? DateTime.now;
 
   final AnalysisRemoteDataSource _remote;
+  final MealPhotoStorage? _photoStorage;
   final AnalysisRequestIdFactory _requestIdFactory;
   final AnalysisClock _clock;
 
   @override
-  Future<MealDraft> analyze(String input) async {
+  Future<MealDraft> analyze(MealAnalysisInput request) async {
     try {
+      final requestId = _requestIdFactory();
+      final photo = request.photo == null
+          ? null
+          : await _uploadPhoto(requestId, request.photo!);
       final json = await _remote.analyze(
-        clientRequestId: _requestIdFactory(),
-        input: input,
+        clientRequestId: requestId,
+        input: request.text,
+        inputKind: request.kind.name,
+        locale: request.locale,
+        photo: photo,
       );
       final response = AnalysisResponseDto.fromJson(json);
       return MealDraft(
-        inputText: input,
+        inputText: request.text,
         mealName: _mealName(_clock()),
         analysisRunId: response.analysisRunId,
         traceId: response.traceId,
@@ -60,6 +72,14 @@ class SupabaseMealAnalysisRepository implements MealRepository {
       );
     } on AnalysisRemoteException catch (error) {
       throw _mapRemoteFailure(error);
+    } on MealPhotoStorageException catch (error) {
+      throw MealAnalysisException(
+        kind: error.code == 'UNAUTHENTICATED'
+            ? MealAnalysisFailureKind.unauthenticated
+            : MealAnalysisFailureKind.unavailable,
+        code: error.code,
+        retryable: error.code == 'PHOTO_UPLOAD_FAILED',
+      );
     } on FormatException {
       throw const MealAnalysisException(
         kind: MealAnalysisFailureKind.invalidResponse,
@@ -67,6 +87,17 @@ class SupabaseMealAnalysisRepository implements MealRepository {
         retryable: true,
       );
     }
+  }
+
+  Future<StoredMealPhoto> _uploadPhoto(
+    String requestId,
+    MealPhotoAttachment photo,
+  ) {
+    final storage = _photoStorage;
+    if (storage == null) {
+      throw const MealPhotoStorageException('PHOTO_STORAGE_UNAVAILABLE');
+    }
+    return storage.upload(requestId: requestId, photo: photo);
   }
 
   MatchState _matchState(AnalysisItemDto item) {

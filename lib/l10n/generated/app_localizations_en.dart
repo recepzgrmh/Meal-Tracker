@@ -168,4 +168,30 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get mealAddPhoto => 'Add meal photo';
+
+  @override
+  String get mealCamera => 'Take photo';
+
+  @override
+  String get mealGallery => 'Choose from library';
+
+  @override
+  String get mealPhotoSelected => 'Meal photo selected';
+
+  @override
+  String get mealRemovePhoto => 'Remove photo';
+
+  @override
+  String get mealPhotoHint =>
+      'Add a clear overhead photo. A short description improves accuracy.';
+
+  @override
+  String get mealPhotoError => 'We couldn’t open that photo. Try another one.';
+
+  @override
+  String get mealPhotoTooLarge =>
+      'That photo is too large. Choose one under 8 MB.';
 }

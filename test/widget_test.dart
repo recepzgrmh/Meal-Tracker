@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meal_clarity/src/app.dart';
 import 'package:meal_clarity/src/data/meal_repository.dart';
+import 'package:meal_clarity/src/domain/meal_analysis_input.dart';
 import 'package:meal_clarity/src/domain/models.dart';
 
 void main() {
@@ -130,8 +131,8 @@ class _InjectedRepository implements MealRepository {
   String? input;
 
   @override
-  Future<MealDraft> analyze(String input) async {
-    this.input = input;
+  Future<MealDraft> analyze(MealAnalysisInput input) async {
+    this.input = input.text;
     return const MealDraft(
       inputText: 'iki yumurta',
       mealName: 'Kahvaltı',
