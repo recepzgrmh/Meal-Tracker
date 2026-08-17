@@ -102,6 +102,23 @@ void main() {
         expect(viewModel.draft, isNull);
       },
     );
+
+    test('shows a corrective message for a grounded no-match', () async {
+      final viewModel = MealFlowViewModel(
+        repository: _DomainFailureRepository(
+          const MealAnalysisException(
+            kind: MealAnalysisFailureKind.noMatch,
+            code: 'NO_MATCH',
+            retryable: false,
+          ),
+        ),
+      );
+
+      await viewModel.analyze('avokado');
+
+      expect(viewModel.step, MealFlowStep.compose);
+      expect(viewModel.error, contains('katalogda güvenle eşleştiremedik'));
+    });
   });
 
   test('MealDetailViewModel recalculates nutrition after portion editing', () {
@@ -139,4 +156,13 @@ class _ThrowingRepository implements MealRepository {
   Future<MealDraft> analyze(String input) async {
     throw StateError('network unavailable');
   }
+}
+
+class _DomainFailureRepository implements MealRepository {
+  const _DomainFailureRepository(this.error);
+
+  final MealAnalysisException error;
+
+  @override
+  Future<MealDraft> analyze(String input) async => throw error;
 }

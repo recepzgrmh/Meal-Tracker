@@ -4,6 +4,28 @@ abstract interface class MealRepository {
   Future<MealDraft> analyze(String input);
 }
 
+enum MealAnalysisFailureKind {
+  noMatch,
+  unauthenticated,
+  invalidRequest,
+  rateLimited,
+  unavailable,
+  invalidResponse,
+  unknown,
+}
+
+class MealAnalysisException implements Exception {
+  const MealAnalysisException({
+    required this.kind,
+    required this.code,
+    required this.retryable,
+  });
+
+  final MealAnalysisFailureKind kind;
+  final String code;
+  final bool retryable;
+}
+
 class MockMealRepository implements MealRepository {
   @override
   Future<MealDraft> analyze(String input) async {
