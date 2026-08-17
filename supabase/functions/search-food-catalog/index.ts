@@ -1,10 +1,12 @@
 import { withSupabase } from 'npm:@supabase/server@1.4.1'
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.112.3'
 import { errorResponse, jsonResponse, redactedLog } from '../_shared/http.ts'
+import { hybridSearch } from './hybrid.ts'
 import { parseSearchRequest, SearchRequestValidationError } from './request.ts'
 
 interface SearchContext {
   supabase: SupabaseClient
+  supabaseAdmin: SupabaseClient
   userClaims?: Record<string, unknown>
 }
 
@@ -31,27 +33,29 @@ export default {
 
     const context = rawContext as SearchContext
     const startedAt = performance.now()
-    const { data, error } = await context.supabase.rpc('search_food_catalog', {
-      p_query: body.query,
-      p_locale: body.locale,
-      p_limit: body.limit,
-    })
-    if (error) {
-      const status = error.code === '22023' ? 422 : error.code === '42501' ? 403 : 500
-      const code = status === 422
-        ? 'INVALID_REQUEST'
-        : status === 403
-        ? 'FORBIDDEN'
-        : 'INTERNAL_ERROR'
-      return errorResponse(code, 'Katalog araması tamamlanamadı', traceId, status, status >= 500)
+    let search
+    try {
+      const apiKey = Deno.env.get('OPENAI_API_KEY')?.trim()
+      if (!apiKey) throw new Error('OPENAI_API_KEY is not configured')
+      search = await hybridSearch(context.supabase, context.supabaseAdmin, {
+        query: body.query,
+        locale: body.locale,
+        limit: body.limit,
+        openAiApiKey: apiKey,
+      })
+    } catch {
+      return errorResponse('INTERNAL_ERROR', 'Katalog araması tamamlanamadı', traceId, 500, true)
     }
 
-    const candidates = (data ?? []).map((row: Record<string, unknown>) => ({
+    const candidates = search.rows.map((row: Record<string, unknown>) => ({
       foodId: row.food_id,
       canonicalName: row.canonical_name,
       matchedAlias: row.matched_alias,
       matchMethod: row.match_method,
       score: Number(row.score),
+      lexicalRank: row.lexical_rank == null ? null : Number(row.lexical_rank),
+      vectorRank: row.vector_rank == null ? null : Number(row.vector_rank),
+      semanticSimilarity: row.semantic_similarity == null ? null : Number(row.semantic_similarity),
       defaultGrams: row.default_grams == null ? null : Number(row.default_grams),
       defaultPortionLabel: row.default_portion_label,
       nutritionPer100g: {
@@ -67,13 +71,24 @@ export default {
       userId: userIdFromClaims(context.userClaims),
       queryLength: body.query.length,
       candidateCount: candidates.length,
+      cacheHit: search.cacheHit,
+      fallback: search.fallback,
+      embeddingModel: search.embeddingModel,
+      embeddingPromptTokens: search.embeddingPromptTokens,
+      backfilledFoods: search.backfilledFoods,
       latencyMs: Math.round(performance.now() - startedAt),
     })
     return jsonResponse({
-      contractVersion: 'catalog-search.v1',
+      contractVersion: 'catalog-search.v2',
       traceId,
       query: body.query,
       candidates,
+      telemetry: {
+        cacheHit: search.cacheHit,
+        fallback: search.fallback,
+        embeddingModel: search.embeddingModel,
+        embeddingPromptTokens: search.embeddingPromptTokens,
+      },
     })
   }),
 }

@@ -10,8 +10,9 @@ Deno.test('normalizes a bounded Turkish catalog query', () => {
   assertEquals(request.limit, 5)
 })
 
-Deno.test('rejects unsupported locale and unbounded limit', () => {
-  expectValidation(() => parseSearchRequest({ query: 'egg', locale: 'en-US' }))
+Deno.test('accepts English and rejects unsupported locale and unbounded limit', () => {
+  assertEquals(parseSearchRequest({ query: 'egg', locale: 'en-US' }).locale, 'en-US')
+  expectValidation(() => parseSearchRequest({ query: 'egg', locale: 'de-DE' }))
   expectValidation(() => parseSearchRequest({ query: 'yumurta', limit: 100 }))
 })
 
