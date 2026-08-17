@@ -120,14 +120,31 @@ class MealDao {
                     row.syncStatus.equals('synced'),
               ))
               .get();
+      final protectedIds =
+          await (database.selectOnly(database.localMeals)
+                ..addColumns([database.localMeals.id])
+                ..where(
+                  database.localMeals.userId.equals(userId) &
+                      database.localMeals.eatenAt.isBiggerOrEqualValue(from) &
+                      database.localMeals.eatenAt.isSmallerThanValue(to) &
+                      database.localMeals.syncStatus.equals('pending'),
+                ))
+              .map((row) => row.read(database.localMeals.id)!)
+              .get();
       if (replaceable.isNotEmpty) {
         await (database.delete(database.localMeals)
               ..where((row) => row.id.isIn(replaceable.map((meal) => meal.id))))
             .go();
       }
+      final safeMeals = meals
+          .where((meal) => !protectedIds.contains(meal.id.value))
+          .toList(growable: false);
+      final safeItems = items
+          .where((item) => !protectedIds.contains(item.mealId.value))
+          .toList(growable: false);
       await database.batch((batch) {
-        batch.insertAllOnConflictUpdate(database.localMeals, meals);
-        batch.insertAllOnConflictUpdate(database.localMealItems, items);
+        batch.insertAllOnConflictUpdate(database.localMeals, safeMeals);
+        batch.insertAllOnConflictUpdate(database.localMealItems, safeItems);
       });
     });
   }

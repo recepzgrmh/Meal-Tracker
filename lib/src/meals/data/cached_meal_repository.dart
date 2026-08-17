@@ -1,0 +1,166 @@
+import 'dart:convert';
+
+import 'package:uuid/uuid.dart';
+
+import '../../domain/models.dart';
+import '../../local/app_database.dart';
+import '../../local/meal_dao.dart';
+import 'meal_persistence_mapper.dart';
+import 'meal_remote_data_source.dart';
+
+typedef OperationIdFactory = String Function();
+typedef Clock = DateTime Function();
+
+class CachedMealRepository {
+  CachedMealRepository({
+    required MealDao local,
+    required MealRemoteDataSource remote,
+    MealPersistenceMapper mapper = const MealPersistenceMapper(),
+    OperationIdFactory? operationIdFactory,
+    Clock? clock,
+  }) : _local = local,
+       _remote = remote,
+       _mapper = mapper,
+       _operationIdFactory = operationIdFactory ?? const Uuid().v4,
+       _clock = clock ?? DateTime.now;
+
+  final MealDao _local;
+  final MealRemoteDataSource _remote;
+  final MealPersistenceMapper _mapper;
+  final OperationIdFactory _operationIdFactory;
+  final Clock _clock;
+
+  Stream<List<LoggedMeal>> watchDay({
+    required String userId,
+    required DateTime day,
+  }) {
+    return _local
+        .watchDay(userId: userId, day: day)
+        .map(
+          (bundles) =>
+              bundles.map(_mapper.localToDomain).toList(growable: false),
+        );
+  }
+
+  Future<void> refreshDay({
+    required String userId,
+    required DateTime day,
+  }) async {
+    final from = DateTime(day.year, day.month, day.day);
+    final to = from.add(const Duration(days: 1));
+    final remoteMeals = await _remote.fetchWindow(
+      userId: userId,
+      from: from,
+      to: to,
+    );
+    final localWrites = remoteMeals.map(_mapper.remoteToLocal).toList();
+    await _local.replaceWindow(
+      userId: userId,
+      from: from,
+      to: to,
+      meals: localWrites.map((write) => write.meal).toList(growable: false),
+      items: localWrites.expand((write) => write.items).toList(growable: false),
+    );
+  }
+
+  Future<String> saveOptimistically({
+    required String userId,
+    required LoggedMeal meal,
+    required DateTime eatenAt,
+  }) async {
+    final operationId = _operationIdFactory();
+    final now = _clock();
+    final write = _mapper.domainToLocal(
+      userId: userId,
+      meal: meal,
+      eatenAt: eatenAt,
+      updatedAt: now,
+    );
+    await _local.putMeal(
+      meal: write.meal,
+      items: write.items,
+      operation: SyncOperationsCompanion.insert(
+        id: operationId,
+        userId: userId,
+        entityType: 'meal',
+        entityId: meal.id,
+        operationType: 'upsert',
+        payloadJson: jsonEncode(
+          _mealPayload(
+            operationId: operationId,
+            userId: userId,
+            meal: meal,
+            eatenAt: eatenAt,
+          ),
+        ),
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+    return operationId;
+  }
+
+  Future<String> deleteOptimistically({
+    required String userId,
+    required String mealId,
+  }) async {
+    final operationId = _operationIdFactory();
+    final now = _clock();
+    await _local.deleteMeal(
+      userId: userId,
+      mealId: mealId,
+      operation: SyncOperationsCompanion.insert(
+        id: operationId,
+        userId: userId,
+        entityType: 'meal',
+        entityId: mealId,
+        operationType: 'delete',
+        payloadJson: jsonEncode({
+          'schema_version': 1,
+          'operation_id': operationId,
+          'meal_id': mealId,
+        }),
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+    return operationId;
+  }
+
+  Map<String, Object?> _mealPayload({
+    required String operationId,
+    required String userId,
+    required LoggedMeal meal,
+    required DateTime eatenAt,
+  }) {
+    return {
+      'schema_version': 1,
+      'operation_id': operationId,
+      'client_request_id': operationId,
+      'meal': {
+        'id': meal.id,
+        'user_id': userId,
+        'name': meal.name,
+        'occurred_at': eatenAt.toUtc().toIso8601String(),
+        'image_path': meal.imageAsset,
+        'items': [
+          for (final MapEntry(key: position, value: item)
+              in meal.items.asMap().entries)
+            {
+              'id': item.id,
+              'position': position,
+              'source_text': item.sourceText,
+              'canonical_name': item.name,
+              'portion_label': item.portionLabel,
+              'grams': item.grams,
+              'calories_per_100g': item.nutritionPer100g.calories,
+              'protein_per_100g': item.nutritionPer100g.protein,
+              'carbs_per_100g': item.nutritionPer100g.carbs,
+              'fat_per_100g': item.nutritionPer100g.fat,
+              'nutrition_source': item.sourceName,
+            },
+        ],
+      },
+    };
+  }
+}
