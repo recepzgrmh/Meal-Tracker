@@ -33,6 +33,10 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Local dart-define files may contain environment-specific publishable keys.
+/config/*.json
+!/config/app_config.example.json
+
 # Symbolication related
 app.*.symbols
 
