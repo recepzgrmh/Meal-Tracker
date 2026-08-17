@@ -244,7 +244,11 @@ messages. S3-03 is also deployed: reviewed drafts enter the durable client
 outbox, `commit-meal` verifies the authenticated analysis/candidate set, and an
 atomic RPC snapshots nutrition from the canonical catalog before completing the
 analysis. Client-supplied calories and macros are never accepted. Manual search
-and the gold dataset remain.
+backend is deployed with bounded exact alias, full-text, and trigram ranking.
+The versioned 60-case Turkish gold set and deterministic eval runner are also
+complete; the first measured iteration improved exact-case accuracy from 85.00%
+to 93.33% and portion MAPE from 10.51% to 1.28%. Secure manual-candidate
+registration and its Flutter correction UI remain.
 
 ### Backlog
 
