@@ -1,0 +1,29 @@
+{
+  "dataset": "turkish_meals_v1",
+  "dataset_case_count": 60,
+  "catalog": "catalog_v1",
+  "pipeline": "deterministic-tr-v1",
+  "measured_at": "2026-08-18",
+  "metrics": {
+    "exact_case_accuracy": 0.9333,
+    "food_identity_precision": 1.0,
+    "food_identity_recall": 0.9701,
+    "food_identity_f1": 0.9848,
+    "portion_mape": 0.0128,
+    "no_match_specificity": 1.0
+  },
+  "comparison": {
+    "before_portion_evidence_fix": {
+      "exact_case_accuracy": 0.85,
+      "portion_mape": 0.1051,
+      "failure_count": 9
+    },
+    "after_portion_evidence_fix": {
+      "exact_case_accuracy": 0.9333,
+      "portion_mape": 0.0128,
+      "failure_count": 4
+    }
+  },
+  "known_failures": ["tr-016", "tr-033", "tr-044", "tr-045"],
+  "review_status": "author-created; dietitian review pending"
+}
