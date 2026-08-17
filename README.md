@@ -3,12 +3,15 @@
 An accuracy-first mobile meal logger built for the EatBetter full-stack case
 study.
 
-The first vertical slice is intentionally deterministic while the real backend
-contract is developed behind repository boundaries:
+The mobile vertical slice now connects to an authenticated, catalog-grounded
+Supabase analysis pipeline while retaining deterministic fixtures for tests:
 
 - Today dashboard with totals derived from meal items
-- Natural-language meal composer
-- Mock analysis behind a replaceable `MealRepository` boundary
+- Turkish/English localized app and locale-aware AI requests
+- text-only, photo-only, and mixed meal composer
+- camera/library picker with private per-user Storage uploads
+- strict vision extraction followed by deterministic catalog matching
+- real and mock analysis behind a replaceable `MealRepository` boundary
 - Editable structured food review
 - Human-in-the-loop portion clarification
 - Log success with undo instead of a blocking success screen
@@ -24,7 +27,7 @@ contract is developed behind repository boundaries:
 
 ```sh
 flutter pub get
-flutter run
+flutter run --dart-define-from-file=config/app_config.dev.json
 ```
 
 ## Verify
@@ -51,7 +54,11 @@ Nutrition totals are derived from meal items in both the Flutter domain and the
 database. The database snapshots per-100g values on each logged item for audit
 history, then generated columns and a trigger calculate item and meal totals.
 
-## Supabase: local now, deploy later
+Photo analysis additionally requires `OPENAI_API_KEY` as an Edge Function
+secret. `OPENAI_VISION_MODEL` is optional; the function has a versioned default.
+Neither value belongs in Flutter config or source control.
+
+## Supabase
 
 No hosted project is required to develop the schema:
 
@@ -74,7 +81,7 @@ Do not commit the service-role key or database password. The mobile app will
 only receive the project URL and publishable/anon key; privileged AI writes
 belong in an Edge Function or backend service.
 
-The initial schema includes:
+The schema includes:
 
 - user-owned profiles and meals protected by row-level security
 - canonical foods, localized aliases, portions, and `pgvector` embeddings
@@ -82,6 +89,7 @@ The initial schema includes:
 - prompt/model/retrieval versions, latency, trace IDs, and ranked candidates
 - per-item confidence, match method, review status, and correction feedback
 - generated nutrition values and server-controlled meal totals
+- private `meal-photos` Storage with authenticated owner-path policies
 
 The migrations and seed have been deployed to the hosted Supabase project.
 Remote `db lint` reports no schema errors, and local/remote migration history is

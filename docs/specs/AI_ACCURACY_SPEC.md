@@ -2,12 +2,12 @@
 
 Status: implementation-ready draft  
 Date: 17 August 2026  
-Scope: text meal analysis, catalog retrieval, structured extraction,
+Scope: text/photo/mixed meal analysis, catalog retrieval, structured extraction,
 clarification policy, nutrition computation, caching, and evals
 
 ## 1. Objective
 
-Convert a Turkish natural-language meal description into:
+Convert a Turkish or English natural-language description, meal photo, or both into:
 
 ```text
 source spans
@@ -35,7 +35,7 @@ The case-study path is hybrid rules + retrieval + LLM:
 
 ```text
 normalize
-→ structured mention extraction
+→ text and/or vision mention extraction
 → exact/alias retrieval
 → lexical retrieval
 → vector fallback
@@ -74,6 +74,19 @@ Selection gate:
 - pin a snapshot for final case numbers if the API exposes an appropriate
   snapshot; otherwise persist the exact returned model identifier
 
+### Vision extraction
+
+Photo input uses the Responses API with `input_image` and strict
+`text.format` JSON Schema. The model may emit only visible food descriptions,
+estimated grams, and a visual-confidence signal. It cannot emit nutrition or a
+catalog ID. The output is fed back into the same deterministic alias/retrieval
+pipeline as text, so unsupported foods become `NO_MATCH` instead of fabricated
+nutrition.
+
+The optional user description may disambiguate a visible food but is never
+treated as visual evidence. Provider requests use `store: false`; the model and
+prompt version are persisted with the analysis trace.
+
 ### Embeddings baseline
 
 Use `text-embedding-3-small`, default 1,536 dimensions, which matches the
@@ -92,13 +105,14 @@ Embedding provider key exists only in Edge Function secrets.
 
 ```json
 {
-  "request_id": "0198...uuid",
-  "client_version": "1.0.0+1",
+  "clientRequestId": "0198...uuid",
   "locale": "tr-TR",
-  "timezone": "Europe/Istanbul",
-  "input": {
-    "kind": "text",
-    "text": "2 yumurta biraz beyaz peynir ve yarım simit"
+  "inputKind": "mixed",
+  "input": "2 yumurta biraz beyaz peynir ve yarım simit",
+  "photo": {
+    "bucket": "meal-photos",
+    "path": "USER_UUID/REQUEST_UUID/source.jpg",
+    "mimeType": "image/jpeg"
   }
 }
 ```
@@ -107,8 +121,11 @@ Validation:
 
 - authenticated user JWT required
 - `request_id` UUID required
-- locale allow-list; Turkish first
-- trimmed input length 1–4,000, client UX limit 1,000
+- locale allow-list: `tr-TR`, `en-US`
+- text required for text/voice, photo required for photo, both required for mixed
+- trimmed text client/function limit 1,000
+- photo must be private `meal-photos`, an allowed MIME type, and owned by the
+  authenticated user under the same request UUID
 - reject binary/HTML payloads and unsupported input kinds
 - same `(user_id, request_id)` returns the existing analysis response
 
@@ -728,4 +745,3 @@ retention.
 - 60+ gold cases produce a checked-in metrics report
 - three documented failures are visible and correctable in the demo
 - OpenAI key never reaches Flutter or standard logs
-

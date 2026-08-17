@@ -15,7 +15,7 @@ Cadence: seven-day case-study delivery, focused daily sprints
 - The demo must remain runnable if the model provider is unavailable; a
   deterministic fixture mode is retained.
 
-## 2. Current delivery status — Sprint 2 complete, Sprint 3 active
+## 2. Current delivery status — Sprint 3 complete, Sprint 4 active
 
 Already delivered:
 
@@ -36,17 +36,23 @@ Already delivered:
 - idempotency/data trace schema
 - deployed meal RPC and `analyze-meal` function
 - remote database lint and unauthenticated function-gateway checks passing
+- Turkish and English Flutter localization foundation with locale-derived AI requests
+- text-only, photo-only, and mixed meal input domain contracts
+- camera/library selection, Android lost-data recovery, preview/remove UX, and 8 MB guard
+- private `meal-photos` Storage bucket design with per-user path RLS
+- strict bilingual multimodal Edge Function request validation
+- vision extraction through a strict JSON schema followed by catalog-only matching
 
 Current limitations:
 
-- Flutter meal analysis still uses the deterministic fixture repository; the new
-  function is not connected to the composer yet
 - `commit-meal` is not implemented; the current outbox writes reviewed meals
   through the conflict-safe RPC
 - deterministic analysis currently covers the curated egg, white-cheese, and
   simit catalog slice
-- no OpenAI extraction/reranking or catalog embeddings have been generated
-- no Storage bucket/policies
+- photo analysis requires the hosted `OPENAI_API_KEY` secret before its live smoke test
+- the current vision stage extracts visible foods; vector fallback and constrained
+  catalog reranking are not implemented yet
+- client photo re-encoding/EXIF stripping and retention cleanup remain privacy hardening
 - no pgTAP suites
 - live OTP and authenticated function smoke tests remain manual environment gates
 
@@ -64,8 +70,8 @@ Configuration
                 → CI/release/Loom
 ```
 
-Storage can run after auth and in parallel with AI, but photo recognition does
-not enter the critical path.
+Storage and photo recognition now share the same accuracy path: vision extracts
+visible food mentions, while retrieval and nutrition remain catalog-grounded.
 
 ## 4. Sprint 1 — Bootstrap, auth, and onboarding
 

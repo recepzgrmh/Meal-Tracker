@@ -17,7 +17,7 @@ security, observability, and delivery
 | Remote backend | Supabase Auth, Postgres, Storage, Edge Functions |
 | Local persistence | Drift/SQLite |
 | Sync | custom transactional outbox + pull refresh |
-| AI boundary | authenticated Supabase Edge Function |
+| AI boundary | authenticated Supabase Edge Function; text/photo/mixed contract |
 | AI provider | OpenAI Responses API through server-side secret |
 | Retrieval | alias/lexical first, pgvector fallback, constrained rerank |
 | Observability | structured function logs + database traces; Sentry optional |
@@ -57,6 +57,9 @@ Trust boundaries:
 - User JWT establishes identity; RLS establishes data authorization.
 - Edge Functions validate auth and inputs but do not trust client `user_id`,
   totals, confidence, or candidate IDs.
+- Meal photos remain in a private bucket. Object paths are scoped as
+  `{auth.uid()}/{clientRequestId}/source.ext`; the function rejects path/request
+  ownership mismatches before provider access.
 - Service-role/secret keys and `OPENAI_API_KEY` exist only as hosted function
   secrets.
 
@@ -218,7 +221,7 @@ Edge Function writes:
 - analyze meal
 - commit analyzed draft
 - account deletion
-- future photo analysis
+- photo and mixed-input analysis
 
 Rationale: AI commits must validate the analysis owner, status, selected
 candidates, idempotency key, and server-derived nutrition in one trusted flow.
@@ -661,4 +664,3 @@ Deployment rules:
 - function tests pass with provider fakes
 - one end-to-end trace is visible across client/function/database
 - architecture and trade-offs are demonstrated in README and Loom
-
