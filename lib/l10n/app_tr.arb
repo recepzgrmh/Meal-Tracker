@@ -48,5 +48,11 @@
   "mealRemovePhoto": "Fotoğrafı kaldır",
   "mealPhotoHint": "Net ve üstten çekilmiş bir fotoğraf ekle. Kısa bir açıklama doğruluğu artırır.",
   "mealPhotoError": "Bu fotoğrafı açamadık. Başka bir fotoğraf dene.",
-  "mealPhotoTooLarge": "Fotoğraf çok büyük. 8 MB'den küçük bir fotoğraf seç."
+  "mealPhotoTooLarge": "Fotoğraf çok büyük. 8 MB'den küçük bir fotoğraf seç.",
+  "catalogSearchAction": "Katalogda ara ve düzelt",
+  "catalogSearchTitle": "Doğru yiyeceği bul",
+  "catalogSearchExplanation": "AI emin olamadı. Katalogdan seçtiğinde besin değerlerini doğrulanmış kaynaktan hesaplarız.",
+  "catalogSearchHint": "Yiyecek adı",
+  "catalogSearchEmpty": "Eşleşen bir yiyecek bulamadık.",
+  "catalogSearchError": "Katalog araması şu anda kullanılamıyor."
 }

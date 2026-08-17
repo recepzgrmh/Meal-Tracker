@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meal_clarity/src/data/meal_repository.dart';
+import 'package:meal_clarity/src/catalog/food_catalog_repository.dart';
 import 'package:meal_clarity/src/domain/meal_analysis_input.dart';
 import 'package:meal_clarity/src/domain/models.dart';
 import 'package:meal_clarity/src/view_models/meal_detail_view_model.dart';
@@ -119,7 +120,33 @@ void main() {
 
       expect(viewModel.step, MealFlowStep.compose);
       expect(viewModel.error, contains('katalogda güvenle eşleştiremedik'));
+      expect(viewModel.manualSearchSuggested, isTrue);
     });
+
+    test(
+      'turns a manual catalog correction into a reviewable grounded draft',
+      () async {
+        final catalog = _FakeCatalogRepository();
+        final viewModel = MealFlowViewModel(
+          repository: _ThrowingRepository(),
+          catalogRepository: catalog,
+          manualItemIdFactory: () => '10000000-0000-0000-0000-000000000099',
+        );
+
+        await viewModel.searchCatalog('beyaz peynr', 'tr-TR');
+        viewModel.selectManualFood(
+          viewModel.catalogResults.single,
+          'beyaz peynr',
+        );
+
+        expect(catalog.query, 'beyaz peynr');
+        expect(viewModel.step, MealFlowStep.review);
+        expect(viewModel.draft?.analysisRunId, isNull);
+        expect(viewModel.draft?.items.single.matchMethod, 'manual');
+        expect(viewModel.draft?.items.single.foodId, 'catalog-cheese');
+        expect(viewModel.draft?.reviewCount, 1);
+      },
+    );
   });
 
   test('MealDetailViewModel recalculates nutrition after portion editing', () {
@@ -166,6 +193,33 @@ class _DomainFailureRepository implements MealRepository {
 
   @override
   Future<MealDraft> analyze(MealAnalysisInput input) async => throw error;
+}
+
+class _FakeCatalogRepository implements FoodCatalogRepository {
+  String? query;
+
+  @override
+  Future<List<CatalogFoodCandidate>> search({
+    required String query,
+    required String locale,
+  }) async {
+    this.query = query;
+    return const [
+      CatalogFoodCandidate(
+        foodId: 'catalog-cheese',
+        name: 'Beyaz Peynir',
+        matchedAlias: 'beyaz peynir',
+        score: 0.8,
+        defaultGrams: 30,
+        defaultPortionLabel: '1 porsiyon',
+        caloriesPer100g: 289,
+        proteinPer100g: 16,
+        carbsPer100g: 2.5,
+        fatPer100g: 24,
+        nutritionSource: 'curated:test',
+      ),
+    ];
+  }
 }
 
 MealAnalysisInput _input(String text) =>

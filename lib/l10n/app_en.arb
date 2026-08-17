@@ -52,5 +52,11 @@
   "mealRemovePhoto": "Remove photo",
   "mealPhotoHint": "Add a clear overhead photo. A short description improves accuracy.",
   "mealPhotoError": "We couldn’t open that photo. Try another one.",
-  "mealPhotoTooLarge": "That photo is too large. Choose one under 8 MB."
+  "mealPhotoTooLarge": "That photo is too large. Choose one under 8 MB.",
+  "catalogSearchAction": "Search catalog and correct",
+  "catalogSearchTitle": "Find the right food",
+  "catalogSearchExplanation": "AI was not confident. Choose from the catalog to calculate nutrition from a verified source.",
+  "catalogSearchHint": "Food name",
+  "catalogSearchEmpty": "No matching food was found.",
+  "catalogSearchError": "Catalog search is currently unavailable."
 }

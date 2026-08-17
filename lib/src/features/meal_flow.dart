@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../l10n/l10n.dart';
 import '../data/meal_repository.dart';
+import '../catalog/food_catalog_repository.dart';
 import '../domain/meal_analysis_input.dart';
 import '../domain/models.dart';
 import '../media/meal_photo_picker.dart';
@@ -9,9 +10,15 @@ import '../theme/app_theme.dart';
 import '../view_models/meal_flow_view_model.dart';
 
 class MealFlow extends StatefulWidget {
-  const MealFlow({super.key, required this.repository, this.photoPicker});
+  const MealFlow({
+    super.key,
+    required this.repository,
+    this.catalogRepository,
+    this.photoPicker,
+  });
 
   final MealRepository repository;
+  final FoodCatalogRepository? catalogRepository;
   final MealPhotoPicker? photoPicker;
 
   @override
@@ -29,7 +36,10 @@ class _MealFlowState extends State<MealFlow> {
   @override
   void initState() {
     super.initState();
-    _viewModel = MealFlowViewModel(repository: widget.repository);
+    _viewModel = MealFlowViewModel(
+      repository: widget.repository,
+      catalogRepository: widget.catalogRepository,
+    );
     _photoPicker = widget.photoPicker ?? ImagePickerMealPhotoPicker();
     _controller.addListener(_refresh);
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -127,6 +137,109 @@ class _MealFlowState extends State<MealFlow> {
         : await _showPortionSheet(item);
     if (updated == null || !mounted) return;
     _viewModel.updateItem(updated);
+  }
+
+  Future<void> _showManualSearch() async {
+    final queryController = TextEditingController(
+      text: _controller.text.trim(),
+    );
+    final locale = Localizations.localeOf(context).languageCode == 'en'
+        ? 'en-US'
+        : 'tr-TR';
+    await _viewModel.searchCatalog(queryController.text, locale);
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      showDragHandle: true,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          22,
+          4,
+          22,
+          18 + MediaQuery.viewInsetsOf(sheetContext).bottom,
+        ),
+        child: SizedBox(
+          height: MediaQuery.sizeOf(sheetContext).height * 0.64,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                context.l10n.catalogSearchTitle,
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                context.l10n.catalogSearchExplanation,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                key: const Key('manual-catalog-query'),
+                controller: queryController,
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  hintText: context.l10n.catalogSearchHint,
+                  suffixIcon: IconButton(
+                    onPressed: () =>
+                        _viewModel.searchCatalog(queryController.text, locale),
+                    icon: const Icon(Icons.search_rounded),
+                  ),
+                ),
+                onSubmitted: (value) => _viewModel.searchCatalog(value, locale),
+              ),
+              const SizedBox(height: 14),
+              Expanded(
+                child: ListenableBuilder(
+                  listenable: _viewModel,
+                  builder: (context, _) {
+                    if (_viewModel.isSearchingCatalog) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (_viewModel.catalogSearchError != null) {
+                      return Center(
+                        child: Text(context.l10n.catalogSearchError),
+                      );
+                    }
+                    if (_viewModel.catalogResults.isEmpty) {
+                      return Center(
+                        child: Text(context.l10n.catalogSearchEmpty),
+                      );
+                    }
+                    return ListView.separated(
+                      itemCount: _viewModel.catalogResults.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final candidate = _viewModel.catalogResults[index];
+                        return ListTile(
+                          key: Key('catalog-result-${candidate.foodId}'),
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(candidate.name),
+                          subtitle: Text(
+                            '${candidate.matchedAlias} · ${candidate.defaultGrams.round()} g',
+                          ),
+                          trailing: const Icon(Icons.chevron_right_rounded),
+                          onTap: () {
+                            _viewModel.selectManualFood(
+                              candidate,
+                              queryController.text.trim(),
+                            );
+                            Navigator.pop(sheetContext);
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    queryController.dispose();
   }
 
   Future<MealItem?> _showTypeSheet(MealItem item) {
@@ -289,6 +402,11 @@ class _MealFlowState extends State<MealFlow> {
                 onAddPhoto: _showPhotoSourceSheet,
                 onRemovePhoto: () => setState(() => _photo = null),
                 onAnalyze: _analyze,
+                onManualSearch:
+                    _viewModel.manualSearchSuggested &&
+                        _viewModel.canSearchCatalog
+                    ? _showManualSearch
+                    : null,
               ),
               MealFlowStep.analyzing => const _Analyzing(
                 key: ValueKey('analyzing'),
@@ -318,6 +436,7 @@ class _Composer extends StatelessWidget {
     required this.onAddPhoto,
     required this.onRemovePhoto,
     required this.onAnalyze,
+    required this.onManualSearch,
   });
 
   final TextEditingController controller;
@@ -328,6 +447,7 @@ class _Composer extends StatelessWidget {
   final VoidCallback onAddPhoto;
   final VoidCallback onRemovePhoto;
   final VoidCallback onAnalyze;
+  final VoidCallback? onManualSearch;
 
   @override
   Widget build(BuildContext context) {
@@ -431,6 +551,15 @@ class _Composer extends StatelessWidget {
                     error!,
                     style: const TextStyle(color: Color(0xFFD93025)),
                   ),
+                  if (onManualSearch != null) ...[
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      key: const Key('manual-catalog-search-button'),
+                      onPressed: onManualSearch,
+                      icon: const Icon(Icons.search_rounded),
+                      label: Text(context.l10n.catalogSearchAction),
+                    ),
+                  ],
                 ],
                 const SizedBox(height: 18),
                 Text(

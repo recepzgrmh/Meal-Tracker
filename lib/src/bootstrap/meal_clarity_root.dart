@@ -7,6 +7,7 @@ import '../../l10n/generated/app_localizations.dart';
 
 import '../app.dart';
 import '../data/meal_repository.dart';
+import '../catalog/food_catalog_repository.dart';
 import '../auth/data/auth_repository.dart';
 import '../auth/presentation/auth_screen.dart';
 import '../auth/presentation/auth_view_model.dart';
@@ -28,6 +29,7 @@ class MealClarityRoot extends StatefulWidget {
     required this.profileRepository,
     this.mealRepository,
     this.analysisRepository,
+    this.catalogRepository,
     this.outboxWorker,
     this.ownedDatabase,
     super.key,
@@ -38,6 +40,7 @@ class MealClarityRoot extends StatefulWidget {
   final ProfileRepository profileRepository;
   final CachedMealRepository? mealRepository;
   final MealRepository? analysisRepository;
+  final FoodCatalogRepository? catalogRepository;
   final OutboxWorker? outboxWorker;
   final AppDatabase? ownedDatabase;
 
@@ -91,6 +94,7 @@ class _MealClarityRootState extends State<MealClarityRoot> {
           builder: (_, _) => MealClarityShell(
             cachedRepository: widget.mealRepository,
             analysisRepository: widget.analysisRepository,
+            catalogRepository: widget.catalogRepository,
             userId: _coordinator.session?.userId,
             onSyncRequested: widget.outboxWorker == null ? null : _drainOutbox,
           ),

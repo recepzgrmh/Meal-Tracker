@@ -171,4 +171,23 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get mealPhotoTooLarge =>
       'Fotoğraf çok büyük. 8 MB\'den küçük bir fotoğraf seç.';
+
+  @override
+  String get catalogSearchAction => 'Katalogda ara ve düzelt';
+
+  @override
+  String get catalogSearchTitle => 'Doğru yiyeceği bul';
+
+  @override
+  String get catalogSearchExplanation =>
+      'AI emin olamadı. Katalogdan seçtiğinde besin değerlerini doğrulanmış kaynaktan hesaplarız.';
+
+  @override
+  String get catalogSearchHint => 'Yiyecek adı';
+
+  @override
+  String get catalogSearchEmpty => 'Eşleşen bir yiyecek bulamadık.';
+
+  @override
+  String get catalogSearchError => 'Katalog araması şu anda kullanılamıyor.';
 }

@@ -8,6 +8,7 @@ import 'src/bootstrap/app_bootstrap.dart';
 import 'src/bootstrap/app_config.dart';
 import 'src/bootstrap/configuration_error_app.dart';
 import 'src/bootstrap/meal_clarity_root.dart';
+import 'src/catalog/food_catalog_repository.dart';
 import 'src/local/app_database.dart';
 import 'src/local/meal_dao.dart';
 import 'src/local/outbox_dao.dart';
@@ -37,6 +38,7 @@ Future<void> main() async {
           remote: SupabaseAnalysisRemoteDataSource(client),
           photoStorage: SupabaseMealPhotoStorage(client),
         ),
+        catalogRepository: SupabaseFoodCatalogRepository(client),
         mealRepository: CachedMealRepository(
           local: mealDao,
           remote: SupabaseMealRemoteDataSource(client),

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../l10n/generated/app_localizations.dart';
 
 import 'data/meal_repository.dart';
+import 'catalog/food_catalog_repository.dart';
 import 'data/mock_seed_data.dart';
 import 'domain/models.dart';
 import 'features/meal_detail_screen.dart';
@@ -38,6 +39,7 @@ class MealClarityShell extends StatefulWidget {
   const MealClarityShell({
     this.cachedRepository,
     this.analysisRepository,
+    this.catalogRepository,
     this.userId,
     this.onSyncRequested,
     super.key,
@@ -45,6 +47,7 @@ class MealClarityShell extends StatefulWidget {
 
   final CachedMealRepository? cachedRepository;
   final MealRepository? analysisRepository;
+  final FoodCatalogRepository? catalogRepository;
   final String? userId;
   final Future<void> Function()? onSyncRequested;
 
@@ -124,7 +127,10 @@ class _MealClarityShellState extends State<MealClarityShell>
     final draft = await Navigator.of(context).push<MealDraft>(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (_) => MealFlow(repository: _analysisRepository),
+        builder: (_) => MealFlow(
+          repository: _analysisRepository,
+          catalogRepository: widget.catalogRepository,
+        ),
       ),
     );
     if (draft == null || !mounted) return;

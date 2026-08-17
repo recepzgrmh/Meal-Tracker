@@ -1,24 +1,44 @@
 import 'package:flutter/foundation.dart';
+import 'package:uuid/uuid.dart';
 
 import '../data/meal_repository.dart';
+import '../catalog/food_catalog_repository.dart';
 import '../domain/meal_analysis_input.dart';
 import '../domain/models.dart';
 
 enum MealFlowStep { compose, analyzing, review }
 
+typedef ManualItemIdFactory = String Function();
+
 class MealFlowViewModel extends ChangeNotifier {
-  MealFlowViewModel({required MealRepository repository})
-    : _repository = repository;
+  MealFlowViewModel({
+    required MealRepository repository,
+    FoodCatalogRepository? catalogRepository,
+    ManualItemIdFactory? manualItemIdFactory,
+  }) : _repository = repository,
+       _catalogRepository = catalogRepository,
+       _manualItemIdFactory = manualItemIdFactory ?? const Uuid().v4;
 
   final MealRepository _repository;
+  final FoodCatalogRepository? _catalogRepository;
+  final ManualItemIdFactory _manualItemIdFactory;
 
   MealFlowStep _step = MealFlowStep.compose;
   MealDraft? _draft;
   String? _error;
+  bool _manualSearchSuggested = false;
+  bool _isSearchingCatalog = false;
+  List<CatalogFoodCandidate> _catalogResults = const [];
+  String? _catalogSearchError;
 
   MealFlowStep get step => _step;
   MealDraft? get draft => _draft;
   String? get error => _error;
+  bool get manualSearchSuggested => _manualSearchSuggested;
+  bool get canSearchCatalog => _catalogRepository != null;
+  bool get isSearchingCatalog => _isSearchingCatalog;
+  List<CatalogFoodCandidate> get catalogResults => _catalogResults;
+  String? get catalogSearchError => _catalogSearchError;
 
   Future<void> analyze(MealAnalysisInput input) async {
     if (input.isEmpty || _step == MealFlowStep.analyzing) return;
@@ -29,17 +49,67 @@ class MealFlowViewModel extends ChangeNotifier {
     );
     _step = MealFlowStep.analyzing;
     _error = null;
+    _manualSearchSuggested = false;
     notifyListeners();
     try {
       _draft = await _repository.analyze(normalized);
       _step = MealFlowStep.review;
     } on MealAnalysisException catch (error) {
       _error = _messageFor(error.kind);
+      _manualSearchSuggested = error.kind == MealAnalysisFailureKind.noMatch;
       _step = MealFlowStep.compose;
     } catch (_) {
       _error = 'Öğünü analiz edemedik. Bağlantını kontrol edip tekrar dene.';
       _step = MealFlowStep.compose;
     }
+    notifyListeners();
+  }
+
+  Future<void> searchCatalog(String query, String locale) async {
+    final repository = _catalogRepository;
+    if (repository == null || query.trim().length < 2 || _isSearchingCatalog) {
+      return;
+    }
+    _isSearchingCatalog = true;
+    _catalogSearchError = null;
+    notifyListeners();
+    try {
+      _catalogResults = await repository.search(query: query, locale: locale);
+    } catch (_) {
+      _catalogSearchError = 'CATALOG_SEARCH_FAILED';
+    } finally {
+      _isSearchingCatalog = false;
+      notifyListeners();
+    }
+  }
+
+  void selectManualFood(CatalogFoodCandidate candidate, String sourceText) {
+    _draft = MealDraft(
+      inputText: sourceText,
+      mealName: _mealName(DateTime.now()),
+      items: [
+        MealItem(
+          id: _manualItemIdFactory(),
+          foodId: candidate.foodId,
+          name: candidate.name,
+          sourceText: sourceText,
+          portionLabel: candidate.defaultPortionLabel,
+          grams: candidate.defaultGrams,
+          nutritionPer100g: Nutrition(
+            calories: candidate.caloriesPer100g,
+            protein: candidate.proteinPer100g,
+            carbs: candidate.carbsPer100g,
+            fat: candidate.fatPer100g,
+          ),
+          matchState: MatchState.checkAmount,
+          sourceName: candidate.nutritionSource,
+          confidence: candidate.score,
+          matchMethod: 'manual',
+        ),
+      ],
+    );
+    _step = MealFlowStep.review;
+    _manualSearchSuggested = false;
     notifyListeners();
   }
 
@@ -70,5 +140,14 @@ class MealFlowViewModel extends ChangeNotifier {
     if (_draft == null) return;
     _draft = _draft!.updateItem(updated);
     notifyListeners();
+  }
+
+  String _mealName(DateTime time) {
+    return switch (time.hour) {
+      >= 5 && < 11 => 'Kahvaltı',
+      >= 11 && < 16 => 'Öğle yemeği',
+      >= 16 && < 22 => 'Akşam yemeği',
+      _ => 'Atıştırma',
+    };
   }
 }

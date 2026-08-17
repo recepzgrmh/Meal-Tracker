@@ -391,6 +391,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'That photo is too large. Choose one under 8 MB.'**
   String get mealPhotoTooLarge;
+
+  /// No description provided for @catalogSearchAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Search catalog and correct'**
+  String get catalogSearchAction;
+
+  /// No description provided for @catalogSearchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find the right food'**
+  String get catalogSearchTitle;
+
+  /// No description provided for @catalogSearchExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'AI was not confident. Choose from the catalog to calculate nutrition from a verified source.'**
+  String get catalogSearchExplanation;
+
+  /// No description provided for @catalogSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Food name'**
+  String get catalogSearchHint;
+
+  /// No description provided for @catalogSearchEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching food was found.'**
+  String get catalogSearchEmpty;
+
+  /// No description provided for @catalogSearchError.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog search is currently unavailable.'**
+  String get catalogSearchError;
 }
 
 class _AppLocalizationsDelegate

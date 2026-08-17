@@ -194,4 +194,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get mealPhotoTooLarge =>
       'That photo is too large. Choose one under 8 MB.';
+
+  @override
+  String get catalogSearchAction => 'Search catalog and correct';
+
+  @override
+  String get catalogSearchTitle => 'Find the right food';
+
+  @override
+  String get catalogSearchExplanation =>
+      'AI was not confident. Choose from the catalog to calculate nutrition from a verified source.';
+
+  @override
+  String get catalogSearchHint => 'Food name';
+
+  @override
+  String get catalogSearchEmpty => 'No matching food was found.';
+
+  @override
+  String get catalogSearchError => 'Catalog search is currently unavailable.';
 }
