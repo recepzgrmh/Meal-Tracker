@@ -101,6 +101,20 @@ Deno.test('understands English counts with localized aliases', () => {
   assertEquals(result.items[0].grams, 100)
 })
 
+Deno.test('resolves quantities written after an inflected food name', () => {
+  const egg = analyzeDeterministically('yumurta 2 adet', catalog)
+  const cheese = analyzeDeterministically('beyaz peynirden 20 g', catalog)
+  assertEquals(egg.items[0].grams, 100)
+  assertEquals(cheese.items[0].grams, 20)
+})
+
+Deno.test('resolves Turkish genitive halves and one-and-a-half portions', () => {
+  const half = analyzeDeterministically('simitin yarısı', catalog)
+  const oneAndHalf = analyzeDeterministically('bir buçuk simit', catalog)
+  assertEquals(half.items[0].grams, 50)
+  assertEquals(oneAndHalf.items[0].grams, 150)
+})
+
 function assertEquals(actual: unknown, expected: unknown): void {
   if (JSON.stringify(actual) !== JSON.stringify(expected)) {
     throw new Error(`Expected ${JSON.stringify(expected)}, received ${JSON.stringify(actual)}`)

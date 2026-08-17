@@ -79,6 +79,10 @@ const ignoredTokens = new Set([
   'serving',
   'slice',
   'half',
+  'buçuk',
+  'bucuk',
+  'yarısı',
+  'yarisi',
   'grams',
   ...Object.keys(numberWords),
 ])
@@ -127,8 +131,8 @@ function findNonOverlappingMatches(input: string, catalog: CatalogFood[]): Phras
           food,
           alias,
           start,
-          end: start + normalizedAlias.length,
-          sourceText: input.slice(start, start + normalizedAlias.length),
+          end: start + result[1].length,
+          sourceText: result[1],
         })
       }
     }
@@ -200,6 +204,16 @@ function resolvePortion(input: string, match: PhraseMatch): PortionResolution {
     }
   }
 
+  const oneAndHalfMatch = before.match(/(?:^|\s)(?:bir|one)\s+(?:buçuk|bucuk|and a half)\s*$/u)
+  if (oneAndHalfMatch) {
+    return {
+      label: scalePortionLabel(defaultPortion.label, '1.5'),
+      grams: defaultPortion.grams * 1.5,
+      quantity: 1.5,
+      inferred: false,
+    }
+  }
+
   const countMatch = before.match(
     /(?:^|\s)(\d{1,2}|bir|iki|üç|uc|dört|dort|beş|bes|one|two|three|four|five)(?:\s+(?:adet|tane|piece|pieces))?\s*$/u,
   )
@@ -239,6 +253,28 @@ function resolvePortion(input: string, match: PhraseMatch): PortionResolution {
     }
   }
 
+  const countAfter = after.match(
+    /^(\d{1,2}|bir|iki|üç|uc|dört|dort|beş|bes|one|two|three|four|five)\s+(?:adet|tane|piece|pieces)(?:\s|$)/u,
+  )
+  if (countAfter) {
+    const quantity = Number(countAfter[1]) || numberWords[countAfter[1]]
+    return {
+      label: scalePortionLabel(defaultPortion.label, String(quantity)),
+      grams: defaultPortion.grams * quantity,
+      quantity,
+      inferred: false,
+    }
+  }
+
+  if (/^(?:yarısı|yarisi|half)(?:\s|$)/u.test(after)) {
+    return {
+      label: scalePortionLabel(defaultPortion.label, '½'),
+      grams: defaultPortion.grams / 2,
+      quantity: 0.5,
+      inferred: false,
+    }
+  }
+
   return {
     label: defaultPortion.label,
     grams: defaultPortion.grams,
@@ -269,17 +305,20 @@ function escapeRegExp(value: string): string {
 }
 
 function inflectedAliasPattern(alias: string): string {
-  const escaped = escapeRegExp(alias)
-  if (/\s/u.test(alias)) return `${escaped}(?:s|es)?`
-  const suffix = '(?:y?[ıiuüae])?'
-  const softened = alias.endsWith('t')
-    ? `${escapeRegExp(alias.slice(0, -1))}d${suffix}`
-    : alias.endsWith('k')
-    ? `${escapeRegExp(alias.slice(0, -1))}(?:ğ|g)${suffix}`
+  const separator = alias.lastIndexOf(' ')
+  const prefix = separator < 0 ? '' : `${escapeRegExp(alias.slice(0, separator + 1))}`
+  const finalWord = separator < 0 ? alias : alias.slice(separator + 1)
+  const escaped = escapeRegExp(finalWord)
+  const suffix = '(?:(?:y?[ıiuüae])|(?:[ıiuü]n)|(?:d|t)(?:a|e|an|en)|(?:lar|ler))?'
+  const softened = finalWord.endsWith('t')
+    ? `${escapeRegExp(finalWord.slice(0, -1))}d${suffix}`
+    : finalWord.endsWith('k')
+    ? `${escapeRegExp(finalWord.slice(0, -1))}(?:ğ|g)${suffix}`
     : null
-  return softened
+  const finalPattern = softened
     ? `(?:${escaped}${suffix}|${softened}|${escaped}(?:s|es))`
     : `(?:${escaped}${suffix}|${escaped}(?:s|es))`
+  return `${prefix}${finalPattern}`
 }
 
 function round(value: number, digits: number): number {
