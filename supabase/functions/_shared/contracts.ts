@@ -1,13 +1,21 @@
 export const ANALYSIS_CONTRACT_VERSION = 'analysis.v1' as const
 export const DETERMINISTIC_PIPELINE_VERSION = 'deterministic-tr-v1' as const
+export const VISION_PIPELINE_VERSION = 'vision-grounded-hybrid-v1' as const
 
-export type InputKind = 'text' | 'voice'
+export type InputKind = 'text' | 'voice' | 'photo' | 'mixed'
+
+export interface MealPhotoReference {
+  bucket: 'meal-photos'
+  path: string
+  mimeType: 'image/jpeg' | 'image/png' | 'image/webp'
+}
 
 export interface AnalyzeMealRequest {
   clientRequestId: string
   input: string
   inputKind?: InputKind
-  locale?: 'tr-TR'
+  locale?: 'tr-TR' | 'en-US'
+  photo?: MealPhotoReference
 }
 
 export interface NutritionPer100g {
@@ -41,9 +49,10 @@ export interface AnalyzeMealResponse {
   items: AnalysisItem[]
   unmatchedText: string[]
   pipeline: {
-    extraction: typeof DETERMINISTIC_PIPELINE_VERSION
+    extraction: typeof DETERMINISTIC_PIPELINE_VERSION | typeof VISION_PIPELINE_VERSION
     retrieval: 'exact-alias-v1'
-    model: null
+    model: string | null
+    promptVersion?: string
   }
   replayed: boolean
 }

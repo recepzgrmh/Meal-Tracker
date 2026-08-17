@@ -1,7 +1,8 @@
-import type { AnalyzeMealRequest } from '../_shared/contracts.ts'
+import type { AnalyzeMealRequest, InputKind, MealPhotoReference } from '../_shared/contracts.ts'
 
-const allowedKeys = new Set(['clientRequestId', 'input', 'inputKind', 'locale'])
+const allowedKeys = new Set(['clientRequestId', 'input', 'inputKind', 'locale', 'photo'])
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu
+const photoPathPattern = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\/source\.(?:jpg|png|webp)$/iu
 
 export class RequestValidationError extends Error {
   constructor(message: string, readonly field?: string) {
@@ -21,25 +22,58 @@ export function parseAnalyzeMealRequest(value: unknown): AnalyzeMealRequest {
   if (typeof value.clientRequestId !== 'string' || !uuidPattern.test(value.clientRequestId)) {
     throw new RequestValidationError('clientRequestId must be a UUID', 'clientRequestId')
   }
-  if (typeof value.input !== 'string' || value.input.trim().length === 0) {
-    throw new RequestValidationError('input must not be empty', 'input')
+  if (value.input !== undefined && typeof value.input !== 'string') {
+    throw new RequestValidationError('input must be a string', 'input')
   }
-  if (value.input.length > 1000) {
+  const input = typeof value.input === 'string' ? value.input.trim() : ''
+  if (input.length > 1000) {
     throw new RequestValidationError('input must be at most 1000 characters', 'input')
   }
-  if (value.inputKind !== undefined && !['text', 'voice'].includes(String(value.inputKind))) {
-    throw new RequestValidationError('inputKind must be text or voice', 'inputKind')
+  const inputKind = (value.inputKind ?? 'text') as InputKind
+  if (!['text', 'voice', 'photo', 'mixed'].includes(inputKind)) {
+    throw new RequestValidationError('inputKind must be text, voice, photo, or mixed', 'inputKind')
   }
-  if (value.locale !== undefined && value.locale !== 'tr-TR') {
-    throw new RequestValidationError('Only tr-TR is supported in v1', 'locale')
+  const locale = value.locale ?? 'tr-TR'
+  if (!['tr-TR', 'en-US'].includes(String(locale))) {
+    throw new RequestValidationError('locale must be tr-TR or en-US', 'locale')
+  }
+
+  const photo = value.photo === undefined ? undefined : parsePhoto(value.photo)
+  if (['text', 'voice'].includes(inputKind) && input.length === 0) {
+    throw new RequestValidationError('input must not be empty for text or voice', 'input')
+  }
+  if (inputKind === 'photo' && !photo) {
+    throw new RequestValidationError('photo is required for photo input', 'photo')
+  }
+  if (inputKind === 'mixed' && (input.length === 0 || !photo)) {
+    throw new RequestValidationError('mixed input requires both input and photo', 'inputKind')
   }
 
   return {
     clientRequestId: value.clientRequestId,
-    input: value.input.trim(),
-    ...(value.inputKind ? { inputKind: value.inputKind as 'text' | 'voice' } : {}),
-    ...(value.locale ? { locale: value.locale as 'tr-TR' } : {}),
+    input,
+    inputKind,
+    locale: locale as 'tr-TR' | 'en-US',
+    ...(photo ? { photo } : {}),
   }
+}
+
+function parsePhoto(value: unknown): MealPhotoReference {
+  if (!isRecord(value)) throw new RequestValidationError('photo must be an object', 'photo')
+  const keys = Object.keys(value)
+  if (keys.some((key) => !['bucket', 'path', 'mimeType'].includes(key))) {
+    throw new RequestValidationError('photo contains an unknown field', 'photo')
+  }
+  if (value.bucket !== 'meal-photos') {
+    throw new RequestValidationError('photo bucket is invalid', 'photo.bucket')
+  }
+  if (typeof value.path !== 'string' || !photoPathPattern.test(value.path)) {
+    throw new RequestValidationError('photo path is invalid', 'photo.path')
+  }
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(String(value.mimeType))) {
+    throw new RequestValidationError('photo mimeType is invalid', 'photo.mimeType')
+  }
+  return value as unknown as MealPhotoReference
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

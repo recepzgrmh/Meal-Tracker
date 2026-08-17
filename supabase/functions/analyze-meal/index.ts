@@ -4,6 +4,7 @@ import {
   ANALYSIS_CONTRACT_VERSION,
   type AnalyzeMealResponse,
   DETERMINISTIC_PIPELINE_VERSION,
+  VISION_PIPELINE_VERSION,
 } from '../_shared/contracts.ts'
 import { errorResponse, jsonHeaders, jsonResponse, redactedLog } from '../_shared/http.ts'
 import {
@@ -13,6 +14,7 @@ import {
   type CatalogPortion,
 } from './deterministic.ts'
 import { parseAnalyzeMealRequest, RequestValidationError } from './request.ts'
+import { extractFoodsFromPhoto } from './vision.ts'
 
 interface RunRow {
   id: string
@@ -65,6 +67,14 @@ export default {
         500,
       )
     }
+    if (body.photo && !body.photo.path.startsWith(`${userId}/${body.clientRequestId}/`)) {
+      return errorResponse(
+        'FORBIDDEN',
+        'Photo path does not belong to this request',
+        requestTraceId,
+        403,
+      )
+    }
 
     const startedAt = performance.now()
     let run: RunRow | null = null
@@ -83,12 +93,23 @@ export default {
         userId,
         clientRequestId: body.clientRequestId,
         traceId: requestTraceId,
-        input: body.input,
+        input: body.input || '[photo]',
         inputKind: body.inputKind ?? 'text',
       })
 
-      const catalog = await loadCatalog(context)
-      const analysis = analyzeDeterministically(body.input, catalog)
+      const vision = body.photo
+        ? await extractFoodsFromPhoto(
+          context.supabaseAdmin,
+          body.photo,
+          body.locale ?? 'tr-TR',
+          body.input,
+        )
+        : null
+      const groundedInput = [body.input, vision?.normalizedDescription]
+        .filter((value) => value && value.trim().length > 0)
+        .join(' ve ')
+      const catalog = await loadCatalog(context, body.locale ?? 'tr-TR')
+      const analysis = analyzeDeterministically(groundedInput, catalog)
       if (analysis.items.length === 0) {
         await markRunFailed(context, run.id, 'NO_MATCH', 'No catalog-grounded food was found')
         return errorResponse(
@@ -110,9 +131,10 @@ export default {
         items: analysis.items,
         unmatchedText: analysis.unmatchedText,
         pipeline: {
-          extraction: DETERMINISTIC_PIPELINE_VERSION,
+          extraction: vision ? VISION_PIPELINE_VERSION : DETERMINISTIC_PIPELINE_VERSION,
           retrieval: 'exact-alias-v1',
-          model: null,
+          model: vision?.model ?? null,
+          ...(vision ? { promptVersion: vision.promptVersion } : {}),
         },
         replayed: false,
       }
@@ -123,6 +145,8 @@ export default {
         analysisRunId: run.id,
         userId,
         inputLength: body.input.length,
+        hasPhoto: Boolean(body.photo),
+        visionModel: vision?.model ?? null,
         itemCount: output.items.length,
         unmatchedCount: output.unmatchedText.length,
         latencyMs: Math.round(performance.now() - startedAt),
@@ -196,18 +220,21 @@ async function createRun(
   return replay
 }
 
-async function loadCatalog(context: SupabaseContext): Promise<CatalogFood[]> {
+async function loadCatalog(
+  context: SupabaseContext,
+  locale: 'tr-TR' | 'en-US',
+): Promise<CatalogFood[]> {
   const [foodsResult, aliasesResult, portionsResult] = await Promise.all([
     context.supabaseAdmin.from('foods').select(
       'id,canonical_name,calories_per_100g,protein_per_100g,carbs_per_100g,fat_per_100g',
-    ).eq('is_active', true).eq('locale', 'tr-TR'),
+    ).eq('is_active', true),
     context.supabaseAdmin.from('food_aliases').select('food_id,alias,priority').eq(
       'locale',
-      'tr-TR',
+      locale,
     ),
     context.supabaseAdmin.from('food_portions').select('food_id,label,grams,is_default').eq(
       'locale',
-      'tr-TR',
+      locale,
     ),
   ])
   for (const result of [foodsResult, aliasesResult, portionsResult]) {
