@@ -1,0 +1,36 @@
+[
+  {
+    "id": "10000000-0000-0000-0000-000000000001",
+    "canonicalName": "Tavuk Yumurtası, Haşlanmış",
+    "nutritionPer100g": { "calories": 155, "protein": 12.6, "carbs": 1.1, "fat": 10.6 },
+    "aliases": [
+      { "value": "haşlanmış yumurta", "priority": 100 },
+      { "value": "yumurta", "priority": 100 }
+    ],
+    "portions": [{ "label": "1 adet", "grams": 50, "isDefault": true }]
+  },
+  {
+    "id": "10000000-0000-0000-0000-000000000002",
+    "canonicalName": "Beyaz Peynir, Tam Yağlı",
+    "nutritionPer100g": { "calories": 289, "protein": 16, "carbs": 2.5, "fat": 24 },
+    "aliases": [
+      { "value": "beyaz peynir", "priority": 100 },
+      { "value": "peynir", "priority": 30 }
+    ],
+    "portions": [
+      { "label": "az", "grams": 15, "isDefault": false },
+      { "label": "1 porsiyon", "grams": 30, "isDefault": true },
+      { "label": "fazla", "grams": 50, "isDefault": false }
+    ]
+  },
+  {
+    "id": "10000000-0000-0000-0000-000000000003",
+    "canonicalName": "Simit",
+    "nutritionPer100g": { "calories": 340, "protein": 10, "carbs": 57, "fat": 8 },
+    "aliases": [{ "value": "simit", "priority": 100 }],
+    "portions": [
+      { "label": "yarım", "grams": 50, "isDefault": false },
+      { "label": "1 adet", "grams": 100, "isDefault": true }
+    ]
+  }
+]

@@ -15,6 +15,7 @@
   },
   "tasks": {
     "check": "deno fmt --check functions && deno lint functions && deno check functions/analyze-meal/index.ts functions/commit-meal/index.ts functions/search-food-catalog/index.ts",
-    "test": "deno test functions/tests"
+    "test": "deno test functions/tests",
+    "eval": "deno run --allow-read functions/evals/run_deterministic_eval.ts"
   }
 }

@@ -1,0 +1,60 @@
+{"id":"tr-001","input":"1 yumurta","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":50}],"tags":["egg","explicit_count"]}
+{"id":"tr-002","input":"2 yumurta","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100}],"tags":["egg","explicit_count"]}
+{"id":"tr-003","input":"iki yumurta yedim","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100}],"tags":["egg","number_word"]}
+{"id":"tr-004","input":"3 adet yumurta","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":150}],"tags":["egg","unit"]}
+{"id":"tr-005","input":"üç tane yumurta","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":150}],"tags":["egg","number_word"]}
+{"id":"tr-006","input":"haşlanmış yumurta","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":50}],"tags":["egg","long_alias","implicit_portion"]}
+{"id":"tr-007","input":"2 haşlanmış yumurta","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100}],"tags":["egg","long_alias"]}
+{"id":"tr-008","input":"100 gram yumurta","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100}],"tags":["egg","explicit_grams"]}
+{"id":"tr-009","input":"yumurta 100 g","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100}],"tags":["egg","suffix_grams"]}
+{"id":"tr-010","input":"dört yumurta","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":200}],"tags":["egg","number_word"]}
+{"id":"tr-011","input":"4 yumurta yedim","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":200}],"tags":["egg","explicit_count"]}
+{"id":"tr-012","input":"bir adet haşlanmış yumurta","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":50}],"tags":["egg","unit"]}
+{"id":"tr-013","input":"yumurta","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":50}],"tags":["egg","implicit_portion"]}
+{"id":"tr-014","input":"YUMURTA!","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":50}],"tags":["egg","casing","punctuation"]}
+{"id":"tr-015","input":"beş tane yumurta","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":250}],"tags":["egg","number_word"]}
+{"id":"tr-016","input":"yumurta 2 adet","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100}],"tags":["egg","suffix_count","known_failure"]}
+{"id":"tr-017","input":"yarım yumurta","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":25}],"tags":["egg","fraction"]}
+{"id":"tr-018","input":"50 gr haşlanmış yumurta","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":50}],"tags":["egg","explicit_grams"]}
+{"id":"tr-019","input":"kahvaltıda 2 yumurta","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100}],"tags":["egg","noise"]}
+{"id":"tr-020","input":"iki adet YUMURTA.","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100}],"tags":["egg","casing","punctuation"]}
+{"id":"tr-021","input":"30 g beyaz peynir","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":30}],"tags":["cheese","explicit_grams"]}
+{"id":"tr-022","input":"beyaz peynir 50 gram","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":50}],"tags":["cheese","suffix_grams"]}
+{"id":"tr-023","input":"biraz beyaz peynir","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":15}],"tags":["cheese","vague_portion"]}
+{"id":"tr-024","input":"az peynir","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":15}],"tags":["cheese","generic_alias","vague_portion"]}
+{"id":"tr-025","input":"peynir","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":30}],"tags":["cheese","generic_alias","identity_ambiguous"]}
+{"id":"tr-026","input":"beyaz peynir","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":30}],"tags":["cheese","implicit_portion"]}
+{"id":"tr-027","input":"15 gram peynir","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":15}],"tags":["cheese","generic_alias","explicit_grams"]}
+{"id":"tr-028","input":"peynir 30 gr","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":30}],"tags":["cheese","suffix_grams"]}
+{"id":"tr-029","input":"50 g PEYNİR!","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":50}],"tags":["cheese","casing","punctuation"]}
+{"id":"tr-030","input":"bir porsiyon beyaz peynir","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":30}],"tags":["cheese","portion_term"]}
+{"id":"tr-031","input":"fazla beyaz peynir","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":50}],"tags":["cheese","vague_portion","known_failure"]}
+{"id":"tr-032","input":"40 gram beyaz peynir yedim","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":40}],"tags":["cheese","explicit_grams"]}
+{"id":"tr-033","input":"beyaz peynirden 20 g","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":20}],"tags":["cheese","suffix_grams","morphology","known_failure"]}
+{"id":"tr-034","input":"20g beyaz peynir","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":20}],"tags":["cheese","compact_unit"]}
+{"id":"tr-035","input":"kahvaltıda biraz peynir vardı","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":15}],"tags":["cheese","noise","vague_portion"]}
+{"id":"tr-036","input":"1 simit","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000003","grams":100}],"tags":["simit","explicit_count"]}
+{"id":"tr-037","input":"yarım simit","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000003","grams":50}],"tags":["simit","fraction"]}
+{"id":"tr-038","input":"½ simit","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000003","grams":50}],"tags":["simit","fraction_symbol"]}
+{"id":"tr-039","input":"iki simit","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000003","grams":200}],"tags":["simit","number_word"]}
+{"id":"tr-040","input":"100 gram simit","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000003","grams":100}],"tags":["simit","explicit_grams"]}
+{"id":"tr-041","input":"simit 50 g","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000003","grams":50}],"tags":["simit","suffix_grams"]}
+{"id":"tr-042","input":"SİMİT!","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000003","grams":100}],"tags":["simit","casing","punctuation"]}
+{"id":"tr-043","input":"bir adet simit yedim","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000003","grams":100}],"tags":["simit","unit"]}
+{"id":"tr-044","input":"simitin yarısı","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000003","grams":50}],"tags":["simit","morphology","known_failure"]}
+{"id":"tr-045","input":"bir buçuk simit","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000003","grams":150}],"tags":["simit","fraction_word","known_failure"]}
+{"id":"tr-046","input":"2 yumurta ve yarım simit","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100},{"foodId":"10000000-0000-0000-0000-000000000003","grams":50}],"tags":["multi_item","explicit_portions"]}
+{"id":"tr-047","input":"2 yumurta, 30 g beyaz peynir","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100},{"foodId":"10000000-0000-0000-0000-000000000002","grams":30}],"tags":["multi_item","explicit_portions"]}
+{"id":"tr-048","input":"bir yumurta biraz peynir yarım simit","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":50},{"foodId":"10000000-0000-0000-0000-000000000002","grams":15},{"foodId":"10000000-0000-0000-0000-000000000003","grams":50}],"tags":["multi_item","mixed_ambiguity"]}
+{"id":"tr-049","input":"3 yumurta ve 1 simit","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":150},{"foodId":"10000000-0000-0000-0000-000000000003","grams":100}],"tags":["multi_item","explicit_count"]}
+{"id":"tr-050","input":"50 g peynir ile 100 g simit","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":50},{"foodId":"10000000-0000-0000-0000-000000000003","grams":100}],"tags":["multi_item","explicit_grams"]}
+{"id":"tr-051","input":"iki haşlanmış yumurta, beyaz peynir ve simit","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100},{"foodId":"10000000-0000-0000-0000-000000000002","grams":30},{"foodId":"10000000-0000-0000-0000-000000000003","grams":100}],"tags":["multi_item","implicit_portions"]}
+{"id":"tr-052","input":"yumurta, yumurta ve simit","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100},{"foodId":"10000000-0000-0000-0000-000000000003","grams":100}],"tags":["multi_item","repeated_food","known_failure"]}
+{"id":"tr-053","input":"2 yumurta ve avokado","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100}],"tags":["partial_match","unknown_item"]}
+{"id":"tr-054","input":"biraz peynir, domates ve yarım simit","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":15},{"foodId":"10000000-0000-0000-0000-000000000003","grams":50}],"tags":["partial_match","unknown_item"]}
+{"id":"tr-055","input":"kahvaltı: 2 yumurta + 30g peynir + 1 simit","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100},{"foodId":"10000000-0000-0000-0000-000000000002","grams":30},{"foodId":"10000000-0000-0000-0000-000000000003","grams":100}],"tags":["multi_item","punctuation","compact_unit"]}
+{"id":"tr-056","input":"bir tabak menemen","expectedItems":[],"expectNoMatch":true,"tags":["no_match","dish"]}
+{"id":"tr-057","input":"avokadolu tost","expectedItems":[],"expectNoMatch":true,"tags":["no_match","dish"]}
+{"id":"tr-058","input":"mercimek çorbası içtim","expectedItems":[],"expectNoMatch":true,"tags":["no_match","dish"]}
+{"id":"tr-059","input":"pizza ve kola","expectedItems":[],"expectNoMatch":true,"tags":["no_match","multi_item"]}
+{"id":"tr-060","input":"bugün çok güzel kahvaltı yaptım","expectedItems":[],"expectNoMatch":true,"tags":["no_match","non_food_specific"]}
