@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
 import 'data/meal_repository.dart';
+import 'data/mock_seed_data.dart';
 import 'domain/models.dart';
-import 'features/meal_flow.dart';
 import 'features/meal_detail_screen.dart';
+import 'features/meal_flow.dart';
 import 'features/today_screen.dart';
 import 'theme/app_theme.dart';
+import 'view_models/today_view_model.dart';
 
 class MealClarityApp extends StatefulWidget {
   const MealClarityApp({super.key});
@@ -18,52 +20,19 @@ class _MealClarityAppState extends State<MealClarityApp> {
   final MealRepository _repository = MockMealRepository();
   final _navigatorKey = GlobalKey<NavigatorState>();
   final _messengerKey = GlobalKey<ScaffoldMessengerState>();
-  final List<LoggedMeal> _meals = [
-    LoggedMeal(
-      id: 'lunch',
-      name: 'Öğle Yemeği',
-      timeLabel: '12:34',
-      imageAsset: 'assets/images/chicken-salad.png',
-      items: const [
-        MealItem(
-          id: 'chicken-salad',
-          name: 'Tavuklu Salata',
-          sourceText: 'tavuklu salata',
-          portionLabel: '1 büyük kase',
-          grams: 350,
-          nutritionPer100g: Nutrition(
-            calories: 174.3,
-            protein: 12,
-            carbs: 8,
-            fat: 10,
-          ),
-          matchState: MatchState.matched,
-        ),
-      ],
-    ),
-    LoggedMeal(
-      id: 'snack',
-      name: 'Ara Öğün',
-      timeLabel: '16:15',
-      imageAsset: 'assets/images/banana-yogurt.png',
-      items: const [
-        MealItem(
-          id: 'banana-yogurt',
-          name: 'Muzlu Yoğurt',
-          sourceText: 'muzlu yoğurt',
-          portionLabel: '1 kase · 250 g',
-          grams: 250,
-          nutritionPer100g: Nutrition(
-            calories: 76,
-            protein: 3,
-            carbs: 12,
-            fat: 2,
-          ),
-          matchState: MatchState.matched,
-        ),
-      ],
-    ),
-  ];
+  late final TodayViewModel _todayViewModel;
+
+  @override
+  void initState() {
+    super.initState();
+    _todayViewModel = TodayViewModel(initialMeals: buildMockMeals());
+  }
+
+  @override
+  void dispose() {
+    _todayViewModel.dispose();
+    super.dispose();
+  }
 
   Future<void> _startMealFlow() async {
     final draft = await _navigatorKey.currentState!.push<MealDraft>(
@@ -74,22 +43,7 @@ class _MealClarityAppState extends State<MealClarityApp> {
     );
     if (draft == null || !mounted) return;
 
-    final mealId = 'meal-${DateTime.now().microsecondsSinceEpoch}';
-    final now = DateTime.now();
-    final timeLabel =
-        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-    setState(() {
-      _meals.insert(
-        0,
-        LoggedMeal(
-          id: mealId,
-          name: draft.mealName,
-          timeLabel: timeLabel,
-          items: draft.items,
-          imageAsset: 'assets/images/breakfast.png',
-        ),
-      );
-    });
+    final loggedMeal = _todayViewModel.logDraft(draft, DateTime.now());
 
     _messengerKey.currentState!.showSnackBar(
       SnackBar(
@@ -100,8 +54,7 @@ class _MealClarityAppState extends State<MealClarityApp> {
         action: SnackBarAction(
           label: 'Geri al',
           textColor: AppColors.lime,
-          onPressed: () =>
-              setState(() => _meals.removeWhere((meal) => meal.id == mealId)),
+          onPressed: () => _todayViewModel.deleteMeal(loggedMeal.id),
         ),
       ),
     );
@@ -112,14 +65,9 @@ class _MealClarityAppState extends State<MealClarityApp> {
       MaterialPageRoute(
         builder: (_) => MealDetailScreen(
           meal: meal,
-          onUpdate: (updated) {
-            setState(() {
-              final index = _meals.indexWhere((item) => item.id == updated.id);
-              if (index != -1) _meals[index] = updated;
-            });
-          },
+          onUpdate: _todayViewModel.updateMeal,
           onDelete: () {
-            setState(() => _meals.removeWhere((item) => item.id == meal.id));
+            _todayViewModel.deleteMeal(meal.id);
             _navigatorKey.currentState!.pop();
           },
         ),
@@ -135,10 +83,13 @@ class _MealClarityAppState extends State<MealClarityApp> {
       debugShowCheckedModeBanner: false,
       title: 'Meal Clarity',
       theme: buildTheme(),
-      home: TodayScreen(
-        meals: _meals,
-        onAddMeal: _startMealFlow,
-        onMealTap: _openMeal,
+      home: ListenableBuilder(
+        listenable: _todayViewModel,
+        builder: (context, _) => TodayScreen(
+          meals: _todayViewModel.meals,
+          onAddMeal: _startMealFlow,
+          onMealTap: _openMeal,
+        ),
       ),
     );
   }

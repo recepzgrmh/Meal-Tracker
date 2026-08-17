@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/meal_repository.dart';
 import '../domain/models.dart';
 import '../theme/app_theme.dart';
-
-enum _FlowStep { compose, analyzing, review }
+import '../view_models/meal_flow_view_model.dart';
 
 class MealFlow extends StatefulWidget {
   const MealFlow({super.key, required this.repository});
@@ -18,13 +17,12 @@ class MealFlow extends StatefulWidget {
 class _MealFlowState extends State<MealFlow> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
-  _FlowStep _step = _FlowStep.compose;
-  MealDraft? _draft;
-  String? _error;
+  late final MealFlowViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
+    _viewModel = MealFlowViewModel(repository: widget.repository);
     _controller.addListener(_refresh);
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => _focusNode.requestFocus(),
@@ -37,6 +35,7 @@ class _MealFlowState extends State<MealFlow> {
       ..removeListener(_refresh)
       ..dispose();
     _focusNode.dispose();
+    _viewModel.dispose();
     super.dispose();
   }
 
@@ -45,24 +44,7 @@ class _MealFlowState extends State<MealFlow> {
   Future<void> _analyze() async {
     if (_controller.text.trim().isEmpty) return;
     FocusScope.of(context).unfocus();
-    setState(() {
-      _step = _FlowStep.analyzing;
-      _error = null;
-    });
-    try {
-      final draft = await widget.repository.analyze(_controller.text.trim());
-      if (!mounted) return;
-      setState(() {
-        _draft = draft;
-        _step = _FlowStep.review;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _error = 'Öğünü analiz edemedik. Lütfen tekrar dene.';
-        _step = _FlowStep.compose;
-      });
-    }
+    await _viewModel.analyze(_controller.text);
   }
 
   Future<void> _reviewItem(MealItem item) async {
@@ -70,7 +52,7 @@ class _MealFlowState extends State<MealFlow> {
         ? await _showTypeSheet(item)
         : await _showPortionSheet(item);
     if (updated == null || !mounted) return;
-    setState(() => _draft = _draft!.updateItem(updated));
+    _viewModel.updateItem(updated);
   }
 
   Future<MealItem?> _showTypeSheet(MealItem item) {
@@ -181,57 +163,64 @@ class _MealFlowState extends State<MealFlow> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: _step == _FlowStep.compose,
-      onPopInvokedWithResult: (didPop, _) {
-        if (!didPop && _step != _FlowStep.compose) {
-          setState(() => _step = _FlowStep.compose);
-        }
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: AppColors.canvas,
-          surfaceTintColor: Colors.transparent,
-          leading: IconButton(
-            tooltip: _step == _FlowStep.compose ? 'Kapat' : 'Geri',
-            onPressed: () {
-              if (_step == _FlowStep.compose) {
-                Navigator.pop(context);
-              } else {
-                setState(() => _step = _FlowStep.compose);
-              }
+    return ListenableBuilder(
+      listenable: _viewModel,
+      builder: (context, _) => PopScope(
+        canPop: _viewModel.step == MealFlowStep.compose,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop && _viewModel.step != MealFlowStep.compose) {
+            _viewModel.showComposer();
+          }
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            backgroundColor: AppColors.canvas,
+            surfaceTintColor: Colors.transparent,
+            leading: IconButton(
+              tooltip: _viewModel.step == MealFlowStep.compose
+                  ? 'Kapat'
+                  : 'Geri',
+              onPressed: () {
+                if (_viewModel.step == MealFlowStep.compose) {
+                  Navigator.pop(context);
+                } else {
+                  _viewModel.showComposer();
+                }
+              },
+              icon: Icon(
+                _viewModel.step == MealFlowStep.compose
+                    ? Icons.close_rounded
+                    : Icons.arrow_back_rounded,
+              ),
+            ),
+            title: Text(
+              _viewModel.step == MealFlowStep.review ? 'Öğünü kontrol et' : '',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          body: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 260),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            child: switch (_viewModel.step) {
+              MealFlowStep.compose => _Composer(
+                key: const ValueKey('composer'),
+                controller: _controller,
+                focusNode: _focusNode,
+                error: _viewModel.error,
+                onAnalyze: _analyze,
+              ),
+              MealFlowStep.analyzing => const _Analyzing(
+                key: ValueKey('analyzing'),
+              ),
+              MealFlowStep.review => _Review(
+                key: const ValueKey('review'),
+                draft: _viewModel.draft!,
+                onReviewItem: _reviewItem,
+                onLog: () => Navigator.pop(context, _viewModel.draft),
+              ),
             },
-            icon: Icon(
-              _step == _FlowStep.compose
-                  ? Icons.close_rounded
-                  : Icons.arrow_back_rounded,
-            ),
           ),
-          title: Text(
-            _step == _FlowStep.review ? 'Öğünü kontrol et' : '',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-        ),
-        body: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 260),
-          switchInCurve: Curves.easeOutCubic,
-          switchOutCurve: Curves.easeInCubic,
-          child: switch (_step) {
-            _FlowStep.compose => _Composer(
-              key: const ValueKey('composer'),
-              controller: _controller,
-              focusNode: _focusNode,
-              error: _error,
-              onAnalyze: _analyze,
-            ),
-            _FlowStep.analyzing => const _Analyzing(key: ValueKey('analyzing')),
-            _FlowStep.review => _Review(
-              key: const ValueKey('review'),
-              draft: _draft!,
-              onReviewItem: _reviewItem,
-              onLog: () => Navigator.pop(context, _draft),
-            ),
-          },
         ),
       ),
     );

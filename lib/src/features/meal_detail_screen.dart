@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../domain/models.dart';
 import '../theme/app_theme.dart';
+import '../view_models/meal_detail_view_model.dart';
 
 class MealDetailScreen extends StatefulWidget {
   const MealDetailScreen({
@@ -20,7 +21,21 @@ class MealDetailScreen extends StatefulWidget {
 }
 
 class _MealDetailScreenState extends State<MealDetailScreen> {
-  late LoggedMeal _meal = widget.meal;
+  late final MealDetailViewModel _viewModel;
+
+  LoggedMeal get _meal => _viewModel.meal;
+
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = MealDetailViewModel(meal: widget.meal);
+  }
+
+  @override
+  void dispose() {
+    _viewModel.dispose();
+    super.dispose();
+  }
 
   Future<void> _editItem(MealItem item) async {
     var selectedGrams = item.grams;
@@ -77,17 +92,7 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
     );
     if (grams == null || !mounted) return;
 
-    final updatedItem = item.copyWith(
-      grams: grams,
-      portionLabel: '${grams.round()} g',
-      matchState: MatchState.matched,
-    );
-    final updatedMeal = _meal.copyWith(
-      items: _meal.items
-          .map((candidate) => candidate.id == item.id ? updatedItem : candidate)
-          .toList(growable: false),
-    );
-    setState(() => _meal = updatedMeal);
+    final updatedMeal = _viewModel.updatePortion(item, grams);
     widget.onUpdate(updatedMeal);
   }
 
@@ -141,163 +146,174 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final nutrition = _meal.nutrition;
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            pinned: true,
-            expandedHeight: 286,
-            backgroundColor: AppColors.canvas,
-            surfaceTintColor: Colors.transparent,
-            leading: IconButton.filledTonal(
-              tooltip: 'Geri',
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back_rounded),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  if (_meal.imageAsset != null)
-                    Hero(
-                      tag: 'meal-image-${_meal.id}',
-                      child: Image.asset(
-                        _meal.imageAsset!,
-                        fit: BoxFit.cover,
-                        cacheWidth: 900,
-                      ),
-                    )
-                  else
-                    const ColoredBox(color: Color(0xFFF0F3E5)),
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Color(0x55000000), Colors.transparent],
-                        stops: [0, 0.45],
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    right: 16,
-                    bottom: 14,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xDDFFFFFF),
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                      child: const Text(
-                        'Katalog görseli',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          SliverPadding(
-            padding: EdgeInsets.fromLTRB(
-              22,
-              24,
-              22,
-              28 + MediaQuery.paddingOf(context).bottom,
-            ),
-            sliver: SliverList.list(
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            _meal.name,
-                            style: Theme.of(context).textTheme.headlineMedium,
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            'Bugün · ${_meal.timeLabel}',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(
-                      '${nutrition.calories.round()} kcal',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ],
+    return ListenableBuilder(
+      listenable: _viewModel,
+      builder: (context, _) {
+        final nutrition = _viewModel.nutrition;
+        return Scaffold(
+          body: CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                pinned: true,
+                expandedHeight: 286,
+                backgroundColor: AppColors.canvas,
+                surfaceTintColor: Colors.transparent,
+                leading: IconButton.filledTonal(
+                  tooltip: 'Geri',
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.arrow_back_rounded),
                 ),
-                const SizedBox(height: 24),
-                _MacroStrip(nutrition: nutrition),
-                const SizedBox(height: 30),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Yiyecekler',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    Text(
-                      'Düzenlemek için dokun',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    border: Border.all(color: AppColors.line),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Column(
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Stack(
+                    fit: StackFit.expand,
                     children: [
-                      for (
-                        var index = 0;
-                        index < _meal.items.length;
-                        index++
-                      ) ...[
-                        _IngredientRow(
-                          item: _meal.items[index],
-                          onTap: () => _editItem(_meal.items[index]),
+                      if (_meal.imageAsset != null)
+                        Hero(
+                          tag: 'meal-image-${_meal.id}',
+                          child: Image.asset(
+                            _meal.imageAsset!,
+                            fit: BoxFit.cover,
+                            cacheWidth: 900,
+                          ),
+                        )
+                      else
+                        const ColoredBox(color: Color(0xFFF0F3E5)),
+                      const DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Color(0x55000000), Colors.transparent],
+                            stops: [0, 0.45],
+                          ),
                         ),
-                        if (index < _meal.items.length - 1)
-                          const Divider(height: 1, indent: 16, endIndent: 16),
-                      ],
+                      ),
+                      Positioned(
+                        right: 16,
+                        bottom: 14,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xDDFFFFFF),
+                            borderRadius: BorderRadius.circular(99),
+                          ),
+                          child: const Text(
+                            'Katalog görseli',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 18),
-                OutlinedButton.icon(
-                  onPressed: _confirmDelete,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFFD93025),
-                    side: const BorderSide(color: Color(0xFFF2C2BE)),
-                    minimumSize: const Size.fromHeight(54),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                  ),
-                  icon: const Icon(Icons.delete_outline_rounded),
-                  label: const Text('Öğünü sil'),
+              ),
+              SliverPadding(
+                padding: EdgeInsets.fromLTRB(
+                  22,
+                  24,
+                  22,
+                  28 + MediaQuery.paddingOf(context).bottom,
                 ),
-              ],
-            ),
+                sliver: SliverList.list(
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _meal.name,
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineMedium,
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                'Bugün · ${_meal.timeLabel}',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          '${nutrition.calories.round()} kcal',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    _MacroStrip(nutrition: nutrition),
+                    const SizedBox(height: 30),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Yiyecekler',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        Text(
+                          'Düzenlemek için dokun',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        border: Border.all(color: AppColors.line),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: Column(
+                        children: [
+                          for (
+                            var index = 0;
+                            index < _meal.items.length;
+                            index++
+                          ) ...[
+                            _IngredientRow(
+                              item: _meal.items[index],
+                              onTap: () => _editItem(_meal.items[index]),
+                            ),
+                            if (index < _meal.items.length - 1)
+                              const Divider(
+                                height: 1,
+                                indent: 16,
+                                endIndent: 16,
+                              ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    OutlinedButton.icon(
+                      onPressed: _confirmDelete,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFD93025),
+                        side: const BorderSide(color: Color(0xFFF2C2BE)),
+                        minimumSize: const Size.fromHeight(54),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
+                      icon: const Icon(Icons.delete_outline_rounded),
+                      label: const Text('Öğünü sil'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
