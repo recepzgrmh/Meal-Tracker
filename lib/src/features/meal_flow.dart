@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/l10n.dart';
 import '../data/meal_repository.dart';
 import '../domain/models.dart';
 import '../theme/app_theme.dart';
@@ -69,19 +70,19 @@ class _MealFlowState extends State<MealFlow> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Hangisine daha yakındı?',
+              context.l10n.mealTypeQuestion,
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: 8),
             Text(
-              'Doğru gıdayı seçmek kalori ve makroları doğrudan etkiler.',
+              context.l10n.mealTypeExplanation,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 20),
             for (final label in [
-              'Tam yağlı yoğurt',
-              'Süzme yoğurt',
-              'Light yoğurt',
+              context.l10n.yogurtWhole,
+              context.l10n.yogurtStrained,
+              context.l10n.yogurtLight,
             ])
               ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -100,9 +101,9 @@ class _MealFlowState extends State<MealFlow> {
 
   Future<MealItem?> _showPortionSheet(MealItem item) {
     final options = <({String label, String detail, double grams})>[
-      (label: 'Az', detail: '≈ 15 g', grams: 15),
-      (label: 'Tahmin', detail: '≈ 30 g', grams: 30),
-      (label: 'Fazla', detail: '≈ 50 g', grams: 50),
+      (label: context.l10n.portionSmall, detail: '≈ 15 g', grams: 15),
+      (label: context.l10n.portionEstimate, detail: '≈ 30 g', grams: 30),
+      (label: context.l10n.portionLarge, detail: '≈ 50 g', grams: 50),
     ];
     return showModalBottomSheet<MealItem>(
       context: context,
@@ -117,13 +118,13 @@ class _MealFlowState extends State<MealFlow> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Peynir ne kadardı?',
+              context.l10n.mealCheeseAmountQuestion,
               key: const Key('portion-title'),
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: 8),
             Text(
-              '30 g tahmin ettik. En yakın miktarı seçebilirsin.',
+              context.l10n.mealCheeseAmountExplanation,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 24),
@@ -152,7 +153,7 @@ class _MealFlowState extends State<MealFlow> {
             Center(
               child: TextButton(
                 onPressed: () {},
-                child: const Text('Tam miktar gir'),
+                child: Text(context.l10n.portionExact),
               ),
             ),
           ],
@@ -178,8 +179,8 @@ class _MealFlowState extends State<MealFlow> {
             surfaceTintColor: Colors.transparent,
             leading: IconButton(
               tooltip: _viewModel.step == MealFlowStep.compose
-                  ? 'Kapat'
-                  : 'Geri',
+                  ? context.l10n.commonClose
+                  : context.l10n.commonBack,
               onPressed: () {
                 if (_viewModel.step == MealFlowStep.compose) {
                   Navigator.pop(context);
@@ -194,7 +195,9 @@ class _MealFlowState extends State<MealFlow> {
               ),
             ),
             title: Text(
-              _viewModel.step == MealFlowStep.review ? 'Öğünü kontrol et' : '',
+              _viewModel.step == MealFlowStep.review
+                  ? context.l10n.mealReviewTitle
+                  : '',
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
@@ -254,12 +257,12 @@ class _Composer extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Ne yedin?',
+                  context.l10n.mealComposeTitle,
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
                 const SizedBox(height: 9),
                 Text(
-                  'Günlük konuşur gibi yaz. Miktarları biliyorsan ekle, bilmiyorsan sorun değil.',
+                  context.l10n.mealComposeSubtitle,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 22),
@@ -271,12 +274,11 @@ class _Composer extends StatelessWidget {
                   maxLines: 7,
                   textCapitalization: TextCapitalization.sentences,
                   decoration: InputDecoration(
-                    hintText:
-                        'Örn. 2 yumurta, biraz beyaz peynir ve yarım simit',
+                    hintText: context.l10n.mealInputHint,
                     suffixIcon: Padding(
                       padding: const EdgeInsets.only(right: 10, bottom: 68),
                       child: IconButton.filled(
-                        tooltip: 'Sesle ekle',
+                        tooltip: context.l10n.mealVoiceInput,
                         onPressed: () {},
                         style: IconButton.styleFrom(
                           backgroundColor: AppColors.lime,
@@ -296,7 +298,7 @@ class _Composer extends StatelessWidget {
                 ],
                 const SizedBox(height: 18),
                 Text(
-                  'Hızlı dene',
+                  context.l10n.mealQuickTry,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 10),
@@ -305,13 +307,14 @@ class _Composer extends StatelessWidget {
                   runSpacing: 8,
                   children: [
                     _ExampleChip(
-                      label: '2 yumurta · peynir · ½ simit',
+                      label: context.l10n.mealQuickEggCheeseLabel,
                       onTap: () => controller.text =
-                          '2 yumurta, biraz beyaz peynir ve yarım simit',
+                          context.l10n.mealQuickEggCheeseValue,
                     ),
                     _ExampleChip(
-                      label: 'Bir kase yoğurt',
-                      onTap: () => controller.text = 'Bir kase yoğurt yedim',
+                      label: context.l10n.mealQuickYogurtLabel,
+                      onTap: () =>
+                          controller.text = context.l10n.mealQuickYogurtValue,
                     ),
                   ],
                 ),
@@ -319,7 +322,7 @@ class _Composer extends StatelessWidget {
                 FilledButton(
                   key: const Key('analyze-button'),
                   onPressed: controller.text.trim().isEmpty ? null : onAnalyze,
-                  child: const Text('Öğünü analiz et'),
+                  child: Text(context.l10n.mealAnalyze),
                 ),
               ],
             ),
@@ -357,11 +360,6 @@ class _Analyzing extends StatefulWidget {
 
 class _AnalyzingState extends State<_Analyzing> {
   int _index = 0;
-  static const _labels = [
-    'Yiyecekler bulunuyor',
-    'Porsiyonlar eşleştiriliyor',
-    'Belirsizlikler kontrol ediliyor',
-  ];
 
   @override
   void initState() {
@@ -370,7 +368,7 @@ class _AnalyzingState extends State<_Analyzing> {
   }
 
   Future<void> _advance() async {
-    while (mounted && _index < _labels.length - 1) {
+    while (mounted && _index < 2) {
       await Future<void>.delayed(const Duration(milliseconds: 280));
       if (mounted) setState(() => _index++);
     }
@@ -378,6 +376,11 @@ class _AnalyzingState extends State<_Analyzing> {
 
   @override
   Widget build(BuildContext context) {
+    final labels = [
+      context.l10n.mealAnalyzingFoods,
+      context.l10n.mealAnalyzingPortions,
+      context.l10n.mealAnalyzingAmbiguity,
+    ];
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -397,7 +400,7 @@ class _AnalyzingState extends State<_Analyzing> {
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 180),
               child: Text(
-                _labels[_index],
+                labels[_index],
                 key: ValueKey(_index),
                 style: Theme.of(context).textTheme.titleLarge,
                 textAlign: TextAlign.center,
@@ -405,7 +408,7 @@ class _AnalyzingState extends State<_Analyzing> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Besin değerleri katalogdan hesaplanacak.',
+              context.l10n.mealCatalogNutrition,
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
@@ -439,15 +442,15 @@ class _Review extends StatelessWidget {
             children: [
               Text(
                 draft.reviewCount == 0
-                    ? '${draft.items.length} yiyecek eşleşti'
-                    : '${draft.items.length} yiyecek bulduk',
+                    ? context.l10n.mealMatchedCount(draft.items.length)
+                    : context.l10n.mealFoundCount(draft.items.length),
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               const SizedBox(height: 8),
               Text(
                 draft.reviewCount == 0
-                    ? 'Her şey hazır. Kaydetmeden önce son kez kontrol et.'
-                    : '${draft.reviewCount} nokta sonucu etkileyebilir.',
+                    ? context.l10n.mealReadyToLog
+                    : context.l10n.mealReviewImpactCount(draft.reviewCount),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 18),
@@ -504,8 +507,8 @@ class _Review extends StatelessWidget {
                   },
             child: Text(
               draft.reviewCount == 0
-                  ? 'Öğünü kaydet'
-                  : '${draft.reviewCount} noktayı kontrol et',
+                  ? context.l10n.mealLog
+                  : context.l10n.mealReviewPoints(draft.reviewCount),
             ),
           ),
         ),
@@ -576,8 +579,8 @@ class _FoodItemRow extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       item.matchState == MatchState.checkAmount
-                          ? 'Miktarı kontrol et'
-                          : 'Türü kontrol et',
+                          ? context.l10n.mealCheckAmount
+                          : context.l10n.mealCheckType,
                       style: const TextStyle(
                         color: Color(0xFFD36B00),
                         fontSize: 13,
@@ -624,9 +627,9 @@ class _MealTotals extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Tahmini toplam',
-            style: TextStyle(color: Color(0xFFBFC1B9), fontSize: 13),
+          Text(
+            context.l10n.mealEstimatedTotal,
+            style: const TextStyle(color: Color(0xFFBFC1B9), fontSize: 13),
           ),
           const SizedBox(height: 4),
           Text(
@@ -641,9 +644,15 @@ class _MealTotals extends StatelessWidget {
           const SizedBox(height: 18),
           Row(
             children: [
-              _TotalMacro(label: 'Protein', value: nutrition.protein),
-              _TotalMacro(label: 'Karbonhidrat', value: nutrition.carbs),
-              _TotalMacro(label: 'Yağ', value: nutrition.fat),
+              _TotalMacro(
+                label: context.l10n.macroProtein,
+                value: nutrition.protein,
+              ),
+              _TotalMacro(
+                label: context.l10n.macroCarbs,
+                value: nutrition.carbs,
+              ),
+              _TotalMacro(label: context.l10n.macroFat, value: nutrition.fat),
             ],
           ),
         ],

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../l10n/generated/app_localizations.dart';
+
 import '../app.dart';
 import '../data/meal_repository.dart';
 import '../auth/data/auth_repository.dart';
@@ -139,7 +141,9 @@ class _MealClarityRootState extends State<MealClarityRoot> {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'Meal Clarity',
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       theme: buildTheme(),
       routerConfig: _router,
     );

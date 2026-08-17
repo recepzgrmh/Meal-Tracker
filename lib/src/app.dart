@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../l10n/generated/app_localizations.dart';
+
 import 'data/meal_repository.dart';
 import 'data/mock_seed_data.dart';
 import 'domain/models.dart';
@@ -14,13 +16,18 @@ import 'theme/app_theme.dart';
 import 'view_models/today_view_model.dart';
 
 class MealClarityApp extends StatelessWidget {
-  const MealClarityApp({super.key});
+  const MealClarityApp({this.locale = const Locale('tr'), super.key});
+
+  final Locale? locale;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Meal Clarity',
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       theme: buildTheme(),
       home: const MealClarityShell(),
     );
