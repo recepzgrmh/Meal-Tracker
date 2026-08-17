@@ -11,15 +11,20 @@ class SupabaseMutationGateway implements MutationGateway {
   final SupabaseClient _client;
 
   @override
-  Future<void> execute(SyncOperation operation) async {
+  Future<MutationResult> execute(SyncOperation operation) async {
     try {
-      await _client.rpc(
+      final response = await _client.rpc(
         'apply_meal_operation',
         params: {
           'p_operation_id': operation.id,
           'p_operation_type': operation.operationType,
           'p_payload': jsonDecode(operation.payloadJson),
         },
+      );
+      final result = response as Map<String, dynamic>;
+      return MutationResult(
+        mealId: result['meal_id'] as String?,
+        rowVersion: result['row_version'] as int?,
       );
     } on PostgrestException catch (error) {
       throw _classify(error);

@@ -12,5 +12,12 @@ class SyncFailure implements Exception {
 }
 
 abstract interface class MutationGateway {
-  Future<void> execute(SyncOperation operation);
+  Future<MutationResult> execute(SyncOperation operation);
+}
+
+class MutationResult {
+  const MutationResult({this.mealId, this.rowVersion});
+
+  final String? mealId;
+  final int? rowVersion;
 }

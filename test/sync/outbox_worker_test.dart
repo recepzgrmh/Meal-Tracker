@@ -29,6 +29,16 @@ void main() {
   tearDown(() => database.close());
 
   test('processes exactly one operation and marks it succeeded', () async {
+    await database.into(database.localMeals).insert(
+      LocalMealsCompanion.insert(
+        id: 'meal-first',
+        userId: 'user-a',
+        name: 'Kahvaltı',
+        eatenAt: now,
+        syncStatus: const Value('pending'),
+        localUpdatedAt: now,
+      ),
+    );
     await _insert(database, _operation('first', now));
     await _insert(database, _operation('second', now));
 
@@ -45,6 +55,9 @@ void main() {
       (await _read(database, 'second')).status,
       SyncOperationStatus.pending,
     );
+    final meal = await database.select(database.localMeals).getSingle();
+    expect(meal.syncStatus, 'synced');
+    expect(meal.rowVersion, 2);
   });
 
   test(
@@ -126,10 +139,11 @@ class FakeMutationGateway implements MutationGateway {
   SyncFailure? failure;
 
   @override
-  Future<void> execute(SyncOperation operation) async {
+  Future<MutationResult> execute(SyncOperation operation) async {
     executedIds.add(operation.id);
     final value = failure;
     if (value != null) throw value;
+    return MutationResult(mealId: operation.entityId, rowVersion: 2);
   }
 }
 

@@ -51,8 +51,12 @@ class OutboxWorker {
 
     await _outbox.markInFlight(operation.id, now);
     try {
-      await _gateway.execute(operation);
-      await _outbox.markSucceeded(operation.id, _clock());
+      final mutationResult = await _gateway.execute(operation);
+      await _outbox.markSucceeded(
+        operation,
+        _clock(),
+        rowVersion: mutationResult.rowVersion,
+      );
       return SyncRunResult(SyncRunOutcome.succeeded, operationId: operation.id);
     } on SyncFailure catch (failure) {
       if (failure.isRetryable && operation.attemptCount + 1 < maxAttempts) {

@@ -60,16 +60,39 @@ class OutboxDao {
     );
   }
 
-  Future<void> markSucceeded(String operationId, DateTime now) {
-    return _update(
-      operationId,
-      SyncOperationsCompanion(
-        status: const Value(SyncOperationStatus.succeeded),
-        nextAttemptAt: const Value(null),
-        lastErrorCode: const Value(null),
-        updatedAt: Value(now),
-      ),
-    );
+  Future<void> markSucceeded(
+    SyncOperation operation,
+    DateTime now, {
+    int? rowVersion,
+  }) {
+    return database.transaction(() async {
+      await _update(
+        operation.id,
+        SyncOperationsCompanion(
+          status: const Value(SyncOperationStatus.succeeded),
+          nextAttemptAt: const Value(null),
+          lastErrorCode: const Value(null),
+          updatedAt: Value(now),
+        ),
+      );
+      if (operation.entityType == 'meal' &&
+          operation.operationType == 'upsert') {
+        await (database.update(database.localMeals)..where(
+              (meal) =>
+                  meal.id.equals(operation.entityId) &
+                  meal.userId.equals(operation.userId),
+            ))
+            .write(
+              LocalMealsCompanion(
+                syncStatus: const Value('synced'),
+                rowVersion: rowVersion == null
+                    ? const Value.absent()
+                    : Value(rowVersion),
+                remoteUpdatedAt: Value(now),
+              ),
+            );
+      }
+    });
   }
 
   Future<void> markRetry({
