@@ -240,7 +240,11 @@ parser, strict request boundary, idempotent `analysis_runs` persistence, trace
 logging, catalog-only matches, and explicit `NO_MATCH`. The production Flutter
 composer now invokes the function through a strict DTO/repository boundary,
 preserves catalog and trace provenance, and maps stable failure codes to safe UI
-messages. `commit-meal`, manual search, and the gold dataset remain.
+messages. S3-03 is also deployed: reviewed drafts enter the durable client
+outbox, `commit-meal` verifies the authenticated analysis/candidate set, and an
+atomic RPC snapshots nutrition from the canonical catalog before completing the
+analysis. Client-supplied calories and macros are never accepted. Manual search
+and the gold dataset remain.
 
 ### Backlog
 
