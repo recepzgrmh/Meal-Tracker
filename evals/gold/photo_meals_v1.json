@@ -1,0 +1,34 @@
+[
+  {
+    "id": "photo-001",
+    "locale": "tr-TR",
+    "image": "evals/images/white_cheese_small.png",
+    "expectedItems": [{"foodId": "10000000-0000-0000-0000-000000000002", "minGrams": 10, "maxGrams": 25}],
+    "tags": ["photo", "single_food", "small_portion"]
+  },
+  {
+    "id": "photo-002",
+    "locale": "tr-TR",
+    "image": "evals/images/white_cheese_regular.png",
+    "expectedItems": [{"foodId": "10000000-0000-0000-0000-000000000002", "minGrams": 25, "maxGrams": 40}],
+    "tags": ["photo", "single_food", "regular_portion"]
+  },
+  {
+    "id": "photo-003",
+    "locale": "en-US",
+    "image": "evals/images/white_cheese_large.png",
+    "expectedItems": [{"foodId": "10000000-0000-0000-0000-000000000002", "minGrams": 40, "maxGrams": 65}],
+    "tags": ["photo", "single_food", "large_portion", "english"]
+  },
+  {
+    "id": "photo-004",
+    "locale": "tr-TR",
+    "image": "evals/images/egg_cheese_simit.png",
+    "expectedItems": [
+      {"foodId": "10000000-0000-0000-0000-000000000001", "minGrams": 80, "maxGrams": 120},
+      {"foodId": "10000000-0000-0000-0000-000000000002", "minGrams": 20, "maxGrams": 65},
+      {"foodId": "10000000-0000-0000-0000-000000000003", "minGrams": 45, "maxGrams": 110}
+    ],
+    "tags": ["photo", "multi_item", "occlusion", "portion"]
+  }
+]

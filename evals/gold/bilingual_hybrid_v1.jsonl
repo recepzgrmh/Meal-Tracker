@@ -1,0 +1,20 @@
+{"id":"hybrid-tr-001","locale":"tr-TR","input":"beyaz peynr","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":30}],"tags":["typo","cheese"]}
+{"id":"hybrid-tr-002","locale":"tr-TR","input":"iki yummurta","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100}],"tags":["typo","count"]}
+{"id":"hybrid-tr-003","locale":"tr-TR","input":"bir gevrek","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000003","grams":100}],"tags":["regional"]}
+{"id":"hybrid-tr-004","locale":"tr-TR","input":"2 yumurtayı yedim","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100}],"tags":["morphology"]}
+{"id":"hybrid-tr-005","locale":"tr-TR","input":"simidi bitirdim","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000003","grams":100}],"tags":["morphology","softening"]}
+{"id":"hybrid-tr-006","locale":"tr-TR","input":"2 yumurta ve 30 g beyaz peynr","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100},{"foodId":"10000000-0000-0000-0000-000000000002","grams":30}],"tags":["mixed_exact_typo"]}
+{"id":"hybrid-tr-007","locale":"tr-TR","input":"yarım simt","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000003","grams":50}],"tags":["typo","fraction"]}
+{"id":"hybrid-tr-008","locale":"tr-TR","input":"bir tabak menemen","expectedItems":[],"expectNoMatch":true,"tags":["no_match","dish"]}
+{"id":"hybrid-tr-009","locale":"tr-TR","input":"avokadolu tost","expectedItems":[],"expectNoMatch":true,"tags":["no_match","out_of_catalog"]}
+{"id":"hybrid-tr-010","locale":"tr-TR","input":"pizza ve kola","expectedItems":[],"expectNoMatch":true,"tags":["no_match","multi_item"]}
+{"id":"hybrid-en-001","locale":"en-US","input":"two boiled eggs","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100}],"tags":["english","count"]}
+{"id":"hybrid-en-002","locale":"en-US","input":"30 g white cheese","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":30}],"tags":["english","explicit_grams"]}
+{"id":"hybrid-en-003","locale":"en-US","input":"white chese","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":30}],"tags":["english","typo"]}
+{"id":"hybrid-en-004","locale":"en-US","input":"half a simit","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000003","grams":50}],"tags":["english","fraction"]}
+{"id":"hybrid-en-005","locale":"en-US","input":"one Turkish sesame ring","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000003","grams":100}],"tags":["english","alias"]}
+{"id":"hybrid-en-006","locale":"en-US","input":"2 eggs and white chese","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100},{"foodId":"10000000-0000-0000-0000-000000000002","grams":30}],"tags":["english","mixed_exact_typo"]}
+{"id":"hybrid-en-007","locale":"en-US","input":"hard boiled egg and half Turkish bagel","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":50},{"foodId":"10000000-0000-0000-0000-000000000003","grams":50}],"tags":["english","multi_item"]}
+{"id":"hybrid-en-008","locale":"en-US","input":"avocado toast","expectedItems":[],"expectNoMatch":true,"tags":["english","no_match"]}
+{"id":"hybrid-en-009","locale":"en-US","input":"lentil soup","expectedItems":[],"expectNoMatch":true,"tags":["english","no_match"]}
+{"id":"hybrid-en-010","locale":"en-US","input":"a healthy breakfast","expectedItems":[],"expectNoMatch":true,"tags":["english","no_match","non_specific"]}
