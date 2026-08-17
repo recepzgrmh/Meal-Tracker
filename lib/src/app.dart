@@ -43,7 +43,8 @@ class MealClarityShell extends StatefulWidget {
   State<MealClarityShell> createState() => _MealClarityShellState();
 }
 
-class _MealClarityShellState extends State<MealClarityShell> {
+class _MealClarityShellState extends State<MealClarityShell>
+    with WidgetsBindingObserver {
   final MealRepository _repository = MockMealRepository();
   late final TodayViewModel _todayViewModel;
   StreamSubscription<List<LoggedMeal>>? _mealSubscription;
@@ -54,6 +55,7 @@ class _MealClarityShellState extends State<MealClarityShell> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     final persistent = widget.cachedRepository != null && widget.userId != null;
     _todayViewModel = TodayViewModel(
       initialMeals: persistent ? const [] : buildMockMeals(),
@@ -92,10 +94,20 @@ class _MealClarityShellState extends State<MealClarityShell> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _mealSubscription?.cancel();
     _historySubscription?.cancel();
     _todayViewModel.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed &&
+        widget.cachedRepository != null &&
+        widget.userId != null) {
+      unawaited(_warmPersistentState(DateTime.now()));
+    }
   }
 
   Future<void> _startMealFlow(BuildContext context) async {

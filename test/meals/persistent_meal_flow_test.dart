@@ -19,15 +19,26 @@ void main() {
       local: MealDao(database),
       remote: _EmptyRemote(),
     );
+    var syncRequests = 0;
 
     await tester.pumpWidget(
       MaterialApp(
         theme: buildTheme(),
-        home: MealClarityShell(cachedRepository: repository, userId: 'user-a'),
+        home: MealClarityShell(
+          cachedRepository: repository,
+          userId: 'user-a',
+          onSyncRequested: () async => syncRequests++,
+        ),
       ),
     );
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('quick-composer')), findsOneWidget);
+    final syncRequestsBeforeResume = syncRequests;
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(syncRequests, syncRequestsBeforeResume + 1);
 
     await tester.tap(find.byKey(const Key('quick-composer')));
     await tester.pumpAndSettle();
