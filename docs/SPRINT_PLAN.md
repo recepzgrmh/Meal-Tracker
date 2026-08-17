@@ -15,28 +15,40 @@ Cadence: seven-day case-study delivery, focused daily sprints
 - The demo must remain runnable if the model provider is unavailable; a
   deterministic fixture mode is retained.
 
-## 2. Current baseline — Sprint 0 complete
+## 2. Current delivery status — Sprint 2 complete, Sprint 3 active
 
 Already delivered:
 
 - Flutter iOS/Android scaffold
 - high-quality Today/composer/review/clarification/detail vertical slice
 - MVVM ViewModels and repository boundary
-- unit, widget, golden, and iOS integration tests
+- resumable onboarding, passwordless email OTP, session restore, and route state machine
+- Drift local source of truth for meals, items, profiles, sync operations, and checkpoints
+- cache-first Today/History streams with app-resume refresh
+- transactional optimistic writes and durable, sequential outbox replay
+- full-jitter retry persistence and blocked conflict/validation states
+- versioned conflict-safe Supabase meal mutation RPC
+- authenticated `analyze-meal` Edge Function contract and deterministic Turkish parser
+- unit, widget, golden, Deno, and iOS integration tests
 - hosted Supabase project linked and migrated
 - RLS, explicit Data API grants, canonical catalog schema, pgvector column/index
 - seed foods, aliases, and portions
 - idempotency/data trace schema
-- remote database lint passing
+- deployed meal RPC and `analyze-meal` function
+- remote database lint and unauthenticated function-gateway checks passing
 
 Current limitations:
 
-- Flutter still uses mock repository
-- no auth/onboarding
-- no local database/outbox
-- no Edge Functions/OpenAI integration
+- Flutter meal analysis still uses the deterministic fixture repository; the new
+  function is not connected to the composer yet
+- `commit-meal` is not implemented; the current outbox writes reviewed meals
+  through the conflict-safe RPC
+- deterministic analysis currently covers the curated egg, white-cheese, and
+  simit catalog slice
+- no OpenAI extraction/reranking or catalog embeddings have been generated
 - no Storage bucket/policies
 - no pgTAP suites
+- live OTP and authenticated function smoke tests remain manual environment gates
 
 ## 3. Dependency path
 
@@ -151,6 +163,12 @@ Timebox: Day 2
 Goal: Today/History use Drift as the local source of truth and synchronize real
 Supabase meal data safely.
 
+Status: complete. Automated exit coverage verifies persistent local logging,
+atomic outbox creation, cache-first replacement protection, account isolation,
+retry scheduling, conflict blocking, app-resume refresh, and successful remote
+reconciliation. The real reconnect demo remains a manual authenticated smoke
+test for the Loom.
+
 ### Backlog
 
 #### S2-01 — Drift foundation
@@ -216,6 +234,11 @@ visible as pending → reconnect → one remote mutation and synced state.
 Timebox: Day 3  
 Goal: replace mock analysis transport with a secure function while keeping the
 first results deterministic and catalog-grounded.
+
+Status: active. S3-01 is complete and deployed. S3-02 has a tested deterministic
+parser, strict request boundary, idempotent `analysis_runs` persistence, trace
+logging, catalog-only matches, and explicit `NO_MATCH`; Flutter integration,
+`commit-meal`, manual search, and the gold dataset remain.
 
 ### Backlog
 
@@ -573,4 +596,3 @@ Do not cut:
    never copy a secret key into Flutter.
 4. Start Sprint 1 with configuration/bootstrap commits before UI screens.
 5. Configure OTP email template and exact redirect allow-list.
-
