@@ -14,6 +14,8 @@ export interface VisionExtraction {
   model: string
   promptVersion: typeof promptVersion
   foods: VisionFood[]
+  inputTokens: number
+  outputTokens: number
 }
 
 export async function extractFoodsFromPhoto(
@@ -99,6 +101,8 @@ export async function extractFoodsFromPhoto(
     foods,
     model,
     promptVersion,
+    inputTokens: Number(payload.usage?.input_tokens ?? 0),
+    outputTokens: Number(payload.usage?.output_tokens ?? 0),
     normalizedDescription: foods
       .map((food) => `${Math.round(food.estimatedGrams)} g ${food.description}`)
       .join(' ve '),

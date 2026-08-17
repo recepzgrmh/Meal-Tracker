@@ -171,6 +171,7 @@ export default {
         output,
         Math.round(performance.now() - startedAt),
         grounding,
+        vision,
       )
 
       redactedLog('info', 'analysis_completed', {
@@ -304,6 +305,7 @@ async function persistResult(
   output: AnalyzeMealResponse,
   latencyMs: number,
   grounding: GroundingResult | null,
+  vision: { inputTokens: number; outputTokens: number } | null,
 ): Promise<void> {
   const candidates = output.items.map((item) => ({
     analysis_run_id: runId,
@@ -332,11 +334,19 @@ async function persistResult(
       prompt_version: grounding?.selection.promptVersion ?? output.pipeline.promptVersion ?? null,
       retrieval_version: 'hybrid-rrf-v1',
       latency_ms: latencyMs,
-      provider_input_tokens: grounding?.selection.inputTokens ?? null,
-      provider_output_tokens: grounding?.selection.outputTokens ?? null,
+      provider_input_tokens: (grounding?.selection.inputTokens ?? 0) +
+        (vision?.inputTokens ?? 0),
+      provider_output_tokens: (grounding?.selection.outputTokens ?? 0) +
+        (vision?.outputTokens ?? 0),
+      embedding_input_tokens: grounding?.embeddingPromptTokens ?? 0,
       provider_attempts: grounding?.selection.attempts ?? null,
       retrieval_cache_hit: grounding?.cacheHit ?? null,
       response_cache_hit: grounding?.selection.cacheHit ?? null,
+      estimated_cost_micros: estimateCostMicros({
+        inputTokens: (grounding?.selection.inputTokens ?? 0) + (vision?.inputTokens ?? 0),
+        outputTokens: (grounding?.selection.outputTokens ?? 0) + (vision?.outputTokens ?? 0),
+        embeddingTokens: grounding?.embeddingPromptTokens ?? 0,
+      }),
       completed_at: new Date().toISOString(),
       error_code: null,
       error_detail: null,
@@ -349,6 +359,7 @@ interface GroundingResult {
   candidates: RetrievalCandidate[]
   selection: CandidateSelectionResult
   cacheHit: boolean
+  embeddingPromptTokens: number
 }
 
 async function groundUnmatchedText(
@@ -379,7 +390,12 @@ async function groundUnmatchedText(
       input: input.query,
       candidates,
     })
-    return { candidates, selection, cacheHit: retrieval.cacheHit }
+    return {
+      candidates,
+      selection,
+      cacheHit: retrieval.cacheHit,
+      embeddingPromptTokens: retrieval.embeddingPromptTokens,
+    }
   } catch (error) {
     const detail = providerErrorDetail(error)
     redactedLog('info', 'candidate_grounding_fallback', {
@@ -389,6 +405,18 @@ async function groundUnmatchedText(
     })
     return null
   }
+}
+
+function estimateCostMicros(input: {
+  inputTokens: number
+  outputTokens: number
+  embeddingTokens: number
+}): number {
+  // Versioned 2026-08-18 standard prices per 1M tokens:
+  // gpt-5.4-nano input $0.20, output $1.25; text-embedding-3-small $0.02.
+  return Math.round(
+    input.inputTokens * 0.20 + input.outputTokens * 1.25 + input.embeddingTokens * 0.02,
+  )
 }
 
 async function cachedCandidateSelection(
