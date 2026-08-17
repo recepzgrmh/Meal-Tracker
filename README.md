@@ -88,6 +88,11 @@ Remote `db lint` reports no schema errors, and local/remote migration history is
 in sync. The first local Docker image pull stalled on this machine, so local
 `db reset` remains a separate environment follow-up rather than a schema blocker.
 
+Production-style OTP delivery uses a signature-verified Supabase Send Email
+Hook backed by Resend. Deployment, secret handling, rollback, and verification
+steps are documented in
+[`docs/SEND_EMAIL_HOOK_RUNBOOK.md`](docs/SEND_EMAIL_HOOK_RUNBOOK.md).
+
 The product and architecture research is in
 `CASE_STUDY_RESEARCH_REPORT_TR.md`.
 
