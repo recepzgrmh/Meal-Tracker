@@ -12,6 +12,8 @@ import '../auth/data/auth_repository.dart';
 import '../auth/presentation/auth_screen.dart';
 import '../auth/presentation/auth_view_model.dart';
 import '../local/app_database.dart';
+import '../localization/ota_localizations.dart';
+import '../localization/ota_translation_repository.dart';
 import '../meals/data/cached_meal_repository.dart';
 import '../onboarding/data/onboarding_repository.dart';
 import '../onboarding/data/profile_repository.dart';
@@ -32,6 +34,7 @@ class MealClarityRoot extends StatefulWidget {
     this.catalogRepository,
     this.outboxWorker,
     this.ownedDatabase,
+    this.translationRepository = const BundledOnlyTranslationRepository(),
     super.key,
   });
 
@@ -43,6 +46,7 @@ class MealClarityRoot extends StatefulWidget {
   final FoodCatalogRepository? catalogRepository;
   final OutboxWorker? outboxWorker;
   final AppDatabase? ownedDatabase;
+  final OtaTranslationRepository translationRepository;
 
   @override
   State<MealClarityRoot> createState() => _MealClarityRootState();
@@ -146,7 +150,10 @@ class _MealClarityRootState extends State<MealClarityRoot> {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: [
+        OtaLocalizationsDelegate(widget.translationRepository),
+        ...AppLocalizations.localizationsDelegates.skip(1),
+      ],
       supportedLocales: AppLocalizations.supportedLocales,
       theme: buildTheme(),
       routerConfig: _router,

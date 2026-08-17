@@ -11,6 +11,7 @@ import 'src/bootstrap/meal_clarity_root.dart';
 import 'src/catalog/food_catalog_repository.dart';
 import 'src/local/app_database.dart';
 import 'src/local/meal_dao.dart';
+import 'src/localization/ota_translation_repository.dart';
 import 'src/local/outbox_dao.dart';
 import 'src/meals/data/cached_meal_repository.dart';
 import 'src/meals/data/supabase_meal_remote_data_source.dart';
@@ -48,6 +49,7 @@ Future<void> main() async {
           gateway: SupabaseMutationGateway(client),
         ),
         ownedDatabase: database,
+        translationRepository: SupabaseOtaTranslationRepository(client),
       ),
     );
   } on AppConfigException catch (error) {
