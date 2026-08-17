@@ -54,7 +54,7 @@ export async function hybridSearch(
       hit_count: Number(cached.hit_count) + 1,
     }).eq('cache_key', cacheKey)
     return {
-      rows: cached.candidates as Array<Record<string, unknown>>,
+      rows: filterGroundedRows(cached.candidates as Array<Record<string, unknown>>),
       cacheHit: true,
       fallback: false,
       embeddingModel: model,
@@ -75,7 +75,7 @@ export async function hybridSearch(
       p_limit: options.limit,
     })
     if (error) throw error
-    const rows = (data ?? []) as Array<Record<string, unknown>>
+    const rows = filterGroundedRows((data ?? []) as Array<Record<string, unknown>>)
     await adminClient.from('ai_retrieval_cache').upsert({
       cache_key: cacheKey,
       query_hash: queryHash,
@@ -135,4 +135,15 @@ async function computeCatalogFingerprint(
 
 export function normalizeQuery(value: string, locale: 'tr-TR' | 'en-US'): string {
   return value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase(locale)
+}
+
+export function filterGroundedRows(
+  rows: Array<Record<string, unknown>>,
+  minimumSemanticSimilarity = 0.35,
+): Array<Record<string, unknown>> {
+  return rows.filter((row) => {
+    if (row.lexical_rank != null) return true
+    const similarity = Number(row.semantic_similarity)
+    return Number.isFinite(similarity) && similarity >= minimumSemanticSimilarity
+  })
 }
