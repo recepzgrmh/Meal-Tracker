@@ -34,7 +34,7 @@ export interface AnalysisItem {
   grams: number
   quantity: number
   confidence: number
-  matchMethod: 'exact' | 'alias'
+  matchMethod: 'exact' | 'alias' | 'retrieval' | 'llm'
   needsClarification: boolean
   clarificationReason?: 'identity' | 'portion'
   nutritionPer100g: NutritionPer100g
@@ -50,7 +50,7 @@ export interface AnalyzeMealResponse {
   unmatchedText: string[]
   pipeline: {
     extraction: typeof DETERMINISTIC_PIPELINE_VERSION | typeof VISION_PIPELINE_VERSION
-    retrieval: 'exact-alias-v1'
+    retrieval: 'exact-alias-v1' | 'hybrid-rrf-v1'
     model: string | null
     promptVersion?: string
   }

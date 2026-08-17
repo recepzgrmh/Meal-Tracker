@@ -2,6 +2,7 @@ import { withSupabase } from 'npm:@supabase/server@1.4.1'
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.112.3'
 import {
   ANALYSIS_CONTRACT_VERSION,
+  type AnalysisItem,
   type AnalyzeMealResponse,
   DETERMINISTIC_PIPELINE_VERSION,
   VISION_PIPELINE_VERSION,
@@ -16,6 +17,12 @@ import {
 import { parseAnalyzeMealRequest, RequestValidationError } from './request.ts'
 import { reconcileModalities } from './reconcile.ts'
 import { extractFoodsFromPhoto } from './vision.ts'
+import {
+  type CandidateSelectionResult,
+  type RetrievalCandidate,
+  selectCatalogCandidates,
+} from './candidate-selector.ts'
+import { hybridSearch } from '../search-food-catalog/hybrid.ts'
 
 interface RunRow {
   id: string
@@ -25,6 +32,7 @@ interface RunRow {
 }
 
 interface SupabaseContext {
+  supabase: SupabaseClient
   supabaseAdmin: SupabaseClient
   userClaims?: Record<string, unknown>
 }
@@ -112,6 +120,17 @@ export default {
         ? analyzeDeterministically(vision.normalizedDescription, catalog)
         : null
       const analysis = reconcileModalities(textAnalysis, visionAnalysis)
+      const grounding = await groundUnmatchedText(context, {
+        query: analysis.unmatchedText.join(' '),
+        locale: body.locale ?? 'tr-TR',
+        existingFoodIds: new Set(analysis.items.map((item) => item.foodId)),
+      })
+      if (grounding) {
+        const groundedItems = toAnalysisItems(grounding.selection, grounding.candidates)
+        analysis.items.push(...groundedItems)
+        if (groundedItems.length > 0) analysis.unmatchedText = []
+        analysis.items.forEach((item, index) => item.itemKey = `item-${index + 1}`)
+      }
       if (analysis.items.length === 0) {
         await markRunFailed(context, run.id, 'NO_MATCH', 'No catalog-grounded food was found')
         return errorResponse(
@@ -134,13 +153,23 @@ export default {
         unmatchedText: analysis.unmatchedText,
         pipeline: {
           extraction: vision ? VISION_PIPELINE_VERSION : DETERMINISTIC_PIPELINE_VERSION,
-          retrieval: 'exact-alias-v1',
-          model: vision?.model ?? null,
-          ...(vision ? { promptVersion: vision.promptVersion } : {}),
+          retrieval: 'hybrid-rrf-v1',
+          model: grounding?.selection.model ?? vision?.model ?? null,
+          ...(grounding
+            ? { promptVersion: grounding.selection.promptVersion }
+            : vision
+            ? { promptVersion: vision.promptVersion }
+            : {}),
         },
         replayed: false,
       }
-      await persistResult(context, run.id, output, Math.round(performance.now() - startedAt))
+      await persistResult(
+        context,
+        run.id,
+        output,
+        Math.round(performance.now() - startedAt),
+        grounding,
+      )
 
       redactedLog('info', 'analysis_completed', {
         traceId: run.trace_id,
@@ -207,7 +236,7 @@ async function createRun(
       raw_input: input.input,
       input_kind: input.inputKind,
       status: 'running',
-      retrieval_version: 'exact-alias-v1',
+      retrieval_version: 'hybrid-rrf-v1',
     }, { onConflict: 'user_id,client_request_id', ignoreDuplicates: true })
     .select('id,trace_id,status,output')
     .maybeSingle()
@@ -272,6 +301,7 @@ async function persistResult(
   runId: string,
   output: AnalyzeMealResponse,
   latencyMs: number,
+  grounding: GroundingResult | null,
 ): Promise<void> {
   const candidates = output.items.map((item) => ({
     analysis_run_id: runId,
@@ -296,16 +326,130 @@ async function persistResult(
     .update({
       status: 'needs_review',
       output,
-      model_name: null,
-      prompt_version: null,
-      retrieval_version: 'exact-alias-v1',
+      model_name: grounding?.selection.model ?? output.pipeline.model,
+      prompt_version: grounding?.selection.promptVersion ?? output.pipeline.promptVersion ?? null,
+      retrieval_version: 'hybrid-rrf-v1',
       latency_ms: latencyMs,
+      provider_input_tokens: grounding?.selection.inputTokens ?? null,
+      provider_output_tokens: grounding?.selection.outputTokens ?? null,
+      provider_attempts: grounding?.selection.attempts ?? null,
+      retrieval_cache_hit: grounding?.cacheHit ?? null,
       completed_at: new Date().toISOString(),
       error_code: null,
       error_detail: null,
     })
     .eq('id', runId)
   if (runError) throw runError
+}
+
+interface GroundingResult {
+  candidates: RetrievalCandidate[]
+  selection: CandidateSelectionResult
+  cacheHit: boolean
+}
+
+async function groundUnmatchedText(
+  context: SupabaseContext,
+  input: {
+    query: string
+    locale: 'tr-TR' | 'en-US'
+    existingFoodIds: Set<string>
+  },
+): Promise<GroundingResult | null> {
+  if (input.query.trim().length < 2) return null
+  const apiKey = Deno.env.get('OPENAI_API_KEY')?.trim()
+  if (!apiKey) return null
+  try {
+    const retrieval = await hybridSearch(context.supabase, context.supabaseAdmin, {
+      query: input.query,
+      locale: input.locale,
+      limit: 10,
+      openAiApiKey: apiKey,
+    })
+    const candidates = retrieval.rows.map(toRetrievalCandidate).filter((candidate) =>
+      candidate !== null && !input.existingFoodIds.has(candidate.foodId)
+    ) as RetrievalCandidate[]
+    if (candidates.length === 0) return null
+    const selection = await selectCatalogCandidates({
+      apiKey,
+      locale: input.locale,
+      input: input.query,
+      candidates,
+    })
+    return { candidates, selection, cacheHit: retrieval.cacheHit }
+  } catch (error) {
+    const detail = providerErrorDetail(error)
+    redactedLog('info', 'candidate_grounding_fallback', {
+      errorType: detail.type,
+      errorCode: detail.code,
+      errorMessage: detail.message,
+    })
+    return null
+  }
+}
+
+function providerErrorDetail(
+  error: unknown,
+): { type: string; code: string | null; message: string } {
+  if (error instanceof Error) {
+    return { type: error.name, code: null, message: error.message.slice(0, 180) }
+  }
+  if (typeof error === 'object' && error !== null) {
+    const row = error as Record<string, unknown>
+    return {
+      type: 'ProviderError',
+      code: typeof row.code === 'string' ? row.code : null,
+      message: typeof row.message === 'string'
+        ? row.message.slice(0, 180)
+        : 'Unknown provider error',
+    }
+  }
+  return { type: 'UnknownError', code: null, message: 'Unknown provider error' }
+}
+
+function toRetrievalCandidate(row: Record<string, unknown>): RetrievalCandidate | null {
+  const defaultGrams = Number(row.default_grams)
+  if (!row.food_id || !Number.isFinite(defaultGrams) || defaultGrams <= 0) return null
+  return {
+    foodId: String(row.food_id),
+    canonicalName: String(row.canonical_name),
+    matchedAlias: String(row.matched_alias),
+    score: Number(row.score),
+    defaultGrams,
+    defaultPortionLabel: String(row.default_portion_label),
+    nutritionPer100g: {
+      calories: Number(row.calories_per_100g),
+      protein: Number(row.protein_per_100g),
+      carbs: Number(row.carbs_per_100g),
+      fat: Number(row.fat_per_100g),
+    },
+  }
+}
+
+function toAnalysisItems(
+  selection: CandidateSelectionResult,
+  candidates: RetrievalCandidate[],
+): AnalysisItem[] {
+  if (selection.noMatch) return []
+  const byId = new Map(candidates.map((candidate) => [candidate.foodId, candidate]))
+  return selection.selections.flatMap((selected, index) => {
+    const candidate = byId.get(selected.candidateId)
+    if (!candidate) return []
+    return [{
+      itemKey: `item-grounded-${index + 1}`,
+      sourceText: selected.sourceText,
+      foodId: candidate.foodId,
+      canonicalName: candidate.canonicalName,
+      portionLabel: `${Math.round(selected.estimatedGrams)} g`,
+      grams: selected.estimatedGrams,
+      quantity: 1,
+      confidence: Math.round(Math.min(selected.confidence, candidate.score) * 100) / 100,
+      matchMethod: 'llm' as const,
+      needsClarification: true,
+      clarificationReason: 'portion' as const,
+      nutritionPer100g: candidate.nutritionPer100g,
+    }]
+  })
 }
 
 async function markRunFailed(
