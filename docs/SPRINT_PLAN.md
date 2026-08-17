@@ -237,8 +237,10 @@ first results deterministic and catalog-grounded.
 
 Status: active. S3-01 is complete and deployed. S3-02 has a tested deterministic
 parser, strict request boundary, idempotent `analysis_runs` persistence, trace
-logging, catalog-only matches, and explicit `NO_MATCH`; Flutter integration,
-`commit-meal`, manual search, and the gold dataset remain.
+logging, catalog-only matches, and explicit `NO_MATCH`. The production Flutter
+composer now invokes the function through a strict DTO/repository boundary,
+preserves catalog and trace provenance, and maps stable failure codes to safe UI
+messages. `commit-meal`, manual search, and the gold dataset remain.
 
 ### Backlog
 
