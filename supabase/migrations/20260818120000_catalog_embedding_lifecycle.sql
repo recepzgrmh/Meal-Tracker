@@ -46,7 +46,7 @@ begin
     where public.catalog_embedding_jobs.locked_until < pg_catalog.now()
   returning true into v_claimed;
 
-  return pg_catalog.coalesce(v_claimed, false);
+  return coalesce(v_claimed, false);
 end;
 $$;
 

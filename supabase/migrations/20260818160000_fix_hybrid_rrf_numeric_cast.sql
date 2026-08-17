@@ -1,25 +1,3 @@
-create table public.ai_retrieval_cache (
-  cache_key text primary key,
-  query_hash text not null,
-  locale text not null check (locale in ('tr-TR', 'en-US')),
-  embedding_model text not null,
-  catalog_fingerprint text not null,
-  query_embedding extensions.vector(1536) not null,
-  candidates jsonb not null check (pg_catalog.jsonb_typeof(candidates) = 'array'),
-  hit_count bigint not null default 0,
-  expires_at timestamptz not null,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create index ai_retrieval_cache_expiry_idx on public.ai_retrieval_cache (expires_at);
-alter table public.ai_retrieval_cache enable row level security;
-revoke all on table public.ai_retrieval_cache from public, anon, authenticated;
-grant select, insert, update, delete on table public.ai_retrieval_cache to service_role;
-
-create trigger ai_retrieval_cache_set_updated_at before update on public.ai_retrieval_cache
-for each row execute function public.set_updated_at();
-
 create or replace function public.hybrid_search_food_catalog(
   p_query text,
   p_query_embedding extensions.vector(1536),
@@ -191,11 +169,3 @@ begin
   limit v_limit;
 end;
 $$;
-
-revoke all on function public.hybrid_search_food_catalog(text, extensions.vector, text, integer)
-  from public, anon;
-grant execute on function public.hybrid_search_food_catalog(text, extensions.vector, text, integer)
-  to authenticated, service_role;
-
-comment on function public.hybrid_search_food_catalog(text, extensions.vector, text, integer) is
-  'Fuses exact alias, full-text/trigram, and pgvector cosine ranks using deterministic reciprocal-rank fusion.';
