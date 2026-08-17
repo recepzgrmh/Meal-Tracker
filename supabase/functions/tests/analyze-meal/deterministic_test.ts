@@ -75,6 +75,16 @@ Deno.test('returns unknown tokens instead of inventing a catalog match', () => {
   assertEquals(result.unmatchedText, ['tabak', 'menemen', 'avokado'])
 })
 
+Deno.test('does not leak a neighboring item quantity across matches', () => {
+  const result = analyzeDeterministically('2 yumurta, 30 g beyaz peynir', catalog)
+  assertEquals(result.items.map((item) => item.grams), [100, 30])
+})
+
+Deno.test('preserves the half symbol before Unicode normalization', () => {
+  const result = analyzeDeterministically('½ simit', catalog)
+  assertEquals(result.items[0].grams, 50)
+})
+
 function assertEquals(actual: unknown, expected: unknown): void {
   if (JSON.stringify(actual) !== JSON.stringify(expected)) {
     throw new Error(`Expected ${JSON.stringify(expected)}, received ${JSON.stringify(actual)}`)

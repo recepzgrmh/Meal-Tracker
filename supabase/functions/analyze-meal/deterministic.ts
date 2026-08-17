@@ -70,6 +70,7 @@ const ignoredTokens = new Set([
 
 export function normalizeTurkishInput(input: string): string {
   return input
+    .replace(/½/gu, ' yarım ')
     .normalize('NFKC')
     .toLocaleLowerCase('tr-TR')
     .replace(/[’']/gu, ' ')
@@ -152,14 +153,16 @@ function toAnalysisItem(input: string, match: PhraseMatch, index: number): Analy
 function resolvePortion(input: string, match: PhraseMatch): PortionResolution {
   const before = input.slice(Math.max(0, match.start - 28), match.start).trim()
   const after = input.slice(match.end, Math.min(input.length, match.end + 20)).trim()
-  const context = `${before} ${after}`.trim()
   const defaultPortion = match.food.portions.find((portion) => portion.isDefault) ??
     match.food.portions[0]
   if (!defaultPortion) {
     throw new Error(`Catalog food ${match.food.id} has no portion`)
   }
 
-  const gramsMatch = context.match(/(?:^|\s)(\d{1,4}(?:[.,]\d{1,2})?)\s*(?:g|gr|gram)(?:\s|$)/u)
+  const gramsBefore = before.match(
+    /(?:^|\s)(\d{1,4}(?:[.,]\d{1,2})?)\s*(?:g|gr|gram)\s*$/u,
+  )
+  const gramsMatch = gramsBefore
   if (gramsMatch) {
     const grams = Number(gramsMatch[1].replace(',', '.'))
     if (grams > 0 && grams <= 10000) {
@@ -190,7 +193,7 @@ function resolvePortion(input: string, match: PhraseMatch): PortionResolution {
     }
   }
 
-  const vagueLabel = before.match(/(?:^|\s)(biraz|az)\s*$/u)?.[1]
+  const vagueLabel = before.match(/(?:^|\s)(biraz|az|fazla)\s*$/u)?.[1]
   if (vagueLabel) {
     const catalogLabel = vagueLabel === 'biraz' ? 'az' : vagueLabel
     const vaguePortion = match.food.portions.find((portion) =>
@@ -203,6 +206,16 @@ function resolvePortion(input: string, match: PhraseMatch): PortionResolution {
         quantity: 1,
         inferred: true,
       }
+    }
+  }
+
+  const gramsAfter = after.match(
+    /^(\d{1,4}(?:[.,]\d{1,2})?)\s*(?:g|gr|gram)(?:\s|$)/u,
+  )
+  if (gramsAfter) {
+    const grams = Number(gramsAfter[1].replace(',', '.'))
+    if (grams > 0 && grams <= 10000) {
+      return { label: `${grams} g`, grams, quantity: 1, inferred: false }
     }
   }
 
