@@ -18,11 +18,13 @@ import { parseAnalyzeMealRequest, RequestValidationError } from './request.ts'
 import { reconcileModalities } from './reconcile.ts'
 import { extractFoodsFromPhoto } from './vision.ts'
 import {
+  CANDIDATE_SELECTION_PROMPT_VERSION,
   type CandidateSelectionResult,
   type RetrievalCandidate,
   selectCatalogCandidates,
 } from './candidate-selector.ts'
 import { hybridSearch } from '../search-food-catalog/hybrid.ts'
+import { sha256 } from '../_shared/embeddings.ts'
 
 interface RunRow {
   id: string
@@ -334,6 +336,7 @@ async function persistResult(
       provider_output_tokens: grounding?.selection.outputTokens ?? null,
       provider_attempts: grounding?.selection.attempts ?? null,
       retrieval_cache_hit: grounding?.cacheHit ?? null,
+      response_cache_hit: grounding?.selection.cacheHit ?? null,
       completed_at: new Date().toISOString(),
       error_code: null,
       error_detail: null,
@@ -370,7 +373,7 @@ async function groundUnmatchedText(
       candidate !== null && !input.existingFoodIds.has(candidate.foodId)
     ) as RetrievalCandidate[]
     if (candidates.length === 0) return null
-    const selection = await selectCatalogCandidates({
+    const selection = await cachedCandidateSelection(context.supabaseAdmin, {
       apiKey,
       locale: input.locale,
       input: input.query,
@@ -385,6 +388,94 @@ async function groundUnmatchedText(
       errorMessage: detail.message,
     })
     return null
+  }
+}
+
+async function cachedCandidateSelection(
+  client: SupabaseClient,
+  input: {
+    apiKey: string
+    locale: 'tr-TR' | 'en-US'
+    input: string
+    candidates: RetrievalCandidate[]
+  },
+): Promise<CandidateSelectionResult> {
+  const model = Deno.env.get('OPENAI_SELECTION_MODEL')?.trim() || 'gpt-5.4-nano'
+  const normalized = input.input.normalize('NFKC').trim().replace(/\s+/g, ' ')
+    .toLocaleLowerCase(input.locale)
+  const queryHash = await sha256(normalized)
+  const candidateFingerprint = await sha256(JSON.stringify(
+    input.candidates.map((candidate) => ({
+      id: candidate.foodId,
+      score: candidate.score,
+      grams: candidate.defaultGrams,
+    })).sort((left, right) => left.id.localeCompare(right.id)),
+  ))
+  const secretSalt = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')?.trim() || 'local-development'
+  const cacheKey = await sha256(
+    `${secretSalt}|${input.locale}|${model}|${CANDIDATE_SELECTION_PROMPT_VERSION}|${queryHash}|${candidateFingerprint}`,
+  )
+  const { data: cached } = await client.from('ai_selection_cache')
+    .select('selection,hit_count').eq('cache_key', cacheKey)
+    .gt('expires_at', new Date().toISOString()).maybeSingle()
+  const restored = restoreCachedSelection(cached?.selection, input.candidates, model)
+  if (restored) {
+    await client.from('ai_selection_cache').update({
+      hit_count: Number(cached?.hit_count ?? 0) + 1,
+    }).eq('cache_key', cacheKey)
+    return restored
+  }
+
+  const selection = await selectCatalogCandidates({ ...input, model })
+  await client.from('ai_selection_cache').upsert({
+    cache_key: cacheKey,
+    query_hash: queryHash,
+    locale: input.locale,
+    model,
+    prompt_version: CANDIDATE_SELECTION_PROMPT_VERSION,
+    candidate_fingerprint: candidateFingerprint,
+    selection: {
+      selections: selection.selections,
+      noMatch: selection.noMatch,
+    },
+    expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+  })
+  return selection
+}
+
+function restoreCachedSelection(
+  value: unknown,
+  candidates: RetrievalCandidate[],
+  model: string,
+): CandidateSelectionResult | null {
+  if (typeof value !== 'object' || value === null) return null
+  const row = value as Record<string, unknown>
+  if (!Array.isArray(row.selections) || typeof row.noMatch !== 'boolean') return null
+  const allowedIds = new Set(candidates.map((candidate) => candidate.foodId))
+  const selections = row.selections.flatMap((entry) => {
+    if (typeof entry !== 'object' || entry === null) return []
+    const item = entry as Record<string, unknown>
+    const candidateId = typeof item.candidateId === 'string' ? item.candidateId : ''
+    const sourceText = typeof item.sourceText === 'string' ? item.sourceText.trim() : ''
+    const estimatedGrams = Number(item.estimatedGrams)
+    const confidence = Number(item.confidence)
+    if (
+      !allowedIds.has(candidateId) || !sourceText || !Number.isFinite(estimatedGrams) ||
+      estimatedGrams < 1 || estimatedGrams > 3000 || !Number.isFinite(confidence) ||
+      confidence < 0 || confidence > 1
+    ) return []
+    return [{ candidateId, sourceText, estimatedGrams, confidence }]
+  })
+  if (!row.noMatch && selections.length === 0) return null
+  return {
+    selections,
+    noMatch: row.noMatch,
+    model,
+    promptVersion: CANDIDATE_SELECTION_PROMPT_VERSION,
+    inputTokens: 0,
+    outputTokens: 0,
+    attempts: 0,
+    cacheHit: true,
   }
 }
 

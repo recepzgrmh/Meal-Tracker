@@ -30,6 +30,7 @@ export interface CandidateSelectionResult {
   inputTokens: number
   outputTokens: number
   attempts: number
+  cacheHit: boolean
 }
 
 interface SelectorOptions {
@@ -91,6 +92,7 @@ export async function selectCatalogCandidates(
           inputTokens: Number(usage?.input_tokens ?? 0),
           outputTokens: Number(usage?.output_tokens ?? 0),
           attempts: attempt,
+          cacheHit: false,
         }
       }
       if (![408, 409, 429].includes(response.status) && response.status < 500) break
