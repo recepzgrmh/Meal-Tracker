@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meal_clarity/src/app.dart';
+import 'package:meal_clarity/src/data/meal_repository.dart';
 import 'package:meal_clarity/src/domain/models.dart';
 
 void main() {
@@ -69,6 +70,31 @@ void main() {
     expect(find.text('Kahvaltı'), findsOneWidget);
   });
 
+  testWidgets(
+    'shell routes composer analysis through the injected repository',
+    (tester) async {
+      final repository = _InjectedRepository();
+      await tester.pumpWidget(
+        MaterialApp(home: MealClarityShell(analysisRepository: repository)),
+      );
+
+      await tester.tap(find.byKey(const Key('quick-composer')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('meal-input')),
+        'iki yumurta',
+      );
+      tester.testTextInput.hide();
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('analyze-button')));
+      await tester.tap(find.byKey(const Key('analyze-button')));
+      await tester.pumpAndSettle();
+
+      expect(repository.input, 'iki yumurta');
+      expect(find.text('Sunucudan Yumurta'), findsOneWidget);
+    },
+  );
+
   testWidgets('meal detail supports deterministic portion editing', (
     tester,
   ) async {
@@ -98,4 +124,36 @@ void main() {
 
     expect(find.text('350 g'), findsNothing);
   });
+}
+
+class _InjectedRepository implements MealRepository {
+  String? input;
+
+  @override
+  Future<MealDraft> analyze(String input) async {
+    this.input = input;
+    return const MealDraft(
+      inputText: 'iki yumurta',
+      mealName: 'Kahvaltı',
+      analysisRunId: 'analysis-run',
+      traceId: 'trace-id',
+      items: [
+        MealItem(
+          id: 'item-1',
+          foodId: 'food-1',
+          name: 'Sunucudan Yumurta',
+          sourceText: 'yumurta',
+          portionLabel: '2 adet',
+          grams: 100,
+          nutritionPer100g: Nutrition(
+            calories: 155,
+            protein: 12.6,
+            carbs: 1.1,
+            fat: 10.6,
+          ),
+          matchState: MatchState.matched,
+        ),
+      ],
+    );
+  }
 }

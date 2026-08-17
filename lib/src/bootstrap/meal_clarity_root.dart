@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../app.dart';
+import '../data/meal_repository.dart';
 import '../auth/data/auth_repository.dart';
 import '../auth/presentation/auth_screen.dart';
 import '../auth/presentation/auth_view_model.dart';
@@ -24,6 +25,7 @@ class MealClarityRoot extends StatefulWidget {
     required this.onboardingRepository,
     required this.profileRepository,
     this.mealRepository,
+    this.analysisRepository,
     this.outboxWorker,
     this.ownedDatabase,
     super.key,
@@ -33,6 +35,7 @@ class MealClarityRoot extends StatefulWidget {
   final OnboardingRepository onboardingRepository;
   final ProfileRepository profileRepository;
   final CachedMealRepository? mealRepository;
+  final MealRepository? analysisRepository;
   final OutboxWorker? outboxWorker;
   final AppDatabase? ownedDatabase;
 
@@ -85,6 +88,7 @@ class _MealClarityRootState extends State<MealClarityRoot> {
           path: '/app',
           builder: (_, _) => MealClarityShell(
             cachedRepository: widget.mealRepository,
+            analysisRepository: widget.analysisRepository,
             userId: _coordinator.session?.userId,
             onSyncRequested: widget.outboxWorker == null ? null : _drainOutbox,
           ),

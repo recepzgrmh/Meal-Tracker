@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'src/analysis/data/analysis_remote_data_source.dart';
+import 'src/analysis/data/supabase_meal_analysis_repository.dart';
 import 'src/auth/data/supabase_auth_repository.dart';
 import 'src/bootstrap/app_bootstrap.dart';
 import 'src/bootstrap/app_config.dart';
@@ -30,6 +32,9 @@ Future<void> main() async {
         authRepository: SupabaseAuthRepository(client),
         onboardingRepository: SharedPreferencesOnboardingRepository(),
         profileRepository: SupabaseProfileRepository(client),
+        analysisRepository: SupabaseMealAnalysisRepository(
+          remote: SupabaseAnalysisRemoteDataSource(client),
+        ),
         mealRepository: CachedMealRepository(
           local: mealDao,
           remote: SupabaseMealRemoteDataSource(client),

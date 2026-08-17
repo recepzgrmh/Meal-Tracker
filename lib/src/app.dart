@@ -30,12 +30,14 @@ class MealClarityApp extends StatelessWidget {
 class MealClarityShell extends StatefulWidget {
   const MealClarityShell({
     this.cachedRepository,
+    this.analysisRepository,
     this.userId,
     this.onSyncRequested,
     super.key,
   });
 
   final CachedMealRepository? cachedRepository;
+  final MealRepository? analysisRepository;
   final String? userId;
   final Future<void> Function()? onSyncRequested;
 
@@ -45,7 +47,7 @@ class MealClarityShell extends StatefulWidget {
 
 class _MealClarityShellState extends State<MealClarityShell>
     with WidgetsBindingObserver {
-  final MealRepository _repository = MockMealRepository();
+  late final MealRepository _analysisRepository;
   late final TodayViewModel _todayViewModel;
   StreamSubscription<List<LoggedMeal>>? _mealSubscription;
   StreamSubscription<List<LoggedMeal>>? _historySubscription;
@@ -56,6 +58,7 @@ class _MealClarityShellState extends State<MealClarityShell>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _analysisRepository = widget.analysisRepository ?? MockMealRepository();
     final persistent = widget.cachedRepository != null && widget.userId != null;
     _todayViewModel = TodayViewModel(
       initialMeals: persistent ? const [] : buildMockMeals(),
@@ -114,7 +117,7 @@ class _MealClarityShellState extends State<MealClarityShell>
     final draft = await Navigator.of(context).push<MealDraft>(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (_) => MealFlow(repository: _repository),
+        builder: (_) => MealFlow(repository: _analysisRepository),
       ),
     );
     if (draft == null || !mounted) return;
