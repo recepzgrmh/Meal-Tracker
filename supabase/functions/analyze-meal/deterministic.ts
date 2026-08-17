@@ -170,7 +170,7 @@ function resolvePortion(input: string, match: PhraseMatch): PortionResolution {
   const halfMatch = before.match(/(?:^|\s)(?:yarım|yarim|½)(?:\s+(?:adet|tane))?\s*$/u)
   if (halfMatch) {
     return {
-      label: `½ ${defaultPortion.label}`,
+      label: scalePortionLabel(defaultPortion.label, '½'),
       grams: defaultPortion.grams / 2,
       quantity: 0.5,
       inferred: false,
@@ -183,7 +183,7 @@ function resolvePortion(input: string, match: PhraseMatch): PortionResolution {
   if (countMatch) {
     const quantity = Number(countMatch[1]) || numberWords[countMatch[1]]
     return {
-      label: `${quantity} ${defaultPortion.label}`,
+      label: scalePortionLabel(defaultPortion.label, String(quantity)),
       grams: defaultPortion.grams * quantity,
       quantity,
       inferred: false,
@@ -238,4 +238,11 @@ function escapeRegExp(value: string): string {
 function round(value: number, digits: number): number {
   const factor = 10 ** digits
   return Math.round((value + Number.EPSILON) * factor) / factor
+}
+
+function scalePortionLabel(label: string, quantity: string): string {
+  const normalized = label.trim()
+  return /^1(?:[.,]0+)?\s+/u.test(normalized)
+    ? normalized.replace(/^1(?:[.,]0+)?/u, quantity)
+    : `${quantity} × ${normalized}`
 }

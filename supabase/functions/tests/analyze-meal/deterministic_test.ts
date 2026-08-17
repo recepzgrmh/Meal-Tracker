@@ -49,6 +49,7 @@ Deno.test('extracts explicit counts and fractions without hallucinating foods', 
 
   assertEquals(result.items.map((item) => item.foodId), ['egg', 'cheese', 'simit'])
   assertEquals(result.items.map((item) => item.grams), [100, 15, 50])
+  assertEquals(result.items.map((item) => item.portionLabel), ['2 adet', 'az', '½ adet'])
   assertEquals(result.items[0].needsClarification, false)
   assertEquals(result.items[1].clarificationReason, 'portion')
   assertEquals(result.unmatchedText, [])
