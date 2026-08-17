@@ -243,70 +243,88 @@ class _Composer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(22, 14, 22, 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Ne yedin?', style: Theme.of(context).textTheme.headlineMedium),
-          const SizedBox(height: 9),
-          Text(
-            'Günlük konuşur gibi yaz. Miktarları biliyorsan ekle, bilmiyorsan sorun değil.',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 22),
-          TextField(
-            key: const Key('meal-input'),
-            controller: controller,
-            focusNode: focusNode,
-            minLines: 4,
-            maxLines: 7,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: InputDecoration(
-              hintText: 'Örn. 2 yumurta, biraz beyaz peynir ve yarım simit',
-              suffixIcon: Padding(
-                padding: const EdgeInsets.only(right: 10, bottom: 68),
-                child: IconButton.filled(
-                  tooltip: 'Sesle ekle',
-                  onPressed: () {},
-                  style: IconButton.styleFrom(
-                    backgroundColor: AppColors.lime,
-                    foregroundColor: AppColors.ink,
-                  ),
-                  icon: const Icon(Icons.mic_none_rounded),
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: const EdgeInsets.fromLTRB(22, 14, 22, 20),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight - 34),
+          child: IntrinsicHeight(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Ne yedin?',
+                  style: Theme.of(context).textTheme.headlineMedium,
                 ),
-              ),
+                const SizedBox(height: 9),
+                Text(
+                  'Günlük konuşur gibi yaz. Miktarları biliyorsan ekle, bilmiyorsan sorun değil.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 22),
+                TextField(
+                  key: const Key('meal-input'),
+                  controller: controller,
+                  focusNode: focusNode,
+                  minLines: 4,
+                  maxLines: 7,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: InputDecoration(
+                    hintText:
+                        'Örn. 2 yumurta, biraz beyaz peynir ve yarım simit',
+                    suffixIcon: Padding(
+                      padding: const EdgeInsets.only(right: 10, bottom: 68),
+                      child: IconButton.filled(
+                        tooltip: 'Sesle ekle',
+                        onPressed: () {},
+                        style: IconButton.styleFrom(
+                          backgroundColor: AppColors.lime,
+                          foregroundColor: AppColors.ink,
+                        ),
+                        icon: const Icon(Icons.mic_none_rounded),
+                      ),
+                    ),
+                  ),
+                ),
+                if (error != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    error!,
+                    style: const TextStyle(color: Color(0xFFD93025)),
+                  ),
+                ],
+                const SizedBox(height: 18),
+                Text(
+                  'Hızlı dene',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _ExampleChip(
+                      label: '2 yumurta · peynir · ½ simit',
+                      onTap: () => controller.text =
+                          '2 yumurta, biraz beyaz peynir ve yarım simit',
+                    ),
+                    _ExampleChip(
+                      label: 'Bir kase yoğurt',
+                      onTap: () => controller.text = 'Bir kase yoğurt yedim',
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                FilledButton(
+                  key: const Key('analyze-button'),
+                  onPressed: controller.text.trim().isEmpty ? null : onAnalyze,
+                  child: const Text('Öğünü analiz et'),
+                ),
+              ],
             ),
           ),
-          if (error != null) ...[
-            const SizedBox(height: 12),
-            Text(error!, style: const TextStyle(color: Color(0xFFD93025))),
-          ],
-          const SizedBox(height: 18),
-          Text('Hızlı dene', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _ExampleChip(
-                label: '2 yumurta · peynir · ½ simit',
-                onTap: () => controller.text =
-                    '2 yumurta, biraz beyaz peynir ve yarım simit',
-              ),
-              _ExampleChip(
-                label: 'Bir kase yoğurt',
-                onTap: () => controller.text = 'Bir kase yoğurt yedim',
-              ),
-            ],
-          ),
-          const Spacer(),
-          FilledButton(
-            key: const Key('analyze-button'),
-            onPressed: controller.text.trim().isEmpty ? null : onAnalyze,
-            child: const Text('Öğünü analiz et'),
-          ),
-        ],
+        ),
       ),
     );
   }
