@@ -25,14 +25,21 @@ void main() {
 
   group('TodayViewModel', () {
     test('logs, updates, deletes, and restores a meal deterministically', () {
-      final viewModel = TodayViewModel();
+      final ids = ['meal-test', 'item-test'].iterator;
+      final viewModel = TodayViewModel(
+        idFactory: () {
+          ids.moveNext();
+          return ids.current;
+        },
+      );
       var notifications = 0;
       viewModel.addListener(() => notifications++);
 
       final loggedAt = DateTime(2026, 8, 17, 9, 5);
       final logged = viewModel.logDraft(draft, loggedAt);
 
-      expect(logged.id, 'meal-${loggedAt.microsecondsSinceEpoch}');
+      expect(logged.id, 'meal-test');
+      expect(logged.items.single.id, 'item-test');
       expect(logged.timeLabel, '09:05');
       expect(viewModel.meals, hasLength(1));
       expect(viewModel.total.calories, closeTo(90, 0.001));

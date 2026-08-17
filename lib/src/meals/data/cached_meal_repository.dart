@@ -66,15 +66,16 @@ class CachedMealRepository {
   Future<String> saveOptimistically({
     required String userId,
     required LoggedMeal meal,
-    required DateTime eatenAt,
+    DateTime? eatenAt,
   }) async {
     final operationId = _operationIdFactory();
     final now = _clock();
     final existing = await _local.getMeal(userId: userId, mealId: meal.id);
+    final effectiveEatenAt = eatenAt ?? existing?.meal.eatenAt ?? now;
     final write = _mapper.domainToLocal(
       userId: userId,
       meal: meal,
-      eatenAt: eatenAt,
+      eatenAt: effectiveEatenAt,
       updatedAt: now,
       rowVersion: existing?.meal.rowVersion ?? 1,
     );
@@ -92,7 +93,7 @@ class CachedMealRepository {
             operationId: operationId,
             userId: userId,
             meal: meal,
-            eatenAt: eatenAt,
+            eatenAt: effectiveEatenAt,
             expectedRowVersion: existing?.meal.rowVersion,
           ),
         ),

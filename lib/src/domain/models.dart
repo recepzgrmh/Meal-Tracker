@@ -54,12 +54,13 @@ class MealItem {
   Nutrition get nutrition => nutritionPer100g.scale(grams / 100);
 
   MealItem copyWith({
+    String? id,
     String? portionLabel,
     double? grams,
     MatchState? matchState,
   }) {
     return MealItem(
-      id: id,
+      id: id ?? this.id,
       name: name,
       sourceText: sourceText,
       portionLabel: portionLabel ?? this.portionLabel,

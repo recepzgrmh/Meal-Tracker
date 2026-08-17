@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -5,12 +7,15 @@ import '../app.dart';
 import '../auth/data/auth_repository.dart';
 import '../auth/presentation/auth_screen.dart';
 import '../auth/presentation/auth_view_model.dart';
+import '../local/app_database.dart';
+import '../meals/data/cached_meal_repository.dart';
 import '../onboarding/data/onboarding_repository.dart';
 import '../onboarding/data/profile_repository.dart';
 import '../onboarding/presentation/onboarding_screen.dart';
 import '../onboarding/presentation/onboarding_view_model.dart';
 import '../onboarding/presentation/profile_completion_screen.dart';
 import '../theme/app_theme.dart';
+import '../sync/outbox_worker.dart';
 import 'app_coordinator.dart';
 
 class MealClarityRoot extends StatefulWidget {
@@ -18,12 +23,18 @@ class MealClarityRoot extends StatefulWidget {
     required this.authRepository,
     required this.onboardingRepository,
     required this.profileRepository,
+    this.mealRepository,
+    this.outboxWorker,
+    this.ownedDatabase,
     super.key,
   });
 
   final AuthRepository authRepository;
   final OnboardingRepository onboardingRepository;
   final ProfileRepository profileRepository;
+  final CachedMealRepository? mealRepository;
+  final OutboxWorker? outboxWorker;
+  final AppDatabase? ownedDatabase;
 
   @override
   State<MealClarityRoot> createState() => _MealClarityRootState();
@@ -34,6 +45,7 @@ class _MealClarityRootState extends State<MealClarityRoot> {
   late final OnboardingViewModel _onboardingViewModel;
   late final AuthViewModel _authViewModel;
   late final GoRouter _router;
+  bool _isDrainingOutbox = false;
 
   @override
   void initState() {
@@ -69,10 +81,33 @@ class _MealClarityRootState extends State<MealClarityRoot> {
           path: '/profile',
           builder: (_, _) => ProfileCompletionScreen(coordinator: _coordinator),
         ),
-        GoRoute(path: '/app', builder: (_, _) => const MealClarityShell()),
+        GoRoute(
+          path: '/app',
+          builder: (_, _) => MealClarityShell(
+            cachedRepository: widget.mealRepository,
+            userId: _coordinator.session?.userId,
+            onSyncRequested: widget.outboxWorker == null ? null : _drainOutbox,
+          ),
+        ),
       ],
     );
     _coordinator.initialize();
+  }
+
+  Future<void> _drainOutbox() async {
+    final worker = widget.outboxWorker;
+    final userId = _coordinator.session?.userId;
+    if (worker == null || userId == null || _isDrainingOutbox) return;
+    _isDrainingOutbox = true;
+    try {
+      await worker.recoverInterrupted(userId);
+      for (var index = 0; index < 20; index++) {
+        final result = await worker.runOnce(userId);
+        if (result.outcome != SyncRunOutcome.succeeded) break;
+      }
+    } finally {
+      _isDrainingOutbox = false;
+    }
   }
 
   String? _redirect(BuildContext context, GoRouterState routerState) {
@@ -92,6 +127,7 @@ class _MealClarityRootState extends State<MealClarityRoot> {
     _authViewModel.dispose();
     _onboardingViewModel.dispose();
     _coordinator.dispose();
+    unawaited(widget.ownedDatabase?.close());
     super.dispose();
   }
 

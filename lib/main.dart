@@ -6,8 +6,15 @@ import 'src/bootstrap/app_bootstrap.dart';
 import 'src/bootstrap/app_config.dart';
 import 'src/bootstrap/configuration_error_app.dart';
 import 'src/bootstrap/meal_clarity_root.dart';
+import 'src/local/app_database.dart';
+import 'src/local/meal_dao.dart';
+import 'src/local/outbox_dao.dart';
+import 'src/meals/data/cached_meal_repository.dart';
+import 'src/meals/data/supabase_meal_remote_data_source.dart';
 import 'src/onboarding/data/shared_preferences_onboarding_repository.dart';
 import 'src/onboarding/data/supabase_profile_repository.dart';
+import 'src/sync/outbox_worker.dart';
+import 'src/sync/supabase_mutation_gateway.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,11 +23,22 @@ Future<void> main() async {
   try {
     await AppBootstrap.initialize(config);
     final client = Supabase.instance.client;
+    final database = AppDatabase.defaults();
+    final mealDao = MealDao(database);
     runApp(
       MealClarityRoot(
         authRepository: SupabaseAuthRepository(client),
         onboardingRepository: SharedPreferencesOnboardingRepository(),
         profileRepository: SupabaseProfileRepository(client),
+        mealRepository: CachedMealRepository(
+          local: mealDao,
+          remote: SupabaseMealRemoteDataSource(client),
+        ),
+        outboxWorker: OutboxWorker(
+          outbox: OutboxDao(database),
+          gateway: SupabaseMutationGateway(client),
+        ),
+        ownedDatabase: database,
       ),
     );
   } on AppConfigException catch (error) {
