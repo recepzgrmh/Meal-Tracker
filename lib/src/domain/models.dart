@@ -40,6 +40,9 @@ class MealItem {
     required this.nutritionPer100g,
     required this.matchState,
     this.sourceName = 'Curated food catalog',
+    this.foodId,
+    this.confidence,
+    this.matchMethod,
   });
 
   final String id;
@@ -50,6 +53,9 @@ class MealItem {
   final Nutrition nutritionPer100g;
   final MatchState matchState;
   final String sourceName;
+  final String? foodId;
+  final double? confidence;
+  final String? matchMethod;
 
   Nutrition get nutrition => nutritionPer100g.scale(grams / 100);
 
@@ -68,6 +74,9 @@ class MealItem {
       nutritionPer100g: nutritionPer100g,
       matchState: matchState ?? this.matchState,
       sourceName: sourceName,
+      foodId: foodId,
+      confidence: confidence,
+      matchMethod: matchMethod,
     );
   }
 }
@@ -77,11 +86,17 @@ class MealDraft {
     required this.inputText,
     required this.mealName,
     required this.items,
+    this.analysisRunId,
+    this.traceId,
+    this.unmatchedText = const [],
   });
 
   final String inputText;
   final String mealName;
   final List<MealItem> items;
+  final String? analysisRunId;
+  final String? traceId;
+  final List<String> unmatchedText;
 
   Nutrition get nutrition =>
       items.fold(Nutrition.zero, (total, item) => total + item.nutrition);
@@ -95,6 +110,9 @@ class MealDraft {
     items: items
         .map((item) => item.id == updated.id ? updated : item)
         .toList(growable: false),
+    analysisRunId: analysisRunId,
+    traceId: traceId,
+    unmatchedText: unmatchedText,
   );
 }
 

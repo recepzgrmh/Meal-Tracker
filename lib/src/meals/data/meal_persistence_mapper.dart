@@ -78,6 +78,7 @@ class MealPersistenceMapper {
             id: item.id,
             mealId: meal.id,
             userId: userId,
+            foodId: Value(item.foodId),
             name: item.name,
             sourceText: item.sourceText,
             portionLabel: item.portionLabel,
@@ -122,6 +123,7 @@ class MealPersistenceMapper {
                 orElse: () => MatchState.checkType,
               ),
               sourceName: item.sourceName,
+              foodId: item.foodId,
             ),
           )
           .toList(growable: false),

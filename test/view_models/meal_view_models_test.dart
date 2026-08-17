@@ -16,11 +16,16 @@ void main() {
     grams: 30,
     nutritionPer100g: Nutrition(calories: 300, protein: 20, carbs: 2, fat: 24),
     matchState: MatchState.checkAmount,
+    foodId: 'catalog-cheese',
+    confidence: 0.84,
+    matchMethod: 'exact',
   );
   const draft = MealDraft(
     inputText: 'peynir',
     mealName: 'Kahvaltı',
     items: [item],
+    analysisRunId: 'analysis-run',
+    traceId: 'trace-id',
   );
 
   group('TodayViewModel', () {
@@ -77,9 +82,11 @@ void main() {
 
         expect(viewModel.step, MealFlowStep.review);
         expect(viewModel.draft?.reviewCount, 1);
+        expect(viewModel.draft?.analysisRunId, 'analysis-run');
 
         viewModel.updateItem(item.copyWith(matchState: MatchState.matched));
         expect(viewModel.draft?.reviewCount, 0);
+        expect(viewModel.draft?.items.single.foodId, 'catalog-cheese');
       },
     );
 

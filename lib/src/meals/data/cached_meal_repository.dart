@@ -173,6 +173,7 @@ class CachedMealRepository {
               in meal.items.asMap().entries)
             {
               'id': item.id,
+              'food_id': item.foodId,
               'position': position,
               'source_text': item.sourceText,
               'canonical_name': item.name,
