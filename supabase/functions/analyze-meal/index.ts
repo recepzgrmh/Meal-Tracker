@@ -14,6 +14,7 @@ import {
   type CatalogPortion,
 } from './deterministic.ts'
 import { parseAnalyzeMealRequest, RequestValidationError } from './request.ts'
+import { reconcileModalities } from './reconcile.ts'
 import { extractFoodsFromPhoto } from './vision.ts'
 
 interface RunRow {
@@ -105,11 +106,12 @@ export default {
           body.input,
         )
         : null
-      const groundedInput = [body.input, vision?.normalizedDescription]
-        .filter((value) => value && value.trim().length > 0)
-        .join(' ve ')
       const catalog = await loadCatalog(context, body.locale ?? 'tr-TR')
-      const analysis = analyzeDeterministically(groundedInput, catalog)
+      const textAnalysis = analyzeDeterministically(body.input, catalog)
+      const visionAnalysis = vision
+        ? analyzeDeterministically(vision.normalizedDescription, catalog)
+        : null
+      const analysis = reconcileModalities(textAnalysis, visionAnalysis)
       if (analysis.items.length === 0) {
         await markRunFailed(context, run.id, 'NO_MATCH', 'No catalog-grounded food was found')
         return errorResponse(
