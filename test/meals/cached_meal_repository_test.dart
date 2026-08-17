@@ -64,6 +64,51 @@ void main() {
     expect(meals.single.items.single.matchState, MatchState.matched);
   });
 
+  test('grounded save persists a durable commit-meal operation', () async {
+    final meal = _domainMeal(name: 'AI Kahvaltısı');
+    const draft = MealDraft(
+      inputText: '2 yumurta',
+      mealName: 'AI Kahvaltısı',
+      analysisRunId: 'analysis-run-1',
+      traceId: 'trace-1',
+      items: [
+        MealItem(
+          id: 'item-key-1',
+          foodId: 'food-egg',
+          name: 'Yumurta',
+          sourceText: '2 yumurta',
+          portionLabel: '2 adet',
+          grams: 100,
+          nutritionPer100g: Nutrition(
+            calories: 155,
+            protein: 12.6,
+            carbs: 1.1,
+            fat: 10.6,
+          ),
+          matchState: MatchState.matched,
+        ),
+      ],
+    );
+
+    await repository.saveAnalyzedOptimistically(
+      userId: 'user-a',
+      meal: meal,
+      draft: draft,
+      eatenAt: now,
+    );
+
+    final operation = await database
+        .select(database.syncOperations)
+        .getSingle();
+    final payload = jsonDecode(operation.payloadJson) as Map<String, dynamic>;
+    final items = payload['items'] as List<dynamic>;
+    expect(operation.operationType, 'commit');
+    expect(payload['analysisRunId'], 'analysis-run-1');
+    expect(payload['commitRequestId'], 'operation-1');
+    expect((items.single as Map<String, dynamic>)['foodId'], 'food-egg');
+    expect(items.single, isNot(contains('calories')));
+  });
+
   test('refresh never overwrites an unsynced optimistic mutation', () async {
     await repository.saveOptimistically(
       userId: 'user-a',

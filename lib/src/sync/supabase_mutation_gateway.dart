@@ -12,6 +12,9 @@ class SupabaseMutationGateway implements MutationGateway {
 
   @override
   Future<MutationResult> execute(SyncOperation operation) async {
+    if (operation.operationType == 'commit') {
+      return _commitAnalyzedMeal(operation);
+    }
     try {
       final response = await _client.rpc(
         'apply_meal_operation',
@@ -34,6 +37,50 @@ class SupabaseMutationGateway implements MutationGateway {
         code: 'network_or_provider_unavailable',
       );
     }
+  }
+
+  Future<MutationResult> _commitAnalyzedMeal(SyncOperation operation) async {
+    try {
+      final response = await _client.functions.invoke(
+        'commit-meal',
+        body: jsonDecode(operation.payloadJson),
+      );
+      final result = response.data as Map<String, dynamic>;
+      if (result['contractVersion'] != 'meal-commit.v1') {
+        throw const SyncFailure(
+          kind: SyncFailureKind.transient,
+          code: 'invalid_commit_contract',
+        );
+      }
+      return MutationResult(
+        mealId: result['mealId'] as String?,
+        rowVersion: result['rowVersion'] as int?,
+      );
+    } on FunctionException catch (error) {
+      throw _classifyFunction(error);
+    } on SyncFailure {
+      rethrow;
+    } catch (_) {
+      throw const SyncFailure(
+        kind: SyncFailureKind.transient,
+        code: 'commit_network_unavailable',
+      );
+    }
+  }
+
+  SyncFailure _classifyFunction(FunctionException error) {
+    final details = error.details;
+    final envelope = details is Map ? details['error'] : null;
+    final body = envelope is Map ? envelope : const {};
+    final code = body['code']?.toString() ?? 'function_${error.status}';
+    final kind = switch (error.status) {
+      400 || 422 => SyncFailureKind.validation,
+      401 || 403 => SyncFailureKind.forbidden,
+      409 => SyncFailureKind.conflict,
+      0 || 408 || 429 || >= 500 => SyncFailureKind.transient,
+      _ => SyncFailureKind.unknown,
+    };
+    return SyncFailure(kind: kind, code: code);
   }
 
   SyncFailure _classify(PostgrestException error) {

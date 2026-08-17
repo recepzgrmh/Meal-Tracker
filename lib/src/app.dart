@@ -126,11 +126,20 @@ class _MealClarityShellState extends State<MealClarityShell>
     final loggedMeal = _todayViewModel.logDraft(draft, loggedAt);
     if (widget.cachedRepository != null && widget.userId != null) {
       try {
-        await widget.cachedRepository!.saveOptimistically(
-          userId: widget.userId!,
-          meal: loggedMeal,
-          eatenAt: loggedAt,
-        );
+        if (draft.analysisRunId != null) {
+          await widget.cachedRepository!.saveAnalyzedOptimistically(
+            userId: widget.userId!,
+            meal: loggedMeal,
+            draft: draft,
+            eatenAt: loggedAt,
+          );
+        } else {
+          await widget.cachedRepository!.saveOptimistically(
+            userId: widget.userId!,
+            meal: loggedMeal,
+            eatenAt: loggedAt,
+          );
+        }
         unawaited(widget.onSyncRequested?.call());
       } catch (_) {
         _todayViewModel.deleteMeal(loggedMeal.id);

@@ -121,6 +121,58 @@ class CachedMealRepository {
     return operationId;
   }
 
+  Future<String> saveAnalyzedOptimistically({
+    required String userId,
+    required LoggedMeal meal,
+    required MealDraft draft,
+    required DateTime eatenAt,
+  }) async {
+    final analysisRunId = draft.analysisRunId;
+    if (analysisRunId == null ||
+        draft.items.any((item) => item.foodId == null)) {
+      throw ArgumentError('A grounded analysis run and food IDs are required.');
+    }
+    final operationId = _operationIdFactory();
+    final now = _clock();
+    final write = _mapper.domainToLocal(
+      userId: userId,
+      meal: meal,
+      eatenAt: eatenAt,
+      updatedAt: now,
+    );
+    await _local.putMeal(
+      meal: write.meal,
+      items: write.items,
+      operation: SyncOperationsCompanion.insert(
+        id: operationId,
+        userId: userId,
+        entityType: 'meal',
+        entityId: meal.id,
+        operationType: 'commit',
+        payloadJson: jsonEncode({
+          'analysisRunId': analysisRunId,
+          'commitRequestId': operationId,
+          'mealId': meal.id,
+          'name': meal.name,
+          'occurredAt': eatenAt.toUtc().toIso8601String(),
+          'items': [
+            for (final item in draft.items)
+              {
+                'itemKey': item.id,
+                'foodId': item.foodId,
+                'sourceText': item.sourceText,
+                'portionLabel': item.portionLabel,
+                'grams': item.grams,
+              },
+          ],
+        }),
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+    return operationId;
+  }
+
   Future<String> deleteOptimistically({
     required String userId,
     required String mealId,
