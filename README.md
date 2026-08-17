@@ -83,10 +83,10 @@ The initial schema includes:
 - per-item confidence, match method, review status, and correction feedback
 - generated nutrition values and server-controlled meal totals
 
-The first local Docker image pull must complete before `db reset` and `db lint`
-can run. On the current machine that image pull stalled before downloading any
-bytes, so database runtime verification remains pending; it is not reported as
-passing.
+The migrations and seed have been deployed to the hosted Supabase project.
+Remote `db lint` reports no schema errors, and local/remote migration history is
+in sync. The first local Docker image pull stalled on this machine, so local
+`db reset` remains a separate environment follow-up rather than a schema blocker.
 
 The product and architecture research is in
 `CASE_STUDY_RESEARCH_REPORT_TR.md`.
