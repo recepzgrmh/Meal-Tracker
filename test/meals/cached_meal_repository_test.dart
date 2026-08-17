@@ -144,6 +144,7 @@ MealRemoteDto _remoteMeal({required String name}) {
     name: name,
     occurredAt: DateTime.utc(2026, 8, 17, 8, 42),
     updatedAt: DateTime.utc(2026, 8, 17, 9),
+    rowVersion: 3,
     items: const [
       MealItemRemoteDto(
         id: 'item-1',

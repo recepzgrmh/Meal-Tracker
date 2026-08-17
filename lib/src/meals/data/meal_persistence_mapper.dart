@@ -25,6 +25,7 @@ class MealPersistenceMapper {
         eatenAt: remote.occurredAt,
         imageAsset: Value(remote.imagePath),
         syncStatus: const Value('synced'),
+        rowVersion: Value(remote.rowVersion),
         localUpdatedAt: remote.updatedAt,
         remoteUpdatedAt: Value(remote.updatedAt),
       ),
@@ -57,6 +58,7 @@ class MealPersistenceMapper {
     required LoggedMeal meal,
     required DateTime eatenAt,
     required DateTime updatedAt,
+    int rowVersion = 1,
   }) {
     return LocalMealWrite(
       meal: LocalMealsCompanion.insert(
@@ -66,6 +68,7 @@ class MealPersistenceMapper {
         eatenAt: eatenAt,
         imageAsset: Value(meal.imageAsset),
         syncStatus: const Value('pending'),
+        rowVersion: Value(rowVersion),
         localUpdatedAt: updatedAt,
       ),
       items: [

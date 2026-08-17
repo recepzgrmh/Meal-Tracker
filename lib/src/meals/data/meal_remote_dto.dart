@@ -6,6 +6,7 @@ class MealRemoteDto {
     required this.name,
     required this.occurredAt,
     required this.updatedAt,
+    required this.rowVersion,
     required this.items,
     this.rawInput,
     this.imagePath,
@@ -21,6 +22,7 @@ class MealRemoteDto {
       occurredAt: DateTime.parse(json['occurred_at'] as String),
       imagePath: json['image_path'] as String?,
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      rowVersion: json['row_version'] as int,
       items: (json['meal_items'] as List<dynamic>? ?? const [])
           .map(
             (item) => MealItemRemoteDto.fromJson(item as Map<String, dynamic>),
@@ -37,6 +39,7 @@ class MealRemoteDto {
   final DateTime occurredAt;
   final String? imagePath;
   final DateTime updatedAt;
+  final int rowVersion;
   final List<MealItemRemoteDto> items;
 }
 

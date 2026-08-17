@@ -17,7 +17,7 @@ class SupabaseMealRemoteDataSource implements MealRemoteDataSource {
     final rows = await _client
         .from('meals')
         .select('''
-          id,user_id,client_request_id,name,raw_input,occurred_at,image_path,updated_at,
+          id,user_id,client_request_id,name,raw_input,occurred_at,image_path,updated_at,row_version,
           meal_items(
             id,food_id,position,source_text,canonical_name,portion_label,grams,
             calories_per_100g,protein_per_100g,carbs_per_100g,fat_per_100g,

@@ -70,11 +70,13 @@ class CachedMealRepository {
   }) async {
     final operationId = _operationIdFactory();
     final now = _clock();
+    final existing = await _local.getMeal(userId: userId, mealId: meal.id);
     final write = _mapper.domainToLocal(
       userId: userId,
       meal: meal,
       eatenAt: eatenAt,
       updatedAt: now,
+      rowVersion: existing?.meal.rowVersion ?? 1,
     );
     await _local.putMeal(
       meal: write.meal,
@@ -91,6 +93,7 @@ class CachedMealRepository {
             userId: userId,
             meal: meal,
             eatenAt: eatenAt,
+            expectedRowVersion: existing?.meal.rowVersion,
           ),
         ),
         createdAt: now,
@@ -106,6 +109,7 @@ class CachedMealRepository {
   }) async {
     final operationId = _operationIdFactory();
     final now = _clock();
+    final existing = await _local.getMeal(userId: userId, mealId: mealId);
     await _local.deleteMeal(
       userId: userId,
       mealId: mealId,
@@ -119,6 +123,7 @@ class CachedMealRepository {
           'schema_version': 1,
           'operation_id': operationId,
           'meal_id': mealId,
+          'expected_row_version': existing?.meal.rowVersion,
         }),
         createdAt: now,
         updatedAt: now,
@@ -132,11 +137,13 @@ class CachedMealRepository {
     required String userId,
     required LoggedMeal meal,
     required DateTime eatenAt,
+    required int? expectedRowVersion,
   }) {
     return {
       'schema_version': 1,
       'operation_id': operationId,
       'client_request_id': operationId,
+      'expected_row_version': expectedRowVersion,
       'meal': {
         'id': meal.id,
         'user_id': userId,
