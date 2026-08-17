@@ -7,6 +7,7 @@ import 'data/mock_seed_data.dart';
 import 'domain/models.dart';
 import 'features/meal_detail_screen.dart';
 import 'features/meal_flow.dart';
+import 'features/history_screen.dart';
 import 'features/today_screen.dart';
 import 'meals/data/cached_meal_repository.dart';
 import 'theme/app_theme.dart';
@@ -46,6 +47,9 @@ class _MealClarityShellState extends State<MealClarityShell> {
   final MealRepository _repository = MockMealRepository();
   late final TodayViewModel _todayViewModel;
   StreamSubscription<List<LoggedMeal>>? _mealSubscription;
+  StreamSubscription<List<LoggedMeal>>? _historySubscription;
+  List<LoggedMeal> _historyMeals = const [];
+  int _selectedTab = 0;
 
   @override
   void initState() {
@@ -59,6 +63,12 @@ class _MealClarityShellState extends State<MealClarityShell> {
       _mealSubscription = widget.cachedRepository!
           .watchDay(userId: widget.userId!, day: now)
           .listen(_todayViewModel.replaceAll);
+      _historySubscription = widget.cachedRepository!
+          .watchHistory(widget.userId!)
+          .listen((meals) {
+            if (!mounted) return;
+            setState(() => _historyMeals = meals);
+          });
       unawaited(_warmPersistentState(now));
     }
   }
@@ -66,9 +76,14 @@ class _MealClarityShellState extends State<MealClarityShell> {
   Future<void> _warmPersistentState(DateTime day) async {
     await widget.onSyncRequested?.call();
     try {
-      await widget.cachedRepository!.refreshDay(
+      await widget.cachedRepository!.refreshWindow(
         userId: widget.userId!,
-        day: day,
+        from: DateTime(
+          day.year,
+          day.month,
+          day.day,
+        ).subtract(const Duration(days: 30)),
+        to: DateTime(day.year, day.month, day.day).add(const Duration(days: 1)),
       );
     } catch (_) {
       // Cache remains the source of truth while offline.
@@ -78,6 +93,7 @@ class _MealClarityShellState extends State<MealClarityShell> {
   @override
   void dispose() {
     _mealSubscription?.cancel();
+    _historySubscription?.cancel();
     _todayViewModel.dispose();
     super.dispose();
   }
@@ -178,11 +194,29 @@ class _MealClarityShellState extends State<MealClarityShell> {
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: _todayViewModel,
-      builder: (context, _) => TodayScreen(
-        meals: _todayViewModel.meals,
-        onAddMeal: () => _startMealFlow(context),
-        onMealTap: (meal) => _openMeal(context, meal),
-      ),
+      builder: (context, _) {
+        if (_selectedTab == 1) {
+          return HistoryScreen(
+            meals: _historyMeals,
+            onMealTap: (meal) => _openMeal(context, meal),
+            onTodayTap: () => setState(() => _selectedTab = 0),
+            onProfileTap: () => _showProfileComingSoon(context),
+          );
+        }
+        return TodayScreen(
+          meals: _todayViewModel.meals,
+          onAddMeal: () => _startMealFlow(context),
+          onMealTap: (meal) => _openMeal(context, meal),
+          onHistoryTap: () => setState(() => _selectedTab = 1),
+          onProfileTap: () => _showProfileComingSoon(context),
+        );
+      },
+    );
+  }
+
+  void _showProfileComingSoon(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Profil ayarları sonraki sprintte.')),
     );
   }
 }

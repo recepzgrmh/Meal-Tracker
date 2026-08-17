@@ -105,6 +105,7 @@ class LoggedMeal {
     required this.timeLabel,
     required this.items,
     this.imageAsset,
+    this.occurredAt,
   });
 
   final String id;
@@ -112,6 +113,7 @@ class LoggedMeal {
   final String timeLabel;
   final List<MealItem> items;
   final String? imageAsset;
+  final DateTime? occurredAt;
 
   Nutrition get nutrition =>
       items.fold(Nutrition.zero, (total, item) => total + item.nutrition);
@@ -122,5 +124,6 @@ class LoggedMeal {
     timeLabel: timeLabel,
     items: items ?? this.items,
     imageAsset: imageAsset,
+    occurredAt: occurredAt,
   );
 }

@@ -61,6 +61,16 @@ void main() {
     expect(localMeals.single.syncStatus, 'pending');
     expect(items.every((item) => _isUuid(item.id)), isTrue);
 
+    await tester.tap(find.text('Geçmiş'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(
+        'Öğünlerin cihazında saklanır ve bağlantı geldiğinde güvenle eşitlenir.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Kahvaltı'), findsOneWidget);
+
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 1));
     await tester.pump(const Duration(milliseconds: 1));

@@ -42,12 +42,29 @@ class CachedMealRepository {
         );
   }
 
+  Stream<List<LoggedMeal>> watchHistory(String userId) {
+    return _local
+        .watchHistory(userId)
+        .map(
+          (bundles) =>
+              bundles.map(_mapper.localToDomain).toList(growable: false),
+        );
+  }
+
   Future<void> refreshDay({
     required String userId,
     required DateTime day,
   }) async {
     final from = DateTime(day.year, day.month, day.day);
     final to = from.add(const Duration(days: 1));
+    await refreshWindow(userId: userId, from: from, to: to);
+  }
+
+  Future<void> refreshWindow({
+    required String userId,
+    required DateTime from,
+    required DateTime to,
+  }) async {
     final remoteMeals = await _remote.fetchWindow(
       userId: userId,
       from: from,

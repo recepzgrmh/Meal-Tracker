@@ -102,6 +102,7 @@ class MealPersistenceMapper {
       timeLabel:
           '${eatenAt.hour.toString().padLeft(2, '0')}:${eatenAt.minute.toString().padLeft(2, '0')}',
       imageAsset: bundle.meal.imageAsset,
+      occurredAt: eatenAt,
       items: bundle.items
           .map(
             (item) => MealItem(

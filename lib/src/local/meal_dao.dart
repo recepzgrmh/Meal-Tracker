@@ -41,6 +41,23 @@ class MealDao {
     return query.watch().map(_groupRows);
   }
 
+  Stream<List<LocalMealBundle>> watchHistory(String userId) {
+    final query =
+        database.select(database.localMeals).join([
+            leftOuterJoin(
+              database.localMealItems,
+              database.localMealItems.mealId.equalsExp(database.localMeals.id) &
+                  database.localMealItems.userId.equals(userId),
+            ),
+          ])
+          ..where(database.localMeals.userId.equals(userId))
+          ..orderBy([
+            OrderingTerm.desc(database.localMeals.eatenAt),
+            OrderingTerm.asc(database.localMealItems.position),
+          ]);
+    return query.watch().map(_groupRows);
+  }
+
   Future<LocalMealBundle?> getMeal({
     required String userId,
     required String mealId,

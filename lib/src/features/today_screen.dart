@@ -9,11 +9,15 @@ class TodayScreen extends StatelessWidget {
     required this.meals,
     required this.onAddMeal,
     required this.onMealTap,
+    this.onHistoryTap,
+    this.onProfileTap,
   });
 
   final List<LoggedMeal> meals;
   final VoidCallback onAddMeal;
   final ValueChanged<LoggedMeal> onMealTap;
+  final VoidCallback? onHistoryTap;
+  final VoidCallback? onProfileTap;
 
   Nutrition get _total =>
       meals.fold(Nutrition.zero, (total, meal) => total + meal.nutrition);
@@ -67,7 +71,11 @@ class TodayScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: _TodayBottomBar(onAddMeal: onAddMeal),
+      bottomNavigationBar: _TodayBottomBar(
+        onAddMeal: onAddMeal,
+        onHistoryTap: onHistoryTap,
+        onProfileTap: onProfileTap,
+      ),
     );
   }
 }
@@ -414,9 +422,15 @@ class _MealRow extends StatelessWidget {
 }
 
 class _TodayBottomBar extends StatelessWidget {
-  const _TodayBottomBar({required this.onAddMeal});
+  const _TodayBottomBar({
+    required this.onAddMeal,
+    this.onHistoryTap,
+    this.onProfileTap,
+  });
 
   final VoidCallback onAddMeal;
+  final VoidCallback? onHistoryTap;
+  final VoidCallback? onProfileTap;
 
   @override
   Widget build(BuildContext context) {
@@ -439,6 +453,10 @@ class _TodayBottomBar extends StatelessWidget {
             selectedIndex: 0,
             backgroundColor: AppColors.surface,
             indicatorColor: const Color(0xFFEAF7B8),
+            onDestinationSelected: (index) {
+              if (index == 1) onHistoryTap?.call();
+              if (index == 2) onProfileTap?.call();
+            },
             destinations: const [
               NavigationDestination(
                 icon: Icon(Icons.home_outlined),
