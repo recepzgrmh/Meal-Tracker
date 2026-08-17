@@ -55,6 +55,8 @@ export interface ApiErrorBody {
       | 'METHOD_NOT_ALLOWED'
       | 'NO_MATCH'
       | 'ANALYSIS_IN_PROGRESS'
+      | 'FORBIDDEN'
+      | 'CONFLICT'
       | 'INTERNAL_ERROR'
     message: string
     traceId: string
