@@ -52,7 +52,13 @@ class AuthViewModel extends ChangeNotifier {
     if (_isBusy) return null;
     _setBusy(true);
     try {
-      return await _repository.verifyEmailOtp(email: _email, token: token);
+      final session = await _repository.verifyEmailOtp(
+        email: _email,
+        token: token,
+      );
+      _timer?.cancel();
+      _resendSeconds = 0;
+      return session;
     } on AuthFailure catch (error) {
       _errorMessage = error.message;
       return null;

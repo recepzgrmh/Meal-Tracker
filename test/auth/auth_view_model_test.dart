@@ -51,5 +51,6 @@ void main() {
 
     expect(session?.userId, 'user-1');
     expect(repository.verifyCount, 1);
+    expect(viewModel.resendSeconds, 0);
   });
 }
