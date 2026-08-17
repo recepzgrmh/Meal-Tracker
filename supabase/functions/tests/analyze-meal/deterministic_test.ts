@@ -85,6 +85,22 @@ Deno.test('preserves the half symbol before Unicode normalization', () => {
   assertEquals(result.items[0].grams, 50)
 })
 
+Deno.test('matches Turkish case suffixes and consonant softening', () => {
+  const result = analyzeDeterministically('2 yumurtayı ve simidi yedim', catalog)
+  assertEquals(result.items.map((item) => item.foodId), ['egg', 'simit'])
+  assertEquals(result.items[0].grams, 100)
+})
+
+Deno.test('understands English counts with localized aliases', () => {
+  const englishCatalog = catalog.map((food) => ({
+    ...food,
+    aliases: food.id === 'egg' ? [{ value: 'boiled egg', priority: 100 }] : [],
+  }))
+  const result = analyzeDeterministically('two boiled eggs', englishCatalog)
+  assertEquals(result.items.length, 1)
+  assertEquals(result.items[0].grams, 100)
+})
+
 function assertEquals(actual: unknown, expected: unknown): void {
   if (JSON.stringify(actual) !== JSON.stringify(expected)) {
     throw new Error(`Expected ${JSON.stringify(expected)}, received ${JSON.stringify(actual)}`)
