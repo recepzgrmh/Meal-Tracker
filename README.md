@@ -91,4 +91,7 @@ in sync. The first local Docker image pull stalled on this machine, so local
 The product and architecture research is in
 `CASE_STUDY_RESEARCH_REPORT_TR.md`.
 
+Implementation specifications and the dependency-ordered sprint backlog are in
+[`docs/specs`](docs/specs/README.md) and [`docs/SPRINT_PLAN.md`](docs/SPRINT_PLAN.md).
+
 Generated food asset disclosure is in `docs/ASSET_PROVENANCE.md`.
