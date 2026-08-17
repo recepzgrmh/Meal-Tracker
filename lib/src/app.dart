@@ -9,17 +9,29 @@ import 'features/today_screen.dart';
 import 'theme/app_theme.dart';
 import 'view_models/today_view_model.dart';
 
-class MealClarityApp extends StatefulWidget {
+class MealClarityApp extends StatelessWidget {
   const MealClarityApp({super.key});
 
   @override
-  State<MealClarityApp> createState() => _MealClarityAppState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Meal Clarity',
+      theme: buildTheme(),
+      home: const MealClarityShell(),
+    );
+  }
 }
 
-class _MealClarityAppState extends State<MealClarityApp> {
+class MealClarityShell extends StatefulWidget {
+  const MealClarityShell({super.key});
+
+  @override
+  State<MealClarityShell> createState() => _MealClarityShellState();
+}
+
+class _MealClarityShellState extends State<MealClarityShell> {
   final MealRepository _repository = MockMealRepository();
-  final _navigatorKey = GlobalKey<NavigatorState>();
-  final _messengerKey = GlobalKey<ScaffoldMessengerState>();
   late final TodayViewModel _todayViewModel;
 
   @override
@@ -34,8 +46,8 @@ class _MealClarityAppState extends State<MealClarityApp> {
     super.dispose();
   }
 
-  Future<void> _startMealFlow() async {
-    final draft = await _navigatorKey.currentState!.push<MealDraft>(
+  Future<void> _startMealFlow(BuildContext context) async {
+    final draft = await Navigator.of(context).push<MealDraft>(
       MaterialPageRoute(
         fullscreenDialog: true,
         builder: (_) => MealFlow(repository: _repository),
@@ -45,7 +57,8 @@ class _MealClarityAppState extends State<MealClarityApp> {
 
     final loggedMeal = _todayViewModel.logDraft(draft, DateTime.now());
 
-    _messengerKey.currentState!.showSnackBar(
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppColors.ink,
@@ -60,15 +73,15 @@ class _MealClarityAppState extends State<MealClarityApp> {
     );
   }
 
-  Future<void> _openMeal(LoggedMeal meal) async {
-    await _navigatorKey.currentState!.push<void>(
+  Future<void> _openMeal(BuildContext context, LoggedMeal meal) async {
+    await Navigator.of(context).push<void>(
       MaterialPageRoute(
         builder: (_) => MealDetailScreen(
           meal: meal,
           onUpdate: _todayViewModel.updateMeal,
           onDelete: () {
             _todayViewModel.deleteMeal(meal.id);
-            _navigatorKey.currentState!.pop();
+            Navigator.of(context).pop();
           },
         ),
       ),
@@ -77,19 +90,12 @@ class _MealClarityAppState extends State<MealClarityApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: _navigatorKey,
-      scaffoldMessengerKey: _messengerKey,
-      debugShowCheckedModeBanner: false,
-      title: 'Meal Clarity',
-      theme: buildTheme(),
-      home: ListenableBuilder(
-        listenable: _todayViewModel,
-        builder: (context, _) => TodayScreen(
-          meals: _todayViewModel.meals,
-          onAddMeal: _startMealFlow,
-          onMealTap: _openMeal,
-        ),
+    return ListenableBuilder(
+      listenable: _todayViewModel,
+      builder: (context, _) => TodayScreen(
+        meals: _todayViewModel.meals,
+        onAddMeal: () => _startMealFlow(context),
+        onMealTap: (meal) => _openMeal(context, meal),
       ),
     );
   }

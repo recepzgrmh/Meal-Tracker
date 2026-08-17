@@ -4,6 +4,7 @@ import 'package:meal_clarity/src/auth/data/auth_repository.dart';
 import 'package:meal_clarity/src/auth/domain/auth_failure.dart';
 import 'package:meal_clarity/src/auth/domain/auth_session.dart';
 import 'package:meal_clarity/src/onboarding/data/onboarding_repository.dart';
+import 'package:meal_clarity/src/onboarding/data/profile_repository.dart';
 import 'package:meal_clarity/src/onboarding/domain/onboarding_draft.dart';
 
 class FakeAuthRepository implements AuthRepository {
@@ -72,4 +73,19 @@ class FakeOnboardingRepository implements OnboardingRepository {
 
   @override
   Future<void> saveDraft(OnboardingDraft draft) async => this.draft = draft;
+}
+
+class FakeProfileRepository implements ProfileRepository {
+  int completionCount = 0;
+  bool shouldFail = false;
+
+  @override
+  Future<void> completeOnboarding({
+    required String userId,
+    required OnboardingDraft draft,
+    required int version,
+  }) async {
+    completionCount++;
+    if (shouldFail) throw StateError('offline');
+  }
 }

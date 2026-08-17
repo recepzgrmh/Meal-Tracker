@@ -23,10 +23,12 @@ class OnboardingViewModel extends ChangeNotifier {
   }
 
   Future<void> goToStep(int step) async {
-    _draft = _draft.copyWith(step: step.clamp(0, 2));
+    _draft = _draft.copyWith(step: step.clamp(0, 3));
     notifyListeners();
     await _repository.saveDraft(_draft);
   }
+
+  Future<void> finishDraft() => goToStep(3);
 
   Future<void> selectIntention(TrackingIntention intention) async {
     _draft = _draft.copyWith(
