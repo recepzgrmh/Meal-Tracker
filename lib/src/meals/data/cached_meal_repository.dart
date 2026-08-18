@@ -228,7 +228,7 @@ class CachedMealRepository {
               'food_id': item.foodId,
               'position': position,
               'source_text': item.sourceText,
-              'canonical_name': item.name,
+              'canonical_name': item.canonicalName,
               'portion_label': item.portionLabel,
               'grams': item.grams,
               'calories_per_100g': item.nutritionPer100g.calories,

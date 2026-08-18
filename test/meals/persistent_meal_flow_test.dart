@@ -42,6 +42,8 @@ void main() {
 
     await tester.tap(find.byKey(const Key('quick-composer')));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('add-meal-text')));
+    await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('meal-input')),
       '2 yumurta, biraz beyaz peynir ve yarım simit',
@@ -52,7 +54,7 @@ void main() {
     await tester.tap(find.byKey(const Key('analyze-button')));
     await tester.pump(const Duration(seconds: 1));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('review-primary-button')));
+    await tester.tap(find.byKey(const Key('review-edit-button')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('portion-30')));
     await tester.pumpAndSettle();
@@ -74,13 +76,8 @@ void main() {
 
     await tester.tap(find.text('Geçmiş'));
     await tester.pumpAndSettle();
-    expect(
-      find.text(
-        'Öğünlerin cihazında saklanır ve bağlantı geldiğinde güvenle eşitlenir.',
-      ),
-      findsOneWidget,
-    );
     expect(find.text('Kahvaltı'), findsOneWidget);
+    expect(find.textContaining('1 öğün ·'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 1));

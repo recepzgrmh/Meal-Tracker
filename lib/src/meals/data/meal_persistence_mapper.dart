@@ -79,7 +79,7 @@ class MealPersistenceMapper {
             mealId: meal.id,
             userId: userId,
             foodId: Value(item.foodId),
-            name: item.name,
+            name: item.canonicalName,
             sourceText: item.sourceText,
             portionLabel: item.portionLabel,
             grams: item.grams,
@@ -108,7 +108,8 @@ class MealPersistenceMapper {
           .map(
             (item) => MealItem(
               id: item.id,
-              name: item.name,
+              name: naturalFoodDisplayName(item.name),
+              canonicalName: item.name,
               sourceText: item.sourceText,
               portionLabel: item.portionLabel,
               grams: item.grams,
