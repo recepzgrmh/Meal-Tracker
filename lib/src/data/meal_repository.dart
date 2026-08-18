@@ -85,7 +85,8 @@ class MockMealRepository implements MealRepository {
       items.add(
         MealItem(
           id: 'white-cheese',
-          name: 'Tam Yağlı Beyaz Peynir',
+          name: 'Tam yağlı beyaz peynir',
+          canonicalName: 'Beyaz Peynir, Tam Yağlı',
           sourceText: normalized.contains('beyaz peynir')
               ? 'beyaz peynir'
               : 'peynir',

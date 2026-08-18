@@ -33,7 +33,7 @@ class Nutrition {
 class MealItem {
   const MealItem({
     required this.id,
-    required this.name,
+    required String name,
     required this.sourceText,
     required this.portionLabel,
     required this.grams,
@@ -43,10 +43,16 @@ class MealItem {
     this.foodId,
     this.confidence,
     this.matchMethod,
-  });
+    this.portionOptions = const [],
+    String? canonicalName,
+    String? displayName,
+  }) : canonicalName = canonicalName ?? name,
+       displayName = displayName ?? name;
 
   final String id;
-  final String name;
+  final String canonicalName;
+  final String displayName;
+  String get name => displayName;
   final String sourceText;
   final String portionLabel;
   final double grams;
@@ -56,6 +62,7 @@ class MealItem {
   final String? foodId;
   final double? confidence;
   final String? matchMethod;
+  final List<FoodPortionOption> portionOptions;
 
   Nutrition get nutrition => nutritionPer100g.scale(grams / 100);
 
@@ -67,7 +74,9 @@ class MealItem {
   }) {
     return MealItem(
       id: id ?? this.id,
-      name: name,
+      name: displayName,
+      canonicalName: canonicalName,
+      displayName: displayName,
       sourceText: sourceText,
       portionLabel: portionLabel ?? this.portionLabel,
       grams: grams ?? this.grams,
@@ -77,8 +86,45 @@ class MealItem {
       foodId: foodId,
       confidence: confidence,
       matchMethod: matchMethod,
+      portionOptions: portionOptions,
     );
   }
+}
+
+class FoodPortionOption {
+  const FoodPortionOption({
+    required this.label,
+    required this.grams,
+    this.sizeClass,
+    this.imageUrl,
+  });
+
+  final String label;
+  final double grams;
+  final String? sizeClass;
+  final String? imageUrl;
+}
+
+String naturalFoodDisplayName(String canonicalName) {
+  final trimmed = canonicalName.trim();
+  final normalized = trimmed.toLowerCase();
+  const preferredNames = {
+    'tavuk yumurtası, haşlanmış': 'Haşlanmış yumurta',
+    'beyaz peynir, tam yağlı': 'Tam yağlı beyaz peynir',
+  };
+  final preferred = preferredNames[normalized];
+  if (preferred != null) return preferred;
+
+  final parts = trimmed
+      .split(',')
+      .map((part) => part.trim().toLowerCase())
+      .where((part) => part.isNotEmpty)
+      .toList(growable: false);
+  final natural = parts.length > 1
+      ? '${parts.skip(1).join(' ')} ${parts.first}'
+      : normalized;
+  if (natural.isEmpty) return trimmed;
+  return '${natural[0].toUpperCase()}${natural.substring(1)}';
 }
 
 class MealDraft {
@@ -110,6 +156,24 @@ class MealDraft {
     items: items
         .map((item) => item.id == updated.id ? updated : item)
         .toList(growable: false),
+    analysisRunId: analysisRunId,
+    traceId: traceId,
+    unmatchedText: unmatchedText,
+  );
+
+  MealDraft addItem(MealItem item) => MealDraft(
+    inputText: inputText,
+    mealName: mealName,
+    items: [...items, item],
+    analysisRunId: analysisRunId,
+    traceId: traceId,
+    unmatchedText: unmatchedText,
+  );
+
+  MealDraft removeItem(String itemId) => MealDraft(
+    inputText: inputText,
+    mealName: mealName,
+    items: items.where((item) => item.id != itemId).toList(growable: false),
     analysisRunId: analysisRunId,
     traceId: traceId,
     unmatchedText: unmatchedText,
