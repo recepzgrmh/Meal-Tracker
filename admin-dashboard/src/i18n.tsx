@@ -1,0 +1,97 @@
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+
+export type AdminLanguage = 'en' | 'tr'
+
+const tr: Record<string, string> = {
+  'AI operations': 'AI operasyonları', 'Engineer role': 'Mühendis rolü', 'Overview': 'Genel Bakış',
+  'MONITOR': 'İZLEME', 'DEBUG': 'HATA AYIKLAMA', 'PRODUCT': 'ÜRÜN', 'SYSTEM': 'SİSTEM',
+  'AI Quality': 'AI Kalitesi', 'Meal Reviews': 'Öğün İncelemeleri', 'Traces': 'İzler', 'Reliability': 'Güvenilirlik',
+  'Analytics': 'Analitik', 'Users': 'Kullanıcılar', 'Audit Log': 'Denetim Kaydı', 'Settings': 'Ayarlar',
+  'Mobile App': 'Mobil Uygulama', 'Search meal, trace, request, user ID': 'Öğün, iz, istek veya kullanıcı kimliği ara',
+  'Production': 'Canlı', 'Staging': 'Hazırlık', 'Development': 'Geliştirme', 'DEMO DATA': 'DEMO VERİSİ',
+  'Updated 45 sec ago': '45 sn önce güncellendi', 'Aggregated 4 min ago': '4 dk önce toplulaştırıldı',
+  'Streaming · 12 sec ago': 'Akış · 12 sn önce', 'Auto-refresh · 30 sec': 'Otomatik yenileme · 30 sn',
+  'Does anything require attention right now?': 'Şu anda ilgilenmemiz gereken bir şey var mı?',
+  'How accurate is the meal analysis system?': 'Öğün analiz sistemi ne kadar doğru?',
+  'Human-in-the-loop evaluation queue': 'İnsan denetimli değerlendirme kuyruğu',
+  'Follow every meal analysis through the pipeline': 'Her öğün analizini işlem hattı boyunca takip et',
+  'Is the meal logging pipeline healthy?': 'Öğün kayıt işlem hattı sağlıklı mı?',
+  'Where does meal logging friction appear?': 'Öğün kaydında sürtünme nerede oluşuyor?',
+  'Support-relevant account signals with identity minimized by default.': 'Kimlik bilgileri varsayılan olarak azaltılmış destek sinyalleri.',
+  'Sensitive administrative actions and data access.': 'Hassas yönetici işlemleri ve veri erişimleri.',
+  'Production configuration is informational for the Engineer role.': 'Canlı yapılandırma Mühendis rolü için bilgilendirme amaçlıdır.',
+  'Meals analyzed': 'Analiz edilen öğün', 'Success rate': 'Başarı oranı', 'Meals edited': 'Düzenlenen öğün',
+  'Clarification rate': 'Netleştirme oranı', 'Median / P95': 'Medyan / P95', 'Needs attention': 'İlgi gerekiyor',
+  'Signals ordered by likely user impact. Select one to investigate.': 'Sinyaller olası kullanıcı etkisine göre sıralandı. İncelemek için seç.',
+  'Sauce correction rate': 'Sos düzeltme oranı', 'P95 analysis latency': 'P95 analiz gecikmesi',
+  'Analysis requests failed': 'Başarısız analiz istekleri', 'Nutrition lookup retry rate': 'Besin sorgusu yeniden deneme oranı',
+  'View 76 cases': '76 vakayı gör', 'Inspect slow traces': 'Yavaş izleri incele', 'Open reliability': 'Güvenilirliği aç',
+  'View service health': 'Servis sağlığını gör', 'Production quality signal': 'Canlı kalite sinyali',
+  'Meals requiring any user correction': 'Kullanıcı düzeltmesi gerektiren öğünler', 'User corrections': 'Kullanıcı düzeltmeleri',
+  'Top quality errors': 'En sık kalite hataları', 'Reviewed and user-corrected meals': 'İncelenen ve kullanıcı tarafından düzeltilen öğünler',
+  'Production signals': 'Canlı sinyaller', 'Golden dataset': 'Altın veri seti', 'Human review': 'İnsan incelemesi', 'Eval runs': 'Değerlendirme koşuları',
+  'Active filter': 'Etkin filtre', 'Meals corrected': 'Düzeltilen öğün', 'Foods corrected': 'Düzeltilen yiyecek',
+  'Canonical accuracy': 'Kanonik doğruluk', 'Portion MAE': 'Porsiyon MAE', 'Calorie MAE': 'Kalori MAE', 'Protein error': 'Protein hatası',
+  'Unavailable': 'Kullanılamıyor', 'Where does the AI fail?': 'AI nerede hata yapıyor?',
+  '981 errors across reviewed or corrected meals': 'İncelenen veya düzeltilen öğünlerde 981 hata', 'Sauce corrections': 'Sos düzeltmeleri',
+  'Correction rate over time': 'Zaman içindeki düzeltme oranı', 'Category performance': 'Kategori performansı',
+  'Lower is better': 'Düşük daha iyi', 'Model version comparison': 'Model sürümü karşılaştırması',
+  'Regression detected': 'Gerileme tespit edildi', 'Improvement': 'İyileşme', 'Regression': 'Gerileme', 'Watch': 'İzle',
+  'High-confidence + user corrected': 'Yüksek güven + kullanıcı düzeltmesi', 'Overconfident mistakes prioritized for investigation': 'Aşırı güvenli hatalar inceleme için önceliklendirildi',
+  'Unreviewed': 'İncelenmedi', 'High-confidence mistake': 'Yüksek güvenli hata', 'Low confidence': 'Düşük güven',
+  'Large calorie correction': 'Büyük kalori düzeltmesi', 'Clarification required': 'Netleştirme gerekli', 'Random sample': 'Rastgele örnek',
+  'Queue': 'Kuyruk', 'Columns': 'Sütunlar', 'Meal': 'Öğün', 'Created': 'Oluşturulma', 'Foods': 'Yiyecekler',
+  'Correction': 'Düzeltme', 'Error type': 'Hata türü', 'Model': 'Model', 'Status': 'Durum',
+  'Meal inspector': 'Öğün inceleyici', 'Back': 'Geri', 'Open trace': 'İzi aç', 'USER INPUT': 'KULLANICI GİRDİSİ',
+  'Photo + text': 'Fotoğraf + metin', 'PII redacted': 'Kişisel veri maskeli', 'AI PREDICTION': 'AI TAHMİNİ',
+  'FINAL USER LOG': 'SON KULLANICI KAYDI', 'AI TOTAL': 'AI TOPLAMI', 'FINAL TOTAL': 'SON TOPLAM',
+  'Review this case': 'Bu vakayı incele', 'Use keys 1–4 for rapid labeling': 'Hızlı etiketleme için 1–4 tuşlarını kullan',
+  'Correct': 'Doğru', 'Acceptable estimate': 'Kabul edilebilir tahmin', 'Needs improvement': 'İyileştirilmeli', 'Incorrect': 'Yanlış',
+  'Optional reviewer note…': 'İsteğe bağlı inceleme notu…', 'Analysis context': 'Analiz bağlamı',
+  'Versioned metadata for reproduction': 'Yeniden üretim için sürümlenmiş meta veri', 'Prompt': 'Prompt', 'Pipeline': 'İşlem hattı',
+  'Confidence': 'Güven', 'Environment': 'Ortam', 'Trace waterfall': 'İz şelalesi',
+  'Select a span to inspect provider, output, validation, and retries': 'Sağlayıcıyı, çıktıyı, doğrulamayı ve yeniden denemeleri incelemek için adım seç',
+  'Total duration': 'Toplam süre', 'Retries': 'Yeniden deneme', 'Success': 'Başarılı', 'Structured output': 'Yapılandırılmış çıktı',
+  'Secrets and signed image URLs are redacted': 'Gizli bilgiler ve imzalı görsel URL’leri maskelendi', 'Formatted': 'Biçimlendirilmiş', 'Raw JSON': 'Ham JSON',
+  'RETRIEVAL CANDIDATES': 'ERİŞİM ADAYLARI', 'NUTRITION SOURCE': 'BESİN KAYNAĞI', 'Duplicate prevented': 'Tekrar kayıt önlendi',
+  'Idempotency check passed': 'Idempotency kontrolü geçti', 'Request volume': 'İstek hacmi', 'Median latency': 'Medyan gecikme',
+  'Retry rate': 'Yeniden deneme oranı', 'Timeout rate': 'Zaman aşımı oranı', 'Pipeline health': 'İşlem hattı sağlığı',
+  'Quality errors excluded from this operational view': 'Kalite hataları bu operasyonel görünümden hariçtir', 'Service': 'Servis',
+  'Healthy': 'Sağlıklı', 'Degraded': 'Bozulmuş', 'P95 latency trend': 'P95 gecikme eğilimi', 'System error breakdown': 'Sistem hatası dağılımı',
+  'Meal logging funnel': 'Öğün kayıt hunisi', 'Recent activity': 'Son etkinlik', 'Active production stack': 'Etkin canlı yığını',
+  'Read only · Engineer role': 'Salt okunur · Mühendis rolü',
+  'Manage OTA copy, rollout, and mobile runtime configuration.': 'OTA metinlerini, yayılımı ve mobil çalışma zamanı yapılandırmasını yönet.',
+  'OTA Translations': 'OTA Çevirileri', 'Remote Config': 'Uzak Yapılandırma', 'Translation bundles': 'Çeviri paketleri',
+  'Mobile clients cache the latest valid bundle and retain bundled ARB fallback.': 'Mobil istemciler son geçerli paketi önbelleğe alır ve gömülü ARB yedeğini korur.',
+  'New draft': 'Yeni taslak', 'Locale': 'Dil', 'Version': 'Sürüm', 'Coverage': 'Kapsama', 'Updated': 'Güncelleme', 'Actions': 'İşlemler',
+  'Draft': 'Taslak', 'Payload': 'Paket boyutu', 'Metric': 'Metrik', 'Change': 'Değişim', 'Result': 'Sonuç',
+  'Edit bundle': 'Paketi düzenle', 'Translation key': 'Çeviri anahtarı', 'Bundled fallback': 'Gömülü yedek', 'OTA override': 'OTA geçersiz kılma',
+  'Only non-empty values override the bundled ARB string.': 'Yalnızca boş olmayan değerler gömülü ARB metnini geçersiz kılar.',
+  'Validate': 'Doğrula', 'Save draft': 'Taslağı kaydet', 'Promote to staging': 'Staging’e yükselt', 'Promote to production': 'Canlıya yükselt',
+  'Validation passed': 'Doğrulama başarılı', 'No placeholder, length, or payload-size errors found.': 'Placeholder, uzunluk veya paket boyutu hatası bulunamadı.',
+  'Production promotion requires Admin role.': 'Canlıya yükseltme Admin rolü gerektirir.', 'Change history': 'Değişiklik geçmişi',
+  'Rollback': 'Geri al', 'Feature flags': 'Özellik bayrakları', 'Minimum app version': 'Minimum uygulama sürümü',
+  'Maintenance mode': 'Bakım modu', 'Analysis photo input': 'Fotoğraflı analiz', 'Voice meal entry': 'Sesli öğün girişi',
+  'Rollout': 'Yayılım', 'Save configuration': 'Yapılandırmayı kaydet', 'Draft saved': 'Taslak kaydedildi',
+  'Changes are versioned and applied through remote configuration': 'Değişiklikler sürümlenir ve uzak yapılandırma üzerinden uygulanır',
+  'Mobile runtime': 'Mobil çalışma zamanı', 'Safe rollout controls': 'Güvenli yayılım kontrolleri',
+  'Eligible users': 'Uygun kullanıcılar', 'Safety checks': 'Güvenlik kontrolleri',
+  'Server-side authorization remains required for every write': 'Her yazma işlemi için sunucu tarafı yetkilendirme zorunludur',
+  'Enabled': 'Etkin', 'Disabled': 'Devre dışı', 'Schema valid': 'Şema geçerli',
+  'Audit logging enabled': 'Denetim kaydı etkin', 'Production requires Admin': 'Canlı ortam Admin gerektirir',
+  'Rollback available': 'Geri alma mevcut', 'Release': 'Yayın',
+  'Every publication and rollback is audit logged': 'Her yayın ve geri alma denetim kaydına yazılır',
+  'Changes are versioned and applied through remote configuration.': 'Değişiklikler sürümlenir ve uzak yapılandırma üzerinden uygulanır.',
+}
+
+type I18nValue = { language: AdminLanguage; setLanguage: (language: AdminLanguage) => void; t: (value: string) => string }
+const I18nContext = createContext<I18nValue>({ language: 'en', setLanguage: () => undefined, t: (value) => value })
+
+export function I18nProvider({ children }: { children: ReactNode }) {
+  const [language, setLanguage] = useState<AdminLanguage>(() => (globalThis.localStorage?.getItem('admin-language') === 'tr' ? 'tr' : 'en'))
+  useEffect(() => { globalThis.localStorage?.setItem('admin-language', language); document.documentElement.lang = language }, [language])
+  const value = useMemo(() => ({ language, setLanguage, t: (text: string) => language === 'tr' ? tr[text] || text : text }), [language])
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
+}
+
+export const useI18n = () => useContext(I18nContext)
