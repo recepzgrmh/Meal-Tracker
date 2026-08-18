@@ -35,8 +35,11 @@ class _LiquidGlassBottomBarState extends State<LiquidGlassBottomBar> {
       label: context.ota('navHistory', tr: 'Geçmiş', en: 'History'),
       icon: Icons.history_rounded,
     ),
+    // Five destinations across a 360 px screen leave ~66 px each, so the full
+    // phrase truncates. The short form is shown; the full one is announced.
     _GlassDestination(
-      label: context.ota('navAddMeal', tr: 'Öğün Ekle', en: 'Add Meal'),
+      label: context.ota('navAddMealShort', tr: 'Ekle', en: 'Add'),
+      semanticLabel: context.ota('navAddMeal', tr: 'Öğün Ekle', en: 'Add Meal'),
       icon: Icons.add_rounded,
       emphasized: true,
     ),
@@ -58,7 +61,14 @@ class _LiquidGlassBottomBarState extends State<LiquidGlassBottomBar> {
 
     return SafeArea(
       top: false,
-      minimum: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+      // Geometry lives in AppNavigationBar so scroll views can reserve exactly
+      // this much clearance via AppSpacing.pageBottom instead of guessing.
+      minimum: const EdgeInsets.fromLTRB(
+        AppNavigationBar.horizontalMargin,
+        0,
+        AppNavigationBar.horizontalMargin,
+        AppNavigationBar.outerMargin,
+      ),
       child: DecoratedBox(
         key: const Key('liquid-glass-navigation-surface'),
         decoration: BoxDecoration(
@@ -68,7 +78,7 @@ class _LiquidGlassBottomBarState extends State<LiquidGlassBottomBar> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppRadius.feature),
           child: Container(
-            height: 62,
+            height: AppNavigationBar.height,
             decoration: BoxDecoration(
               color: AppColors.surface.withValues(alpha: fillOpacity),
               borderRadius: BorderRadius.circular(AppRadius.feature),
@@ -101,8 +111,8 @@ class _LiquidGlassBottomBarState extends State<LiquidGlassBottomBar> {
                           heightFactor: 1,
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 4,
+                              horizontal: AppSpacing.xxs,
+                              vertical: AppSpacing.xxs,
                             ),
                             child: DecoratedBox(
                               decoration: BoxDecoration(
@@ -244,60 +254,64 @@ class _GlassDestinationButton extends StatelessWidget {
     return Semantics(
       selected: selected,
       button: true,
-      label: destination.label,
+      label: destination.semanticLabel,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
           customBorder: const StadiumBorder(),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: highlighted ? 38 : 31,
-                height: 31,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: highlighted ? AppColors.lime : Colors.transparent,
-                    borderRadius: BorderRadius.circular(AppRadius.medium),
-                  ),
-                  child: TweenAnimationBuilder<Color?>(
-                    duration: reduceMotion ? Duration.zero : AppMotion.fast,
-                    curve: Curves.easeOutCubic,
-                    tween: ColorTween(
-                      end: selected || highlighted
-                          ? AppColors.brand
-                          : AppColors.muted,
+          // The wrapping Semantics already carries the label; without this the
+          // icon and caption merge into it and every destination is announced
+          // twice.
+          child: ExcludeSemantics(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: highlighted ? 38 : 31,
+                  height: 31,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: highlighted ? AppColors.lime : Colors.transparent,
+                      borderRadius: BorderRadius.circular(AppRadius.medium),
                     ),
-                    builder: (context, color, _) => Icon(
-                      destination.icon,
-                      size: destination.emphasized ? 22 : 20,
-                      color: color,
+                    child: TweenAnimationBuilder<Color?>(
+                      duration: reduceMotion ? Duration.zero : AppMotion.fast,
+                      curve: Curves.easeOutCubic,
+                      tween: ColorTween(
+                        end: selected || highlighted
+                            ? AppColors.brand
+                            : AppColors.muted,
+                      ),
+                      builder: (context, color, _) => Icon(
+                        destination.icon,
+                        size: destination.emphasized ? 22 : 20,
+                        color: color,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              AnimatedDefaultTextStyle(
-                duration: reduceMotion
-                    ? Duration.zero
-                    : const Duration(milliseconds: 180),
-                style: TextStyle(
-                  color: selected ? AppColors.brandStrong : AppColors.muted,
-                  fontSize: 11,
-                  height: 1,
-                  fontWeight: selected || highlighted
-                      ? FontWeight.w700
-                      : FontWeight.w500,
+                const SizedBox(height: AppSpacing.micro),
+                AnimatedDefaultTextStyle(
+                  duration: reduceMotion ? Duration.zero : AppMotion.fast,
+                  style: TextStyle(
+                    color: selected ? AppColors.brandStrong : AppColors.muted,
+                    // 11 px sat below the legible floor for a persistent control.
+                    fontSize: 12,
+                    height: 1,
+                    fontWeight: selected || highlighted
+                        ? FontWeight.w700
+                        : FontWeight.w500,
+                  ),
+                  child: Text(
+                    destination.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.fade,
+                    softWrap: false,
+                  ),
                 ),
-                child: Text(
-                  destination.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.fade,
-                  softWrap: false,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -310,9 +324,14 @@ class _GlassDestination {
     required this.label,
     required this.icon,
     this.emphasized = false,
-  });
+    String? semanticLabel,
+  }) : semanticLabel = semanticLabel ?? label;
 
   final String label;
+
+  /// What assistive tech announces, when the visible label had to be shortened
+  /// to fit the bar.
+  final String semanticLabel;
   final IconData icon;
   final bool emphasized;
 }

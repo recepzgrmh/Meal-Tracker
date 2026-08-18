@@ -4,6 +4,7 @@ import 'package:meal_clarity/src/app.dart';
 import 'package:meal_clarity/src/data/meal_repository.dart';
 import 'package:meal_clarity/src/domain/meal_analysis_input.dart';
 import 'package:meal_clarity/src/domain/models.dart';
+import 'package:meal_clarity/src/domain/nutrition_goals.dart';
 import 'package:meal_clarity/src/features/analysis_screen.dart';
 
 void main() {
@@ -147,7 +148,13 @@ void main() {
 
     expect(find.text('Günlük'), findsOneWidget);
     expect(find.text('Geçmiş'), findsOneWidget);
-    expect(find.text('Öğün Ekle'), findsOneWidget);
+    // Visible label is shortened to fit five destinations; the full phrase is
+    // what assistive tech announces.
+    expect(find.text('Ekle'), findsOneWidget);
+    expect(
+      tester.getSemantics(find.byKey(const Key('nav-destination-2'))).label,
+      'Öğün Ekle',
+    );
     expect(find.text('Analiz'), findsOneWidget);
     expect(find.text('Profil'), findsOneWidget);
 
@@ -161,7 +168,7 @@ void main() {
     expect(find.text('Günlük hedef'), findsOneWidget);
     expect(find.text('2.100 kcal'), findsOneWidget);
 
-    await tester.tap(find.text('Öğün Ekle'));
+    await tester.tap(find.byKey(const Key('nav-destination-2')));
     await tester.pumpAndSettle();
     expect(
       find.text('Yemeğini göster,\ngerisini birlikte halledelim.'),
@@ -171,6 +178,46 @@ void main() {
     await tester.tap(find.byKey(const Key('add-meal-text')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('meal-input')), findsOneWidget);
+  });
+
+  testWidgets('daily summary exposes real metrics and opens analysis details', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MealClarityApp());
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('daily-summary-card')), findsOneWidget);
+    expect(find.byKey(const Key('daily-calorie-ring')), findsOneWidget);
+    expect(find.byKey(const Key('daily-consumed-stat')), findsOneWidget);
+    expect(find.byKey(const Key('daily-goal-stat')), findsOneWidget);
+    expect(find.text('Alınan'), findsOneWidget);
+    expect(find.text('Hedef'), findsOneWidget);
+    expect(find.text('Yakılan'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('daily-summary-details')));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .getSemantics(find.byKey(const Key('nav-destination-3')))
+          .toString(),
+      contains('isSelected'),
+    );
+    expect(find.text('Henüz yeterli veri yok'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('daily summary remains scrollable in landscape', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(844, 390));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MealClarityApp());
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('daily-summary-card')), findsOneWidget);
+    expect(find.byKey(const Key('daily-summary-details')), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('primary tabs support horizontal swipe navigation', (
@@ -532,6 +579,8 @@ void main() {
       MaterialApp(
         home: AnalysisScreen(
           meals: meals,
+          goals: NutritionGoals.fallback,
+          onAddMeal: () {},
           onMealTap: (_) {},
           onNavigationSelected: (_) {},
         ),
@@ -543,7 +592,7 @@ void main() {
     expect(find.text('Henüz yeterli veri yok'), findsNothing);
   });
 
-  for (final width in [360.0, 375.0, 390.0, 430.0]) {
+  for (final width in [320.0, 360.0, 375.0, 390.0, 430.0]) {
     testWidgets('primary dashboard and add meal fit at ${width.round()} px', (
       tester,
     ) async {

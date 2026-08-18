@@ -10,6 +10,19 @@ class MealDetailViewModel extends ChangeNotifier {
   LoggedMeal get meal => _meal;
   Nutrition get nutrition => _meal.nutrition;
 
+  /// True while any food in the meal is still an unreviewed estimate, so the
+  /// screen can keep admitting that the total is approximate.
+  bool get hasEstimates =>
+      _meal.items.any((item) => item.matchState != MatchState.matched);
+
+  /// What [item] would contribute at [grams], without touching stored state.
+  ///
+  /// The portion sheet promises that calories are recalculated, so it has to
+  /// show the new number while the slider moves — long before anything is
+  /// committed.
+  Nutrition previewNutrition(MealItem item, double grams) =>
+      item.nutritionPer100g.scale(grams / 100);
+
   LoggedMeal updatePortion(MealItem item, double grams) {
     final updatedItem = item.copyWith(
       grams: grams,

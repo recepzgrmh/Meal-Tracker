@@ -93,17 +93,32 @@ void main() {
     );
 
     test(
-      'returns to composer with a safe message on repository failure',
+      'returns to composer with a reportable failure kind on repository error',
       () async {
         final viewModel = MealFlowViewModel(repository: _ThrowingRepository());
 
         await viewModel.analyze(_input('peynir'));
 
         expect(viewModel.step, MealFlowStep.compose);
-        expect(viewModel.error, isNotEmpty);
+        expect(viewModel.errorKind, MealAnalysisFailureKind.unknown);
         expect(viewModel.draft, isNull);
       },
     );
+
+    test('discards a stale analysis after the user cancels', () async {
+      final repository = _ControllableRepository();
+      final viewModel = MealFlowViewModel(repository: repository);
+
+      final operation = viewModel.analyze(_input('peynir'));
+      expect(viewModel.step, MealFlowStep.analyzing);
+
+      viewModel.showComposer();
+      repository.complete(draft);
+      await operation;
+
+      expect(viewModel.step, MealFlowStep.compose);
+      expect(viewModel.draft, isNull);
+    });
 
     test('shows a corrective message for a grounded no-match', () async {
       final viewModel = MealFlowViewModel(
@@ -119,7 +134,7 @@ void main() {
       await viewModel.analyze(_input('avokado'));
 
       expect(viewModel.step, MealFlowStep.compose);
-      expect(viewModel.error, contains('katalogda güvenle eşleştiremedik'));
+      expect(viewModel.errorKind, MealAnalysisFailureKind.noMatch);
       expect(viewModel.manualSearchSuggested, isTrue);
     });
 
@@ -137,16 +152,42 @@ void main() {
         viewModel.selectManualFood(
           viewModel.catalogResults.single,
           'beyaz peynr',
+          mealName: 'Kahvaltı',
         );
 
         expect(catalog.query, 'beyaz peynr');
         expect(viewModel.step, MealFlowStep.review);
+        expect(viewModel.draft?.mealName, 'Kahvaltı');
         expect(viewModel.draft?.analysisRunId, isNull);
         expect(viewModel.draft?.items.single.matchMethod, 'manual');
         expect(viewModel.draft?.items.single.foodId, 'catalog-cheese');
         expect(viewModel.draft?.reviewCount, 1);
       },
     );
+
+    test('keeps an analyzed draft when a manual correction is picked', () async {
+      final catalog = _FakeCatalogRepository();
+      final viewModel = MealFlowViewModel(
+        repository: _ImmediateRepository(draft),
+        catalogRepository: catalog,
+        manualItemIdFactory: () => 'manual-1',
+      );
+
+      await viewModel.analyze(_input('peynir'));
+      await viewModel.searchCatalog('beyaz peynir', 'tr-TR');
+      viewModel.selectManualFood(
+        viewModel.catalogResults.single,
+        'beyaz peynir',
+        mealName: 'Öğle yemeği',
+      );
+
+      // The correction is additive: the analyzed item survives and the draft
+      // keeps the analysis provenance it was created with.
+      expect(viewModel.draft?.items, hasLength(2));
+      expect(viewModel.draft?.items.first.id, 'cheese');
+      expect(viewModel.draft?.analysisRunId, 'analysis-run');
+      expect(viewModel.draft?.mealName, 'Kahvaltı');
+    });
 
     test(
       'keeps manual additions distinct and allows predicted food removal',

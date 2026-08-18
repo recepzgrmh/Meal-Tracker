@@ -30,8 +30,14 @@ abstract final class AppColors {
   static const fat = Color(0xFFB23A67);
 }
 
+/// The 4 px spacing scale. Every gap in the app snaps to one of these steps;
+/// [micro] and [tiny] are the only sub-step values and exist for optical
+/// corrections inside a component (icon-to-label, label-to-value), never for
+/// spacing between components.
 abstract final class AppSpacing {
+  static const micro = 2.0;
   static const xxs = 4.0;
+  static const tiny = 6.0;
   static const xs = 8.0;
   static const sm = 12.0;
   static const md = 16.0;
@@ -43,6 +49,26 @@ abstract final class AppSpacing {
   static const x48 = 48.0;
   static const x56 = 56.0;
   static const x64 = 64.0;
+
+  /// Horizontal inset shared by every full-page scroll view.
+  static const page = lg;
+
+  /// Bottom inset a scrolling page needs so its last item clears the floating
+  /// navigation bar. Previously each screen hard-coded 96–104, none of which
+  /// matched the bar's real height.
+  static double pageBottom(BuildContext context) =>
+      AppNavigationBar.height +
+      AppNavigationBar.outerMargin +
+      MediaQuery.viewPaddingOf(context).bottom +
+      md;
+}
+
+/// Geometry of [LiquidGlassBottomBar], shared so scroll views can reserve the
+/// right amount of room instead of guessing.
+abstract final class AppNavigationBar {
+  static const height = 62.0;
+  static const outerMargin = 8.0;
+  static const horizontalMargin = 14.0;
 }
 
 abstract final class AppRadius {
@@ -136,21 +162,6 @@ ThemeData buildTheme() {
       ),
     ),
     dividerColor: AppColors.line,
-    cardTheme: CardThemeData(
-      color: AppColors.surface,
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(AppRadius.large)),
-        side: BorderSide(color: AppColors.line),
-      ),
-    ),
-    navigationBarTheme: const NavigationBarThemeData(
-      backgroundColor: AppColors.surface,
-      indicatorColor: AppColors.limeSoft,
-      elevation: 0,
-      height: 72,
-    ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.surface,

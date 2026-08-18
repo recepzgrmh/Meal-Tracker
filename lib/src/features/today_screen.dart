@@ -1,21 +1,34 @@
 import 'package:flutter/material.dart';
+
 import '../../l10n/l10n.dart';
 import '../domain/models.dart';
+import '../domain/nutrition_goals.dart';
 import '../theme/app_theme.dart';
-import '../widgets/app_surfaces.dart';
+import '../util/formatters.dart';
+import '../widgets/daily_summary_card.dart';
 import '../widgets/liquid_glass_bottom_bar.dart';
+import '../widgets/meal_list_tile.dart';
 
 class TodayScreen extends StatelessWidget {
   const TodayScreen({
-    super.key,
     required this.meals,
+    required this.goals,
+    required this.day,
     required this.onAddMeal,
     required this.onMealTap,
     required this.onNavigationSelected,
     this.showBottomNavigationBar = true,
+    super.key,
   });
 
   final List<LoggedMeal> meals;
+  final NutritionGoals goals;
+
+  /// The day this screen represents. Owned by the shell so the header cannot
+  /// freeze on the date of the first build when the app stays open past
+  /// midnight.
+  final DateTime day;
+
   final VoidCallback onAddMeal;
   final ValueChanged<LoggedMeal> onMealTap;
   final ValueChanged<int> onNavigationSelected;
@@ -34,15 +47,24 @@ class TodayScreen extends StatelessWidget {
         child: CustomScrollView(
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 104),
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.page,
+                AppSpacing.lg,
+                AppSpacing.page,
+                AppSpacing.pageBottom(context),
+              ),
               sliver: SliverList.list(
                 children: [
-                  const _TodayHeader(),
-                  const SizedBox(height: 18),
-                  _DailySummary(total: total),
-                  const SizedBox(height: 12),
+                  _TodayHeader(day: day),
+                  const SizedBox(height: AppSpacing.lg),
+                  DailySummaryCard(
+                    total: total,
+                    goals: goals,
+                    onDetails: () => onNavigationSelected(3),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
                   _QuickComposer(onTap: onAddMeal),
-                  const SizedBox(height: 26),
+                  const SizedBox(height: AppSpacing.xl),
                   _SectionHeader(
                     title: context.ota(
                       'todayMealsTitle',
@@ -56,12 +78,15 @@ class TodayScreen extends StatelessWidget {
                       replacements: {'count': meals.length},
                     ),
                   ),
-                  const SizedBox(height: 11),
+                  const SizedBox(height: AppSpacing.sm),
                   if (meals.isEmpty)
                     _EmptyMeals(onAddMeal: onAddMeal)
                   else
                     ...meals.map(
-                      (meal) => _MealRow(meal, onTap: () => onMealTap(meal)),
+                      (meal) => MealListTile(
+                        meal: meal,
+                        onTap: () => onMealTap(meal),
+                      ),
                     ),
                 ],
               ),
@@ -80,11 +105,12 @@ class TodayScreen extends StatelessWidget {
 }
 
 class _TodayHeader extends StatelessWidget {
-  const _TodayHeader();
+  const _TodayHeader({required this.day});
+
+  final DateTime day;
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -92,222 +118,10 @@ class _TodayHeader extends StatelessWidget {
           context.ota('todayTitle', tr: 'Bugün', en: 'Today'),
           style: Theme.of(context).textTheme.displaySmall,
         ),
-        const SizedBox(height: 5),
+        const SizedBox(height: AppSpacing.tiny),
         Text(
-          _formatHeaderDate(now, Localizations.localeOf(context).languageCode),
+          formatHeaderDate(context, day),
           style: Theme.of(context).textTheme.bodyMedium,
-        ),
-      ],
-    );
-  }
-}
-
-class _DailySummary extends StatelessWidget {
-  const _DailySummary({required this.total});
-
-  static const calorieGoal = 2100.0;
-  final Nutrition total;
-
-  @override
-  Widget build(BuildContext context) {
-    final remaining = (calorieGoal - total.calories)
-        .clamp(0, calorieGoal)
-        .toDouble();
-    final largeText = MediaQuery.textScalerOf(context).scale(14) >= 20;
-    return HeroCardSurface(
-      color: AppColors.brandSoft,
-      padding: const EdgeInsets.fromLTRB(22, 20, 22, 18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (largeText) ...[
-            _RemainingCalories(remaining: remaining),
-            const SizedBox(height: 10),
-            _CalorieGoalProgress(total: total),
-          ] else
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(child: _RemainingCalories(remaining: remaining)),
-                _CalorieGoalProgress(total: total),
-              ],
-            ),
-          const SizedBox(height: 15),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(99),
-            child: LinearProgressIndicator(
-              minHeight: 7,
-              value: (total.calories / calorieGoal).clamp(0, 1),
-              backgroundColor: AppColors.surfaceMuted,
-              valueColor: const AlwaysStoppedAnimation(AppColors.limeDark),
-            ),
-          ),
-          const SizedBox(height: 14),
-          Container(height: 1, color: AppColors.line),
-          const SizedBox(height: 13),
-          if (largeText)
-            Column(
-              children: [
-                _MacroMetric(
-                  label: context.l10n.macroProtein,
-                  value: total.protein,
-                  goal: 160,
-                  color: AppColors.protein,
-                ),
-                const SizedBox(height: 16),
-                _MacroMetric(
-                  label: context.l10n.macroCarbs,
-                  value: total.carbs,
-                  goal: 240,
-                  color: AppColors.carbs,
-                ),
-                const SizedBox(height: 16),
-                _MacroMetric(
-                  label: context.l10n.macroFat,
-                  value: total.fat,
-                  goal: 70,
-                  color: AppColors.fat,
-                ),
-              ],
-            )
-          else
-            Row(
-              children: [
-                Expanded(
-                  child: _MacroMetric(
-                    label: context.l10n.macroProtein,
-                    value: total.protein,
-                    goal: 160,
-                    color: AppColors.protein,
-                  ),
-                ),
-                const SizedBox(width: 18),
-                Expanded(
-                  child: _MacroMetric(
-                    label: context.l10n.macroCarbs,
-                    value: total.carbs,
-                    goal: 240,
-                    color: AppColors.carbs,
-                  ),
-                ),
-                const SizedBox(width: 18),
-                Expanded(
-                  child: _MacroMetric(
-                    label: context.l10n.macroFat,
-                    value: total.fat,
-                    goal: 70,
-                    color: AppColors.fat,
-                  ),
-                ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RemainingCalories extends StatelessWidget {
-  const _RemainingCalories({required this.remaining});
-
-  final double remaining;
-
-  @override
-  Widget build(BuildContext context) => Text.rich(
-    TextSpan(
-      text: _formatNumber(remaining.round()),
-      style: const TextStyle(
-        color: AppColors.ink,
-        fontSize: 40,
-        height: 1,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -1.1,
-      ),
-      children: [
-        TextSpan(
-          text: context.ota(
-            'caloriesRemainingSuffix',
-            tr: ' kcal kaldı',
-            en: ' kcal left',
-          ),
-          style: const TextStyle(
-            color: AppColors.muted,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 0,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-class _CalorieGoalProgress extends StatelessWidget {
-  const _CalorieGoalProgress({required this.total});
-
-  final Nutrition total;
-
-  @override
-  Widget build(BuildContext context) => Text(
-    context.ota(
-      'calorieGoalProgress',
-      tr: '{current} / 2.100',
-      en: '{current} / 2,100',
-      replacements: {'current': _formatNumber(total.calories.round())},
-    ),
-    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-      color: AppColors.ink,
-      fontWeight: FontWeight.w600,
-    ),
-  );
-}
-
-class _MacroMetric extends StatelessWidget {
-  const _MacroMetric({
-    required this.label,
-    required this.value,
-    required this.goal,
-    required this.color,
-  });
-
-  final String label;
-  final double value;
-  final double goal;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: AppColors.muted),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          context.ota(
-            'macroGoalProgress',
-            tr: '{current} / {goal} g',
-            en: '{current} / {goal} g',
-            replacements: {'current': value.round(), 'goal': goal.round()},
-          ),
-          maxLines: 1,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 13),
-        ),
-        const SizedBox(height: 7),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(99),
-          child: LinearProgressIndicator(
-            minHeight: 4,
-            value: (value / goal).clamp(0, 1),
-            backgroundColor: AppColors.surfaceMuted,
-            valueColor: AlwaysStoppedAnimation(color),
-          ),
         ),
       ],
     );
@@ -335,7 +149,12 @@ class _QuickComposer extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadius.compactCard),
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.sm,
+              AppSpacing.md,
+            ),
             child: Row(
               children: [
                 Container(
@@ -347,7 +166,7 @@ class _QuickComposer extends StatelessWidget {
                   ),
                   child: const Icon(Icons.photo_camera_outlined, size: 22),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,7 +179,7 @@ class _QuickComposer extends StatelessWidget {
                         ),
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppSpacing.micro),
                       Text(
                         context.ota(
                           'quickAddBody',
@@ -401,104 +220,6 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _MealRow extends StatelessWidget {
-  const _MealRow(this.meal, {required this.onTap});
-
-  final LoggedMeal meal;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 9),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppRadius.compactCard),
-          boxShadow: AppShadows.card,
-        ),
-        child: Material(
-          color: AppColors.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.compactCard),
-            side: const BorderSide(color: AppColors.line),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            key: Key('meal-${meal.id}'),
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.medium),
-                    child: meal.imageAsset == null
-                        ? Container(
-                            width: 88,
-                            height: 88,
-                            color: AppColors.surfaceMuted,
-                            child: const Icon(
-                              Icons.restaurant_rounded,
-                              size: 21,
-                            ),
-                          )
-                        : Image.asset(
-                            meal.imageAsset!,
-                            width: 88,
-                            height: 88,
-                            fit: BoxFit.cover,
-                            cacheWidth: 240,
-                          ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          meal.name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          meal.timeLabel,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '${meal.nutrition.calories.round()}',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      Text(
-                        'kcal',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(height: 8),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        size: 20,
-                        color: AppColors.muted,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _EmptyMeals extends StatelessWidget {
   const _EmptyMeals({required this.onAddMeal});
 
@@ -507,7 +228,7 @@ class _EmptyMeals extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.large),
@@ -523,7 +244,7 @@ class _EmptyMeals extends StatelessWidget {
             ),
             style: Theme.of(context).textTheme.titleMedium,
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: AppSpacing.tiny),
           Text(
             context.ota(
               'todayEmptyBody',
@@ -533,7 +254,7 @@ class _EmptyMeals extends StatelessWidget {
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.md),
           TextButton(
             onPressed: onAddMeal,
             child: Text(
@@ -548,64 +269,4 @@ class _EmptyMeals extends StatelessWidget {
       ),
     );
   }
-}
-
-String _formatNumber(int value) {
-  return value.toString().replaceAllMapped(
-    RegExp(r'\B(?=(\d{3})+(?!\d))'),
-    (_) => '.',
-  );
-}
-
-String _formatHeaderDate(DateTime date, String languageCode) {
-  const trWeekdays = [
-    'Pazartesi',
-    'Salı',
-    'Çarşamba',
-    'Perşembe',
-    'Cuma',
-    'Cumartesi',
-    'Pazar',
-  ];
-  const trMonths = [
-    'Ocak',
-    'Şubat',
-    'Mart',
-    'Nisan',
-    'Mayıs',
-    'Haziran',
-    'Temmuz',
-    'Ağustos',
-    'Eylül',
-    'Ekim',
-    'Kasım',
-    'Aralık',
-  ];
-  const enWeekdays = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
-  ];
-  const enMonths = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
-  final english = languageCode == 'en';
-  final weekdays = english ? enWeekdays : trWeekdays;
-  final months = english ? enMonths : trMonths;
-  return '${weekdays[date.weekday - 1]}, ${date.day} ${months[date.month - 1]}';
 }

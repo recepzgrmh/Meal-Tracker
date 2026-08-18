@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/l10n.dart';
 import '../domain/models.dart';
 import '../theme/app_theme.dart';
+import '../util/formatters.dart';
 import '../widgets/app_surfaces.dart';
 import '../widgets/liquid_glass_bottom_bar.dart';
-import '../../l10n/l10n.dart';
+import '../widgets/meal_list_tile.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({
     required this.meals,
+    required this.onAddMeal,
     required this.onMealTap,
     required this.onNavigationSelected,
     this.selectedDayIndex,
@@ -18,6 +21,7 @@ class HistoryScreen extends StatefulWidget {
   });
 
   final List<LoggedMeal> meals;
+  final VoidCallback onAddMeal;
   final ValueChanged<LoggedMeal> onMealTap;
   final ValueChanged<int> onNavigationSelected;
   final int? selectedDayIndex;
@@ -81,16 +85,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
         child: CustomScrollView(
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(22, 22, 22, 96),
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.page,
+                AppSpacing.page,
+                AppSpacing.page,
+                AppSpacing.pageBottom(context),
+              ),
               sliver: SliverList.list(
                 children: [
                   Text(
                     context.ota('historyTitle', tr: 'Geçmiş', en: 'History'),
                     style: Theme.of(context).textTheme.displaySmall,
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: AppSpacing.xl),
                   if (selectedDay == null)
-                    const _EmptyHistory()
+                    _EmptyHistory(onAddMeal: widget.onAddMeal)
                   else ...[
                     if (days.length > 1) ...[
                       _DayRail(
@@ -98,21 +107,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         selectedIndex: safeIndex,
                         onSelected: _selectDay,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.md),
                     ],
                     StandardCardSurface(
-                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
                       child: Column(
                         children: [
                           Text(
-                            _formatHistoryDate(
-                              selectedDay,
-                              Localizations.localeOf(context).languageCode,
-                            ),
+                            formatFullDate(context, selectedDay),
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: AppSpacing.sm),
                           Text(
                             context.ota(
                               'calorieAmount',
@@ -124,7 +129,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             ),
                             style: Theme.of(context).textTheme.headlineMedium,
                           ),
-                          const SizedBox(height: 7),
+                          const SizedBox(height: AppSpacing.xs),
                           Text(
                             context.ota(
                               'historySummary',
@@ -140,17 +145,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    for (
-                      var index = 0;
-                      index < selectedMeals.length;
-                      index++
-                    ) ...[
-                      _HistoryMealCard(
-                        meal: selectedMeals[index],
-                        onTap: () => widget.onMealTap(selectedMeals[index]),
+                    const SizedBox(height: AppSpacing.xl),
+                    for (final meal in selectedMeals)
+                      MealListTile(
+                        meal: meal,
+                        onTap: () => widget.onMealTap(meal),
+                        subtitle: context.ota(
+                          'mealFoodCount',
+                          tr: '{time} · {count} yiyecek',
+                          en: '{time} · {count} foods',
+                          replacements: {
+                            'time': meal.timeLabel,
+                            'count': meal.items.length,
+                          },
+                        ),
                       ),
-                    ],
                   ],
                 ],
               ),
@@ -181,20 +190,26 @@ class _DayRail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final languageCode = Localizations.localeOf(context).languageCode;
     return SizedBox(
       height: 68,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: days.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.xs),
         itemBuilder: (context, index) {
           final day = days[index];
           final selected = index == selectedIndex;
           return Semantics(
             button: true,
             selected: selected,
-            label: _formatHistoryDate(day, languageCode),
+            // The rail filters the day below it; the bare date read as a
+            // heading rather than as a control.
+            label: context.ota(
+              'historyDayFilterSemantics',
+              tr: '{date} gününü göster',
+              en: 'Show {date}',
+              replacements: {'date': formatFullDate(context, day)},
+            ),
             child: Material(
               color: selected ? AppColors.lime : AppColors.surface,
               shape: RoundedRectangleBorder(
@@ -211,14 +226,14 @@ class _DayRail extends StatelessWidget {
                   constraints: const BoxConstraints(minWidth: 64),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          _shortWeekday(day, languageCode),
+                          formatShortWeekday(context, day),
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: selected
@@ -226,7 +241,7 @@ class _DayRail extends StatelessWidget {
                                     : AppColors.muted,
                               ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppSpacing.micro),
                         Text(
                           '${day.day}',
                           style: Theme.of(context).textTheme.titleMedium,
@@ -244,170 +259,15 @@ class _DayRail extends StatelessWidget {
   }
 }
 
-String _shortWeekday(DateTime date, String languageCode) {
-  const tr = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
-  const en = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  return (languageCode == 'en' ? en : tr)[date.weekday - 1];
-}
-
-String _formatHistoryDate(DateTime date, String languageCode) {
-  const trWeekdays = [
-    'Pazartesi',
-    'Salı',
-    'Çarşamba',
-    'Perşembe',
-    'Cuma',
-    'Cumartesi',
-    'Pazar',
-  ];
-  const trMonths = [
-    'Ocak',
-    'Şubat',
-    'Mart',
-    'Nisan',
-    'Mayıs',
-    'Haziran',
-    'Temmuz',
-    'Ağustos',
-    'Eylül',
-    'Ekim',
-    'Kasım',
-    'Aralık',
-  ];
-  const enWeekdays = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
-  ];
-  const enMonths = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
-  ];
-  final english = languageCode == 'en';
-  final weekdays = english ? enWeekdays : trWeekdays;
-  final months = english ? enMonths : trMonths;
-  return '${date.day} ${months[date.month - 1]}, '
-      '${weekdays[date.weekday - 1]}';
-}
-
-class _HistoryMealCard extends StatelessWidget {
-  const _HistoryMealCard({required this.meal, required this.onTap});
-
-  final LoggedMeal meal;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppRadius.compactCard),
-          boxShadow: AppShadows.card,
-        ),
-        child: Material(
-          color: AppColors.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.compactCard),
-            side: const BorderSide(color: AppColors.line),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.all(10),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.large),
-                    child: SizedBox.square(
-                      dimension: 88,
-                      child: meal.imageAsset == null
-                          ? const ColoredBox(
-                              color: AppColors.canvas,
-                              child: Icon(Icons.restaurant_rounded),
-                            )
-                          : Image.asset(meal.imageAsset!, fit: BoxFit.cover),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          meal.name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          context.ota(
-                            'mealFoodCount',
-                            tr: '{time} · {count} yiyecek',
-                            en: '{time} · {count} foods',
-                            replacements: {
-                              'time': meal.timeLabel,
-                              'count': meal.items.length,
-                            },
-                          ),
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '${meal.nutrition.calories.round()}',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      Text(
-                        'kcal',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(height: 8),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        size: 20,
-                        color: AppColors.muted,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _EmptyHistory extends StatelessWidget {
-  const _EmptyHistory();
+  const _EmptyHistory({required this.onAddMeal});
+
+  final VoidCallback onAddMeal;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 36),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
       child: Column(
         children: [
           Text(
@@ -418,7 +278,7 @@ class _EmptyHistory extends StatelessWidget {
             ),
             style: Theme.of(context).textTheme.titleLarge,
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.tiny),
           Text(
             context.ota(
               'historyEmptyBody',
@@ -427,6 +287,17 @@ class _EmptyHistory extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextButton(
+            onPressed: onAddMeal,
+            child: Text(
+              context.ota(
+                'historyEmptyAction',
+                tr: 'İlk öğünü ekle',
+                en: 'Add your first meal',
+              ),
+            ),
           ),
         ],
       ),

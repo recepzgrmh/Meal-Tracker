@@ -9,6 +9,7 @@ import 'data/meal_repository.dart';
 import 'catalog/food_catalog_repository.dart';
 import 'data/mock_seed_data.dart';
 import 'domain/models.dart';
+import 'domain/nutrition_goals.dart';
 import 'features/meal_detail_screen.dart';
 import 'features/meal_flow.dart';
 import 'features/analysis_screen.dart';
@@ -47,6 +48,11 @@ class MealClarityShell extends StatefulWidget {
     this.catalogRepository,
     this.userId,
     this.onSyncRequested,
+    this.goals = NutritionGoals.fallback,
+    this.locale,
+    this.onLocaleChanged,
+    this.onSignOut,
+    this.onDeleteAccount,
     super.key,
   });
 
@@ -55,6 +61,13 @@ class MealClarityShell extends StatefulWidget {
   final FoodCatalogRepository? catalogRepository;
   final String? userId;
   final Future<void> Function()? onSyncRequested;
+  final NutritionGoals goals;
+
+  /// `null` means "follow the device". Only set when the user picked a language.
+  final Locale? locale;
+  final ValueChanged<Locale?>? onLocaleChanged;
+  final Future<void> Function()? onSignOut;
+  final Future<bool> Function()? onDeleteAccount;
 
   @override
   State<MealClarityShell> createState() => _MealClarityShellState();
@@ -69,10 +82,15 @@ class _MealClarityShellState extends State<MealClarityShell>
   late final PageController _pageController;
   StreamSubscription<List<LoggedMeal>>? _mealSubscription;
   StreamSubscription<List<LoggedMeal>>? _historySubscription;
+  Timer? _midnightTimer;
   List<LoggedMeal> _historyMeals = const [];
+  late DateTime _currentDay;
   int _selectedTab = 0;
   int _historyDayIndex = 0;
   int _analysisDays = 7;
+
+  bool get _isPersistent =>
+      widget.cachedRepository != null && widget.userId != null;
 
   @override
   void initState() {
@@ -80,23 +98,61 @@ class _MealClarityShellState extends State<MealClarityShell>
     WidgetsBinding.instance.addObserver(this);
     _pageController = PageController();
     _analysisRepository = widget.analysisRepository ?? MockMealRepository();
-    final persistent = widget.cachedRepository != null && widget.userId != null;
+    _currentDay = _startOfToday();
     _todayViewModel = TodayViewModel(
-      initialMeals: persistent ? const [] : buildMockMeals(),
+      initialMeals: _isPersistent ? const [] : buildMockMeals(),
     );
-    if (persistent) {
-      final now = DateTime.now();
-      _mealSubscription = widget.cachedRepository!
-          .watchDay(userId: widget.userId!, day: now)
-          .listen(_todayViewModel.replaceAll);
+    if (_isPersistent) {
+      _subscribeToDay();
       _historySubscription = widget.cachedRepository!
           .watchHistory(widget.userId!)
           .listen((meals) {
             if (!mounted) return;
             setState(() => _historyMeals = meals);
           });
-      unawaited(_warmPersistentState(now));
+      unawaited(_warmPersistentState(_currentDay));
     }
+    _scheduleMidnightRollover();
+  }
+
+  static DateTime _startOfToday() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  void _subscribeToDay() {
+    _mealSubscription?.cancel();
+    _mealSubscription = widget.cachedRepository!
+        .watchDay(userId: widget.userId!, day: _currentDay)
+        .listen(_todayViewModel.replaceAll);
+  }
+
+  /// A shell left open overnight used to keep serving yesterday's meals: the
+  /// day was captured once in [initState]. It is now re-derived on resume and
+  /// on a timer aimed at the next local midnight, whichever happens first.
+  void _handleDayRollover() {
+    final today = _startOfToday();
+    if (today != _currentDay) {
+      _currentDay = today;
+      if (_isPersistent) {
+        _subscribeToDay();
+        unawaited(_warmPersistentState(today));
+      }
+      if (mounted) setState(() {});
+    }
+    _scheduleMidnightRollover();
+  }
+
+  void _scheduleMidnightRollover() {
+    _midnightTimer?.cancel();
+    final now = DateTime.now();
+    final nextMidnight = DateTime(now.year, now.month, now.day + 1);
+    _midnightTimer = Timer(
+      // A second of slack so the timer never fires a hair before the boundary
+      // and re-arms for the same day.
+      nextMidnight.difference(now) + const Duration(seconds: 1),
+      _handleDayRollover,
+    );
   }
 
   Future<void> _warmPersistentState(DateTime day) async {
@@ -119,6 +175,7 @@ class _MealClarityShellState extends State<MealClarityShell>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _midnightTimer?.cancel();
     _mealSubscription?.cancel();
     _historySubscription?.cancel();
     _pageController.dispose();
@@ -128,11 +185,9 @@ class _MealClarityShellState extends State<MealClarityShell>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed &&
-        widget.cachedRepository != null &&
-        widget.userId != null) {
-      unawaited(_warmPersistentState(DateTime.now()));
-    }
+    if (state != AppLifecycleState.resumed) return;
+    _handleDayRollover();
+    if (_isPersistent) unawaited(_warmPersistentState(_currentDay));
   }
 
   Future<void> _startMealFlow(
@@ -150,10 +205,13 @@ class _MealClarityShellState extends State<MealClarityShell>
       ),
     );
     if (draft == null || !mounted) return;
+    await _logDraft(draft);
+  }
 
-    final loggedAt = DateTime.now();
+  Future<void> _logDraft(MealDraft draft) async {
+    final loggedAt = draft.eatenAt ?? DateTime.now();
     final loggedMeal = _todayViewModel.logDraft(draft, loggedAt);
-    if (widget.cachedRepository != null && widget.userId != null) {
+    if (_isPersistent) {
       try {
         if (draft.analysisRunId != null) {
           await widget.cachedRepository!.saveAnalyzedOptimistically(
@@ -172,53 +230,68 @@ class _MealClarityShellState extends State<MealClarityShell>
         unawaited(widget.onSyncRequested?.call());
       } catch (_) {
         _todayViewModel.deleteMeal(loggedMeal.id);
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                context.ota(
-                  'mealSaveDeviceError',
-                  tr: 'Öğün cihazına kaydedilemedi.',
-                  en: 'The meal could not be saved to your device.',
-                ),
-              ),
-            ),
-          );
-        }
+        if (!mounted) return;
+        // Floating like the success snackbar: `extendBody: true` puts the
+        // navigation bar over a fixed one.
+        _showFloatingSnackBar(
+          message: context.ota(
+            'mealSaveDeviceError',
+            tr: 'Öğün cihazına kaydedilemedi.',
+            en: 'The meal could not be saved to your device.',
+          ),
+          actionLabel: context.ota(
+            'commonRetry',
+            tr: 'Tekrar dene',
+            en: 'Try again',
+          ),
+          onAction: () => unawaited(_logDraft(draft)),
+        );
         return;
       }
     }
 
-    if (!context.mounted) return;
+    if (!mounted) return;
+    _showFloatingSnackBar(
+      message: context.ota(
+        'mealSavedMessage',
+        tr: '{meal} kaydedildi',
+        en: '{meal} saved',
+        replacements: {'meal': draft.mealName},
+      ),
+      actionLabel: context.ota('commonUndo', tr: 'Geri al', en: 'Undo'),
+      onAction: () {
+        _todayViewModel.deleteMeal(loggedMeal.id);
+        if (_isPersistent) {
+          unawaited(
+            widget.cachedRepository!
+                .deleteOptimistically(
+                  userId: widget.userId!,
+                  mealId: loggedMeal.id,
+                )
+                .then((_) => widget.onSyncRequested?.call()),
+          );
+        }
+      },
+    );
+  }
+
+  void _showFloatingSnackBar({
+    required String message,
+    required String actionLabel,
+    required VoidCallback onAction,
+  }) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppColors.ink,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        content: Text(
-          context.ota(
-            'mealSavedMessage',
-            tr: '{meal} kaydedildi',
-            en: '{meal} saved',
-            replacements: {'meal': draft.mealName},
-          ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.large),
         ),
+        content: Text(message),
         action: SnackBarAction(
-          label: context.ota('commonUndo', tr: 'Geri al', en: 'Undo'),
+          label: actionLabel,
           textColor: AppColors.lime,
-          onPressed: () {
-            _todayViewModel.deleteMeal(loggedMeal.id);
-            if (widget.cachedRepository != null && widget.userId != null) {
-              unawaited(
-                widget.cachedRepository!
-                    .deleteOptimistically(
-                      userId: widget.userId!,
-                      mealId: loggedMeal.id,
-                    )
-                    .then((_) => widget.onSyncRequested?.call()),
-              );
-            }
-          },
+          onPressed: onAction,
         ),
       ),
     );
@@ -381,6 +454,8 @@ class _MealClarityShellState extends State<MealClarityShell>
               TodayScreen(
                 key: const PageStorageKey('today-tab'),
                 meals: _todayViewModel.meals,
+                goals: widget.goals,
+                day: _currentDay,
                 onAddMeal: () => _showQuickAddSheet(context),
                 onMealTap: (meal) => _openMeal(context, meal),
                 onNavigationSelected: (index) =>
@@ -390,6 +465,7 @@ class _MealClarityShellState extends State<MealClarityShell>
               HistoryScreen(
                 key: const PageStorageKey('history-tab'),
                 meals: _analysisMeals,
+                onAddMeal: () => _showQuickAddSheet(context),
                 selectedDayIndex: _historyDayIndex,
                 onSelectedDayIndexChanged: (index) {
                   setState(() => _historyDayIndex = index);
@@ -402,6 +478,8 @@ class _MealClarityShellState extends State<MealClarityShell>
               AnalysisScreen(
                 key: const PageStorageKey('analysis-tab'),
                 meals: _analysisMeals,
+                goals: widget.goals,
+                onAddMeal: () => _showQuickAddSheet(context),
                 selectedDays: _analysisDays,
                 onSelectedDaysChanged: (days) {
                   setState(() => _analysisDays = days);
@@ -413,6 +491,11 @@ class _MealClarityShellState extends State<MealClarityShell>
               ),
               ProfileScreen(
                 key: const PageStorageKey('profile-tab'),
+                goals: widget.goals,
+                locale: widget.locale,
+                onLocaleChanged: widget.onLocaleChanged,
+                onSignOut: widget.onSignOut,
+                onDeleteAccount: widget.onDeleteAccount,
                 onNavigationSelected: (index) =>
                     _handleNavigation(context, index),
                 showBottomNavigationBar: false,

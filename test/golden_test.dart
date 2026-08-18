@@ -34,7 +34,7 @@ void main() {
 
   testWidgets('add meal visual baseline', (tester) async {
     await pumpApp(tester);
-    await tester.tap(find.text('Öğün Ekle').last);
+    await tester.tap(find.byKey(const Key('nav-destination-2')));
     await tester.pumpAndSettle();
 
     await expectLater(

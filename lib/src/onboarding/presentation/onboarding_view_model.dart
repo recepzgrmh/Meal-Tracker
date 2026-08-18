@@ -3,6 +3,10 @@ import 'package:flutter/foundation.dart';
 import '../data/onboarding_repository.dart';
 import '../domain/onboarding_draft.dart';
 
+/// Why a calorie target was rejected. The view model deliberately does not
+/// carry a message: the copy belongs to the UI layer, which localises it once.
+enum CalorieTargetError { outOfRange }
+
 class OnboardingViewModel extends ChangeNotifier {
   OnboardingViewModel(this._repository);
 
@@ -30,6 +34,11 @@ class OnboardingViewModel extends ChangeNotifier {
 
   Future<void> finishDraft() => goToStep(3);
 
+  /// Leaves onboarding for the sign-in screen without answering any of it.
+  /// The returning user keeps an empty draft: nothing is written except the
+  /// step the coordinator reads to decide where to route.
+  Future<void> skipToSignIn() => goToStep(3);
+
   Future<void> selectIntention(TrackingIntention intention) async {
     _draft = _draft.copyWith(
       intention: intention,
@@ -39,14 +48,14 @@ class OnboardingViewModel extends ChangeNotifier {
     await _repository.saveDraft(_draft);
   }
 
-  String? validateCalorieTarget(String rawValue) {
+  CalorieTargetError? validateCalorieTarget(String rawValue) {
     if (_draft.intention != TrackingIntention.calories ||
         rawValue.trim().isEmpty) {
       return null;
     }
     final value = int.tryParse(rawValue.trim());
     if (value == null || value < 500 || value > 10000) {
-      return '500–10.000 kcal arasında bir değer gir veya alanı boş bırak.';
+      return CalorieTargetError.outOfRange;
     }
     return null;
   }

@@ -138,6 +138,34 @@ void main() {
     final meals = await repository.watchDay(userId: 'user-a', day: now).first;
     expect(meals.single.name, 'Çevrimdışı Öğün');
   });
+
+  test('clearing a user drops their cached meals and pending sync', () async {
+    await repository.saveOptimistically(
+      userId: 'user-a',
+      meal: _domainMeal(name: 'Silinecek Öğün'),
+      eatenAt: now,
+    );
+    await repository.saveOptimistically(
+      userId: 'user-b',
+      meal: _domainMeal(
+        name: 'Kalacak Öğün',
+        id: 'meal-2',
+        itemId: 'item-2',
+      ),
+      eatenAt: now,
+    );
+
+    await repository.clearUser('user-a');
+
+    final cleared = await repository.watchDay(userId: 'user-a', day: now).first;
+    expect(cleared, isEmpty);
+    final operations = await database.select(database.syncOperations).get();
+    expect(operations.every((row) => row.userId == 'user-b'), isTrue);
+
+    // Signing out must not disturb another account cached on the same device.
+    final retained = await repository.watchDay(userId: 'user-b', day: now).first;
+    expect(retained.single.name, 'Kalacak Öğün');
+  });
 }
 
 class FakeMealRemoteDataSource implements MealRemoteDataSource {
@@ -157,19 +185,23 @@ class FakeMealRemoteDataSource implements MealRemoteDataSource {
   }
 }
 
-LoggedMeal _domainMeal({required String name}) {
+LoggedMeal _domainMeal({
+  required String name,
+  String id = 'meal-1',
+  String itemId = 'item-1',
+}) {
   return LoggedMeal(
-    id: 'meal-1',
+    id: id,
     name: name,
     timeLabel: '08:42',
-    items: const [
+    items: [
       MealItem(
-        id: 'item-1',
+        id: itemId,
         name: 'Yumurta',
         sourceText: 'yumurta',
         portionLabel: '1 adet · 50 g',
         grams: 50,
-        nutritionPer100g: Nutrition(
+        nutritionPer100g: const Nutrition(
           calories: 140,
           protein: 12.6,
           carbs: 0.7,

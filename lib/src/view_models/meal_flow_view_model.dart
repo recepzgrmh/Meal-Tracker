@@ -25,22 +25,32 @@ class MealFlowViewModel extends ChangeNotifier {
 
   MealFlowStep _step = MealFlowStep.compose;
   MealDraft? _draft;
-  String? _error;
   MealAnalysisFailureKind? _errorKind;
   bool _manualSearchSuggested = false;
   bool _isSearchingCatalog = false;
   List<CatalogFoodCandidate> _catalogResults = const [];
   String? _catalogSearchError;
+  bool _isSearchingVariants = false;
+  List<CatalogFoodCandidate> _variantResults = const [];
+  String? _variantSearchError;
+
+  /// Bumped whenever the user leaves the analyzing step. An in-flight
+  /// `analyze()` compares its own generation on completion and drops its result
+  /// when it is stale, so a late response can no longer yank the user out of
+  /// the composer they deliberately went back to.
+  int _analysisGeneration = 0;
 
   MealFlowStep get step => _step;
   MealDraft? get draft => _draft;
-  String? get error => _error;
   MealAnalysisFailureKind? get errorKind => _errorKind;
   bool get manualSearchSuggested => _manualSearchSuggested;
   bool get canSearchCatalog => _catalogRepository != null;
   bool get isSearchingCatalog => _isSearchingCatalog;
   List<CatalogFoodCandidate> get catalogResults => _catalogResults;
   String? get catalogSearchError => _catalogSearchError;
+  bool get isSearchingVariants => _isSearchingVariants;
+  List<CatalogFoodCandidate> get variantResults => _variantResults;
+  String? get variantSearchError => _variantSearchError;
 
   Future<void> analyze(MealAnalysisInput input) async {
     if (input.isEmpty || _step == MealFlowStep.analyzing) return;
@@ -49,21 +59,23 @@ class MealFlowViewModel extends ChangeNotifier {
       locale: input.locale,
       photo: input.photo,
     );
+    final generation = _analysisGeneration;
     _step = MealFlowStep.analyzing;
-    _error = null;
     _errorKind = null;
     _manualSearchSuggested = false;
     notifyListeners();
     try {
-      _draft = await _repository.analyze(normalized);
+      final draft = await _repository.analyze(normalized);
+      if (generation != _analysisGeneration) return;
+      _draft = draft;
       _step = MealFlowStep.review;
     } on MealAnalysisException catch (error) {
-      _error = _messageFor(error.kind);
+      if (generation != _analysisGeneration) return;
       _errorKind = error.kind;
       _manualSearchSuggested = error.kind == MealAnalysisFailureKind.noMatch;
       _step = MealFlowStep.compose;
     } catch (_) {
-      _error = 'Öğünü analiz edemedik. Bağlantını kontrol edip tekrar dene.';
+      if (generation != _analysisGeneration) return;
       _errorKind = MealAnalysisFailureKind.unknown;
       _step = MealFlowStep.compose;
     }
@@ -88,31 +100,43 @@ class MealFlowViewModel extends ChangeNotifier {
     }
   }
 
-  void selectManualFood(CatalogFoodCandidate candidate, String sourceText) {
-    final item = MealItem(
-      id: _manualItemIdFactory(),
-      foodId: candidate.foodId,
-      name: naturalFoodDisplayName(candidate.name),
-      canonicalName: candidate.name,
-      sourceText: sourceText,
-      portionLabel: candidate.defaultPortionLabel,
-      grams: candidate.defaultGrams,
-      nutritionPer100g: Nutrition(
-        calories: candidate.caloriesPer100g,
-        protein: candidate.proteinPer100g,
-        carbs: candidate.carbsPer100g,
-        fat: candidate.fatPer100g,
-      ),
-      matchState: MatchState.checkAmount,
-      sourceName: candidate.nutritionSource,
-      confidence: candidate.score,
-      matchMethod: 'manual',
-    );
-    _draft = MealDraft(
-      inputText: sourceText,
-      mealName: _mealName(DateTime.now()),
-      items: [item],
-    );
+  /// Loads the catalog entries the "which type?" question can actually offer
+  /// for [item]. Kept in fields of its own so an open variant sheet and the
+  /// manual search sheet never overwrite each other's results.
+  Future<void> searchItemVariants(MealItem item, String locale) async {
+    final repository = _catalogRepository;
+    if (repository == null || _isSearchingVariants) return;
+    final query = item.canonicalName.trim().isNotEmpty
+        ? item.canonicalName.trim()
+        : item.sourceText.trim();
+    _isSearchingVariants = true;
+    _variantSearchError = null;
+    _variantResults = const [];
+    notifyListeners();
+    try {
+      _variantResults = query.length < 2
+          ? const []
+          : await repository.search(query: query, locale: locale);
+    } catch (_) {
+      _variantSearchError = 'CATALOG_SEARCH_FAILED';
+    } finally {
+      _isSearchingVariants = false;
+      notifyListeners();
+    }
+  }
+
+  void selectManualFood(
+    CatalogFoodCandidate candidate,
+    String sourceText, {
+    required String mealName,
+  }) {
+    final item = _manualItem(candidate, sourceText);
+    final draft = _draft;
+    // A manual correction used to throw away everything already analyzed; it
+    // only starts a draft when there is nothing to add to.
+    _draft = draft == null
+        ? MealDraft(inputText: sourceText, mealName: mealName, items: [item])
+        : draft.addItem(item);
     _step = MealFlowStep.review;
     _manualSearchSuggested = false;
     notifyListeners();
@@ -121,7 +145,11 @@ class MealFlowViewModel extends ChangeNotifier {
   void addManualFood(CatalogFoodCandidate candidate, String sourceText) {
     final draft = _draft;
     if (draft == null) return;
-    _draft = draft.addItem(
+    _draft = draft.addItem(_manualItem(candidate, sourceText));
+    notifyListeners();
+  }
+
+  MealItem _manualItem(CatalogFoodCandidate candidate, String sourceText) =>
       MealItem(
         id: _manualItemIdFactory(),
         foodId: candidate.foodId,
@@ -140,29 +168,10 @@ class MealFlowViewModel extends ChangeNotifier {
         sourceName: candidate.nutritionSource,
         confidence: candidate.score,
         matchMethod: 'manual',
-      ),
-    );
-    notifyListeners();
-  }
-
-  String _messageFor(MealAnalysisFailureKind kind) {
-    return switch (kind) {
-      MealAnalysisFailureKind.noMatch =>
-        'Bu yiyeceği katalogda güvenle eşleştiremedik. Daha açık tarif etmeyi dene.',
-      MealAnalysisFailureKind.unauthenticated =>
-        'Oturumun yenilenmeli. Tekrar giriş yapıp deneyebilirsin.',
-      MealAnalysisFailureKind.invalidRequest =>
-        'Açıklamayı anlayamadık. Daha kısa ve net yazmayı dene.',
-      MealAnalysisFailureKind.rateLimited =>
-        'Çok hızlı deneme yaptın. Biraz bekleyip tekrar dene.',
-      MealAnalysisFailureKind.unavailable ||
-      MealAnalysisFailureKind.invalidResponse ||
-      MealAnalysisFailureKind.unknown =>
-        'Öğünü analiz edemedik. Bağlantını kontrol edip tekrar dene.',
-    };
-  }
+      );
 
   void showComposer() {
+    _analysisGeneration++;
     if (_step == MealFlowStep.compose) return;
     _step = MealFlowStep.compose;
     notifyListeners();
@@ -180,12 +189,10 @@ class MealFlowViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _mealName(DateTime time) {
-    return switch (time.hour) {
-      >= 5 && < 11 => 'Kahvaltı',
-      >= 11 && < 16 => 'Öğle yemeği',
-      >= 16 && < 22 => 'Akşam yemeği',
-      _ => 'Atıştırma',
-    };
+  void setEatenAt(DateTime? value) {
+    final draft = _draft;
+    if (draft == null) return;
+    _draft = draft.withEatenAt(value);
+    notifyListeners();
   }
 }
