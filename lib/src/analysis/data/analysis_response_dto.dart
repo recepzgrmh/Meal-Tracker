@@ -52,6 +52,7 @@ class AnalysisItemDto {
     required this.matchMethod,
     required this.needsClarification,
     required this.nutritionPer100g,
+    this.portionOptions = const [],
     this.clarificationReason,
   });
 
@@ -76,6 +77,15 @@ class AnalysisItemDto {
       nutritionPer100g: AnalysisNutritionDto.fromJson(
         _map(json['nutritionPer100g'], 'nutritionPer100g'),
       ),
+      portionOptions: json['portionOptions'] is List
+          ? (json['portionOptions'] as List)
+                .map(
+                  (value) => AnalysisPortionOptionDto.fromJson(
+                    _map(value, 'portionOptions[]'),
+                  ),
+                )
+                .toList(growable: false)
+          : const [],
     );
   }
 
@@ -90,6 +100,30 @@ class AnalysisItemDto {
   final bool needsClarification;
   final String? clarificationReason;
   final AnalysisNutritionDto nutritionPer100g;
+  final List<AnalysisPortionOptionDto> portionOptions;
+}
+
+class AnalysisPortionOptionDto {
+  const AnalysisPortionOptionDto({
+    required this.label,
+    required this.grams,
+    this.sizeClass,
+    this.imageUrl,
+  });
+
+  factory AnalysisPortionOptionDto.fromJson(Map<String, dynamic> json) {
+    return AnalysisPortionOptionDto(
+      label: _string(json, 'label'),
+      grams: _number(json, 'grams'),
+      sizeClass: json['sizeClass'] as String?,
+      imageUrl: json['imageUrl'] as String?,
+    );
+  }
+
+  final String label;
+  final double grams;
+  final String? sizeClass;
+  final String? imageUrl;
 }
 
 class AnalysisNutritionDto {
