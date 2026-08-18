@@ -29,6 +29,7 @@ Deno.test('vision retries 429 and records the successful attempt', async () => {
   assertEquals(calls, 2)
   assertEquals(result.attempts, 2)
   assertEquals(result.foods[0].description, 'yumurta')
+  assertEquals(result.foods[0].portionConfidence, 0.62)
   assertEquals(result.inputTokens, 25)
 })
 
@@ -94,7 +95,13 @@ function providerResponse(): Response {
       content: [{
         type: 'output_text',
         text: JSON.stringify({
-          foods: [{ description: 'yumurta', estimatedGrams: 100, confidence: 0.9 }],
+          foods: [{
+            description: 'yumurta',
+            estimatedGrams: 100,
+            identityConfidence: 0.9,
+            portionConfidence: 0.62,
+            portionBasis: 'catalog_default',
+          }],
         }),
       }],
     }],

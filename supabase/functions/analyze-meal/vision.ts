@@ -1,12 +1,14 @@
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.112.3'
 import type { MealPhotoReference } from '../_shared/contracts.ts'
 
-const promptVersion = 'meal-vision-extraction-v1'
+const promptVersion = 'meal-vision-extraction-v2'
 
-interface VisionFood {
+export interface VisionFood {
   description: string
   estimatedGrams: number
-  confidence: number
+  identityConfidence: number
+  portionConfidence: number
+  portionBasis: 'user_text' | 'container_reference' | 'visible_scale' | 'catalog_default'
 }
 
 export interface VisionExtraction {
@@ -145,7 +147,7 @@ function buildVisionRequest(options: VisionRequestOptions, model: string): Recor
           {
             type: 'input_text',
             text:
-              'You extract foods and visible portion estimates from one meal photo. Never invent nutrition, ingredients hidden inside a dish, or foods not visually supported. User text may disambiguate a visible food but is not visual evidence. Return short canonical food descriptions in the requested language. If uncertain, use a generic description and lower confidence.',
+              'You identify visibly supported foods in one meal photo. Never invent nutrition, hidden ingredients, cooking oil, sauces, or foods that are not visible or explicitly stated by the user. Separate identity confidence from portion confidence. Exact mass from a single RGB photo is usually uncertain: use catalog_default and low portion confidence unless user text gives an amount, a known container clearly supplies scale, or a visible reference supplies scale. Return short canonical food descriptions in the requested language.',
           },
         ],
       },
@@ -158,7 +160,7 @@ function buildVisionRequest(options: VisionRequestOptions, model: string): Recor
               options.userText || '(none)'
             }`,
           },
-          { type: 'input_image', image_url: options.image, detail: 'low' },
+          { type: 'input_image', image_url: options.image, detail: 'high' },
         ],
       },
     ],
@@ -180,9 +182,20 @@ function buildVisionRequest(options: VisionRequestOptions, model: string): Recor
                 properties: {
                   description: { type: 'string', minLength: 1, maxLength: 100 },
                   estimatedGrams: { type: 'number', minimum: 1, maximum: 3000 },
-                  confidence: { type: 'number', minimum: 0, maximum: 1 },
+                  identityConfidence: { type: 'number', minimum: 0, maximum: 1 },
+                  portionConfidence: { type: 'number', minimum: 0, maximum: 1 },
+                  portionBasis: {
+                    type: 'string',
+                    enum: ['user_text', 'container_reference', 'visible_scale', 'catalog_default'],
+                  },
                 },
-                required: ['description', 'estimatedGrams', 'confidence'],
+                required: [
+                  'description',
+                  'estimatedGrams',
+                  'identityConfidence',
+                  'portionConfidence',
+                  'portionBasis',
+                ],
               },
             },
           },
@@ -223,13 +236,25 @@ function parseFoods(value: unknown): VisionFood[] {
     const row = item as Record<string, unknown>
     const description = typeof row.description === 'string' ? row.description.trim() : ''
     const estimatedGrams = Number(row.estimatedGrams)
-    const confidence = Number(row.confidence)
+    const identityConfidence = Number(row.identityConfidence)
+    const portionConfidence = Number(row.portionConfidence)
+    const portionBasis = row.portionBasis
     if (
       !description || description.length > 100 || !Number.isFinite(estimatedGrams) ||
-      estimatedGrams < 1 || estimatedGrams > 3000 || !Number.isFinite(confidence) ||
-      confidence < 0 || confidence > 1
+      estimatedGrams < 1 || estimatedGrams > 3000 ||
+      !Number.isFinite(identityConfidence) || identityConfidence < 0 || identityConfidence > 1 ||
+      !Number.isFinite(portionConfidence) || portionConfidence < 0 || portionConfidence > 1 ||
+      !['user_text', 'container_reference', 'visible_scale', 'catalog_default'].includes(
+        String(portionBasis),
+      )
     ) return []
-    return [{ description, estimatedGrams, confidence }]
+    return [{
+      description,
+      estimatedGrams,
+      identityConfidence,
+      portionConfidence,
+      portionBasis: portionBasis as VisionFood['portionBasis'],
+    }]
   })
 }
 

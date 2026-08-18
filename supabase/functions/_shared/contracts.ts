@@ -1,6 +1,6 @@
 export const ANALYSIS_CONTRACT_VERSION = 'analysis.v1' as const
 export const DETERMINISTIC_PIPELINE_VERSION = 'deterministic-tr-v1' as const
-export const VISION_PIPELINE_VERSION = 'vision-grounded-hybrid-v1' as const
+export const VISION_PIPELINE_VERSION = 'vision-grounded-hybrid-v2' as const
 
 export type InputKind = 'text' | 'voice' | 'photo' | 'mixed'
 
@@ -37,6 +37,12 @@ export interface AnalysisItem {
   matchMethod: 'exact' | 'alias' | 'retrieval' | 'llm'
   needsClarification: boolean
   clarificationReason?: 'identity' | 'portion'
+  portionOptions?: Array<{
+    label: string
+    grams: number
+    sizeClass?: 'small' | 'regular' | 'large' | 'custom'
+    imageUrl?: string
+  }>
   nutritionPer100g: NutritionPer100g
 }
 
