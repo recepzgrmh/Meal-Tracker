@@ -276,6 +276,43 @@ void main() {
     await tester.pumpAndSettle();
   });
 
+  testWidgets('selected bottom tab can be held and scrubbed to a destination', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MealClarityApp());
+    await tester.pumpAndSettle();
+
+    AnimatedAlign indicator() => tester.widget<AnimatedAlign>(
+      find.byKey(const Key('bottom-nav-selection-indicator')),
+    );
+
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byKey(const Key('nav-destination-0'))),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+    await gesture.moveTo(
+      tester.getCenter(find.byKey(const Key('nav-destination-3'))),
+    );
+    await tester.pump();
+
+    expect((indicator().alignment as Alignment).x, closeTo(0.5, 0.01));
+    expect(indicator().duration, Duration.zero);
+
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .getSemantics(find.byKey(const Key('nav-destination-3')))
+          .toString(),
+      contains('isSelected'),
+    );
+    expect(find.text('Analiz'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('analysis period survives tab changes', (tester) async {
     await tester.pumpWidget(const MealClarityApp());
     await tester.pumpAndSettle();

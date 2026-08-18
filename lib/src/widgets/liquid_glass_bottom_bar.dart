@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../theme/app_theme.dart';
 import '../../l10n/l10n.dart';
 
-class LiquidGlassBottomBar extends StatelessWidget {
+class LiquidGlassBottomBar extends StatefulWidget {
   const LiquidGlassBottomBar({
     required this.selectedIndex,
     required this.onDestinationSelected,
@@ -12,6 +15,16 @@ class LiquidGlassBottomBar extends StatelessWidget {
 
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
+
+  @override
+  State<LiquidGlassBottomBar> createState() => _LiquidGlassBottomBarState();
+}
+
+class _LiquidGlassBottomBarState extends State<LiquidGlassBottomBar> {
+  static const int _destinationCount = 5;
+
+  Alignment? _dragAlignment;
+  int? _dragTargetIndex;
 
   List<_GlassDestination> _destinations(BuildContext context) => [
     _GlassDestination(
@@ -74,13 +87,17 @@ class LiquidGlassBottomBar extends StatelessWidget {
                     child: IgnorePointer(
                       child: AnimatedAlign(
                         key: const Key('bottom-nav-selection-indicator'),
-                        alignment: _indicatorAlignment(selectedIndex),
-                        duration: MediaQuery.disableAnimationsOf(context)
+                        alignment:
+                            _dragAlignment ??
+                            _indicatorAlignment(widget.selectedIndex),
+                        duration:
+                            _dragAlignment != null ||
+                                MediaQuery.disableAnimationsOf(context)
                             ? Duration.zero
                             : AppMotion.fast,
                         curve: Curves.easeOutCubic,
                         child: FractionallySizedBox(
-                          widthFactor: 1 / 5,
+                          widthFactor: 1 / _destinationCount,
                           heightFactor: 1,
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
@@ -100,18 +117,36 @@ class LiquidGlassBottomBar extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Row(
-                    children: List.generate(destinations.length, (index) {
-                      final destination = destinations[index];
-                      return Expanded(
-                        child: _GlassDestinationButton(
-                          key: Key('nav-destination-$index'),
-                          destination: destination,
-                          selected: selectedIndex == index,
-                          onTap: () => onDestinationSelected(index),
+                  Positioned.fill(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) => GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onLongPressStart: (details) => _startDrag(
+                          details.localPosition.dx,
+                          constraints.maxWidth,
                         ),
-                      );
-                    }),
+                        onLongPressMoveUpdate: (details) => _updateDrag(
+                          details.localPosition.dx,
+                          constraints.maxWidth,
+                        ),
+                        onLongPressEnd: (_) => _finishDrag(),
+                        onLongPressCancel: _cancelDrag,
+                        child: Row(
+                          children: List.generate(destinations.length, (index) {
+                            final destination = destinations[index];
+                            return Expanded(
+                              child: _GlassDestinationButton(
+                                key: Key('nav-destination-$index'),
+                                destination: destination,
+                                selected: widget.selectedIndex == index,
+                                onTap: () =>
+                                    widget.onDestinationSelected(index),
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -130,6 +165,62 @@ class LiquidGlassBottomBar extends StatelessWidget {
       4 => Alignment.centerRight,
       _ => Alignment.centerLeft,
     };
+  }
+
+  void _startDrag(double x, double width) {
+    final pressedIndex = _tabIndexForX(x, width);
+    if (pressedIndex != widget.selectedIndex) return;
+
+    setState(() {
+      _dragTargetIndex = pressedIndex;
+      _dragAlignment = _alignmentForX(x, width);
+    });
+    unawaited(HapticFeedback.selectionClick());
+  }
+
+  void _updateDrag(double x, double width) {
+    if (_dragAlignment == null) return;
+    final targetIndex = _tabIndexForX(x, width);
+    if (targetIndex != _dragTargetIndex) {
+      _dragTargetIndex = targetIndex;
+      unawaited(HapticFeedback.selectionClick());
+    }
+    setState(() => _dragAlignment = _alignmentForX(x, width));
+  }
+
+  void _finishDrag() {
+    final targetIndex = _dragTargetIndex;
+    if (_dragAlignment == null || targetIndex == null) return;
+
+    setState(() {
+      _dragAlignment = null;
+      _dragTargetIndex = null;
+    });
+    widget.onDestinationSelected(targetIndex);
+  }
+
+  void _cancelDrag() {
+    if (_dragAlignment == null) return;
+    setState(() {
+      _dragAlignment = null;
+      _dragTargetIndex = null;
+    });
+  }
+
+  int _tabIndexForX(double x, double width) {
+    if (width <= 0) return widget.selectedIndex;
+    return (x.clamp(0.0, width) / width * _destinationCount).floor().clamp(
+      0,
+      _destinationCount - 1,
+    );
+  }
+
+  Alignment _alignmentForX(double x, double width) {
+    if (width <= 0) return _indicatorAlignment(widget.selectedIndex);
+    final indicatorWidth = width / _destinationCount;
+    final center = x.clamp(indicatorWidth / 2, width - indicatorWidth / 2);
+    final travel = width - indicatorWidth;
+    return Alignment(((center - indicatorWidth / 2) / travel) * 2 - 1, 0);
   }
 }
 
