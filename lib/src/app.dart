@@ -441,20 +441,7 @@ class _MealClarityShellState extends State<MealClarityShell>
         : _tabOrder.indexOf(_selectedTab);
     if (page == currentPage && index == _selectedTab) return;
     setState(() => _selectedTab = index);
-    final shouldJump =
-        MediaQuery.disableAnimationsOf(context) ||
-        (page - currentPage).abs() > 1;
-    if (shouldJump) {
-      _pageController.jumpToPage(page);
-    } else {
-      unawaited(
-        _pageController.animateToPage(
-          page,
-          duration: AppMotion.standard,
-          curve: Curves.easeOutCubic,
-        ),
-      );
-    }
+    _pageController.jumpToPage(page);
   }
 
   List<LoggedMeal> get _analysisMeals {

@@ -242,6 +242,40 @@ void main() {
     expect(find.text('Profil'), findsWidgets);
   });
 
+  testWidgets('bottom navigation uses one interruptible sliding indicator', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MealClarityApp());
+    await tester.pumpAndSettle();
+
+    AnimatedAlign indicator() => tester.widget<AnimatedAlign>(
+      find.byKey(const Key('bottom-nav-selection-indicator')),
+    );
+
+    expect(indicator().alignment, Alignment.centerLeft);
+    await tester.tap(find.byKey(const Key('nav-destination-1')));
+    await tester.pump(const Duration(milliseconds: 40));
+    expect(indicator().alignment, const Alignment(-0.5, 0));
+    final pages = tester.widget<PageView>(
+      find.byKey(const Key('primary-tab-page-view')),
+    );
+    expect(pages.controller!.page, 1);
+
+    await tester.tap(find.byKey(const Key('nav-destination-3')));
+    await tester.pump(const Duration(milliseconds: 40));
+    expect(indicator().alignment, const Alignment(0.5, 0));
+    expect(
+      tester
+          .getSemantics(find.byKey(const Key('nav-destination-3')))
+          .toString(),
+      contains('isSelected'),
+    );
+    expect(tester.takeException(), isNull);
+    await tester.pumpAndSettle();
+  });
+
   testWidgets('analysis period survives tab changes', (tester) async {
     await tester.pumpWidget(const MealClarityApp());
     await tester.pumpAndSettle();

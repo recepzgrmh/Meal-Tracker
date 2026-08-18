@@ -17,28 +17,23 @@ class LiquidGlassBottomBar extends StatelessWidget {
     _GlassDestination(
       label: context.ota('navToday', tr: 'Günlük', en: 'Today'),
       icon: Icons.calendar_today_outlined,
-      selectedIcon: Icons.calendar_today_rounded,
     ),
     _GlassDestination(
       label: context.ota('navHistory', tr: 'Geçmiş', en: 'History'),
       icon: Icons.history_rounded,
-      selectedIcon: Icons.history_rounded,
     ),
     _GlassDestination(
       label: context.ota('navAddMeal', tr: 'Öğün Ekle', en: 'Add Meal'),
       icon: Icons.add_rounded,
-      selectedIcon: Icons.add_rounded,
       emphasized: true,
     ),
     _GlassDestination(
       label: context.ota('navAnalysis', tr: 'Analiz', en: 'Analysis'),
       icon: Icons.bar_chart_outlined,
-      selectedIcon: Icons.bar_chart_rounded,
     ),
     _GlassDestination(
       label: context.ota('navProfile', tr: 'Profil', en: 'Profile'),
       icon: Icons.person_outline_rounded,
-      selectedIcon: Icons.person_rounded,
     ),
   ];
 
@@ -73,24 +68,68 @@ class LiquidGlassBottomBar extends StatelessWidget {
             ),
             child: MediaQuery.withClampedTextScaling(
               maxScaleFactor: 1.25,
-              child: Row(
-                children: List.generate(destinations.length, (index) {
-                  final destination = destinations[index];
-                  return Expanded(
-                    child: _GlassDestinationButton(
-                      key: Key('nav-destination-$index'),
-                      destination: destination,
-                      selected: selectedIndex == index,
-                      onTap: () => onDestinationSelected(index),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: AnimatedAlign(
+                        key: const Key('bottom-nav-selection-indicator'),
+                        alignment: _indicatorAlignment(selectedIndex),
+                        duration: MediaQuery.disableAnimationsOf(context)
+                            ? Duration.zero
+                            : AppMotion.fast,
+                        curve: Curves.easeOutCubic,
+                        child: FractionallySizedBox(
+                          widthFactor: 1 / 5,
+                          heightFactor: 1,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 4,
+                            ),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: AppColors.brandSoft,
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.medium,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                  );
-                }),
+                  ),
+                  Row(
+                    children: List.generate(destinations.length, (index) {
+                      final destination = destinations[index];
+                      return Expanded(
+                        child: _GlassDestinationButton(
+                          key: Key('nav-destination-$index'),
+                          destination: destination,
+                          selected: selectedIndex == index,
+                          onTap: () => onDestinationSelected(index),
+                        ),
+                      );
+                    }),
+                  ),
+                ],
               ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  Alignment _indicatorAlignment(int index) {
+    return switch (index) {
+      1 => const Alignment(-0.5, 0),
+      2 => Alignment.center,
+      3 => const Alignment(0.5, 0),
+      4 => Alignment.centerRight,
+      _ => Alignment.centerLeft,
+    };
   }
 }
 
@@ -123,27 +162,28 @@ class _GlassDestinationButton extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              AnimatedContainer(
-                duration: reduceMotion
-                    ? Duration.zero
-                    : const Duration(milliseconds: 220),
-                curve: Curves.easeOutCubic,
+              SizedBox(
                 width: highlighted ? 38 : 31,
                 height: 31,
-                decoration: BoxDecoration(
-                  color: highlighted
-                      ? AppColors.lime
-                      : selected
-                      ? AppColors.brandSoft
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(AppRadius.medium),
-                ),
-                child: Icon(
-                  selected ? destination.selectedIcon : destination.icon,
-                  size: destination.emphasized ? 22 : 20,
-                  color: selected || highlighted
-                      ? AppColors.brand
-                      : AppColors.muted,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: highlighted ? AppColors.lime : Colors.transparent,
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
+                  ),
+                  child: TweenAnimationBuilder<Color?>(
+                    duration: reduceMotion ? Duration.zero : AppMotion.fast,
+                    curve: Curves.easeOutCubic,
+                    tween: ColorTween(
+                      end: selected || highlighted
+                          ? AppColors.brand
+                          : AppColors.muted,
+                    ),
+                    builder: (context, color, _) => Icon(
+                      destination.icon,
+                      size: destination.emphasized ? 22 : 20,
+                      color: color,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 2),
@@ -178,12 +218,10 @@ class _GlassDestination {
   const _GlassDestination({
     required this.label,
     required this.icon,
-    required this.selectedIcon,
     this.emphasized = false,
   });
 
   final String label;
   final IconData icon;
-  final IconData selectedIcon;
   final bool emphasized;
 }
