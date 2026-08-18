@@ -189,11 +189,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('daily-summary-card')), findsOneWidget);
+    expect(find.byKey(const Key('daily-summary-title')), findsOneWidget);
     expect(find.byKey(const Key('daily-calorie-ring')), findsOneWidget);
     expect(find.byKey(const Key('daily-consumed-stat')), findsOneWidget);
     expect(find.byKey(const Key('daily-goal-stat')), findsOneWidget);
     expect(find.text('Alınan'), findsOneWidget);
     expect(find.text('Hedef'), findsOneWidget);
+    expect(find.text('Detaylar'), findsOneWidget);
     expect(find.text('Yakılan'), findsNothing);
 
     await tester.tap(find.byKey(const Key('daily-summary-details')));

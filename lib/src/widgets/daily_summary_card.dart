@@ -29,34 +29,22 @@ class DailySummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final remaining = (goals.calories - total.calories)
-        .clamp(0, goals.calories)
-        .toDouble();
-    final calorieProgress = (total.calories / goals.calories).clamp(0.0, 1.0);
+    final remaining = math.max(0.0, goals.calories - total.calories);
+    final calorieProgress = goals.calories > 0
+        ? (total.calories / goals.calories).clamp(0.0, 1.0)
+        : 0.0;
     final largeText = MediaQuery.textScalerOf(context).scale(14) >= 20;
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final stacked = largeText || constraints.maxWidth < 300;
-        return Semantics(
-          button: true,
-          label: context.ota(
-            'dailySummaryDetails',
-            tr: 'Detaylar',
-            en: 'Details',
-          ),
-          child: GestureDetector(
-            key: const Key('daily-summary-details'),
-            behavior: HitTestBehavior.opaque,
-            onTap: onDetails,
-            child: _SummaryBody(
-              stacked: stacked,
-              remaining: remaining,
-              calorieProgress: calorieProgress,
-              total: total,
-              goals: goals,
-            ),
-          ),
+        return _SummaryBody(
+          stacked: stacked,
+          remaining: remaining,
+          calorieProgress: calorieProgress,
+          total: total,
+          goals: goals,
+          onDetails: onDetails,
         );
       },
     );
@@ -70,6 +58,7 @@ class _SummaryBody extends StatelessWidget {
     required this.calorieProgress,
     required this.total,
     required this.goals,
+    required this.onDetails,
   });
 
   final bool stacked;
@@ -77,106 +66,153 @@ class _SummaryBody extends StatelessWidget {
   final double calorieProgress;
   final Nutrition total;
   final NutritionGoals goals;
+  final VoidCallback onDetails;
 
   @override
   Widget build(BuildContext context) {
     return HeroCardSurface(
       key: const Key('daily-summary-card'),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        children: [
-          if (stacked) ...[
-                _CalorieRing(
-                  remaining: remaining,
-                  progress: calorieProgress,
-                  total: total,
-                  goals: goals,
-                ),
+      padding: EdgeInsets.zero,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(AppRadius.heroCard),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          key: const Key('daily-summary-details'),
+          borderRadius: BorderRadius.circular(AppRadius.heroCard),
+          onTap: onDetails,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              children: [
+                _SummaryHeader(),
                 const SizedBox(height: AppSpacing.md),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _SupportingMetric(
-                        key: const Key('daily-consumed-stat'),
-                        value: total.calories,
-                        label: context.ota(
-                          'caloriesConsumedLabel',
-                          tr: 'Alınan',
-                          en: 'Consumed',
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: _SupportingMetric(
-                        key: const Key('daily-goal-stat'),
-                        value: goals.calories,
-                        label: context.ota(
-                          'calorieGoalLabel',
-                          tr: 'Hedef',
-                          en: 'Goal',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ] else
-                Row(
-                  children: [
-                    Expanded(
-                      child: _SupportingMetric(
-                        key: const Key('daily-consumed-stat'),
-                        value: total.calories,
-                        label: context.ota(
-                          'caloriesConsumedLabel',
-                          tr: 'Alınan',
-                          en: 'Consumed',
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    _CalorieRing(
-                      remaining: remaining,
-                      progress: calorieProgress,
-                      total: total,
-                      goals: goals,
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Expanded(
-                      child: _SupportingMetric(
-                        key: const Key('daily-goal-stat'),
-                        value: goals.calories,
-                        label: context.ota(
-                          'calorieGoalLabel',
-                          tr: 'Hedef',
-                          en: 'Goal',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              const SizedBox(height: AppSpacing.md),
-              _MacroRail(total: total, goals: goals, stacked: stacked),
-              if (goals.isDefault) ...[
-                const SizedBox(height: AppSpacing.sm),
-                Container(height: 1, color: AppColors.line),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  context.ota(
-                    'calorieGoalDefaultNote',
-                    tr: 'Önerilen hedefi profilinden değiştirebilirsin.',
-                    en: 'You can change the suggested target in your profile.',
+                if (stacked) ...[
+                  _CalorieRing(
+                    remaining: remaining,
+                    progress: calorieProgress,
+                    total: total,
+                    goals: goals,
                   ),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.muted,
-                    height: 1.35,
+                  const SizedBox(height: AppSpacing.md),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _SupportingMetric(
+                          key: const Key('daily-consumed-stat'),
+                          value: total.calories,
+                          label: context.ota(
+                            'caloriesConsumedLabel',
+                            tr: 'Alınan',
+                            en: 'Consumed',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: _SupportingMetric(
+                          key: const Key('daily-goal-stat'),
+                          value: goals.calories,
+                          label: context.ota(
+                            'calorieGoalLabel',
+                            tr: 'Hedef',
+                            en: 'Goal',
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
+                ] else
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _SupportingMetric(
+                          key: const Key('daily-consumed-stat'),
+                          value: total.calories,
+                          label: context.ota(
+                            'caloriesConsumedLabel',
+                            tr: 'Alınan',
+                            en: 'Consumed',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      _CalorieRing(
+                        remaining: remaining,
+                        progress: calorieProgress,
+                        total: total,
+                        goals: goals,
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Expanded(
+                        child: _SupportingMetric(
+                          key: const Key('daily-goal-stat'),
+                          value: goals.calories,
+                          label: context.ota(
+                            'calorieGoalLabel',
+                            tr: 'Hedef',
+                            en: 'Goal',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                const SizedBox(height: AppSpacing.md),
+                _MacroRail(total: total, goals: goals, stacked: stacked),
+                if (goals.isDefault) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  Container(height: 1, color: AppColors.line),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    context.ota(
+                      'calorieGoalDefaultNote',
+                      tr: 'Önerilen hedefi profilinden değiştirebilirsin.',
+                      en: 'You can change the suggested target in your profile.',
+                    ),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.muted,
+                      height: 1.35,
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
-        );
+        ),
+      ),
+    );
+  }
+}
+
+class _SummaryHeader extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            context.ota('dailySummaryTitle', tr: 'Özet', en: 'Summary'),
+            key: const Key('daily-summary-title'),
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+        ),
+        Text(
+          context.ota('dailySummaryDetails', tr: 'Detaylar', en: 'Details'),
+          style: Theme.of(
+            context,
+          ).textTheme.labelLarge?.copyWith(color: AppColors.brand),
+        ),
+        const SizedBox(width: AppSpacing.xxs),
+        const ExcludeSemantics(
+          child: Icon(
+            Icons.chevron_right_rounded,
+            size: 20,
+            color: AppColors.brand,
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -225,36 +261,43 @@ class _CalorieRing extends StatelessWidget {
                 ),
               ),
               Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      formatNumber(context, remaining.round()),
-                      key: const Key('daily-remaining-calories'),
-                      maxLines: 1,
-                      style: const TextStyle(
-                        color: AppColors.ink,
-                        fontSize: 26,
-                        height: 1,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.8,
-                        fontFeatures: [FontFeature.tabularFigures()],
-                      ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          formatNumber(context, remaining.round()),
+                          key: const Key('daily-remaining-calories'),
+                          maxLines: 1,
+                          style: const TextStyle(
+                            color: AppColors.ink,
+                            fontSize: 26,
+                            height: 1,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.8,
+                            fontFeatures: [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xxs),
+                        Text(
+                          context.ota(
+                            'caloriesRemainingRingLabel',
+                            tr: 'kcal kaldı',
+                            en: 'kcal left',
+                          ),
+                          maxLines: 1,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: AppColors.muted,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: AppSpacing.xxs),
-                    Text(
-                      context.ota(
-                        'caloriesRemainingRingLabel',
-                        tr: 'kcal kaldı',
-                        en: 'kcal left',
-                      ),
-                      maxLines: 1,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.muted,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ],
@@ -283,7 +326,7 @@ class _CalorieArcPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final strokeWidth = highContrast ? 14.0 : 12.0;
+    final strokeWidth = highContrast ? 12.0 : 10.0;
     final rect = Offset.zero & size;
     final arcRect = rect.deflate(strokeWidth / 2);
     final trackPaint = Paint()
@@ -387,18 +430,21 @@ class _MacroRail extends StatelessWidget {
         value: total.carbs,
         goal: goals.carbs,
         color: AppColors.carbs,
+        icon: Icons.bakery_dining_rounded,
       ),
       _MacroMetric(
         label: context.l10n.macroProtein,
         value: total.protein,
         goal: goals.protein,
         color: AppColors.protein,
+        icon: Icons.egg_alt_rounded,
       ),
       _MacroMetric(
         label: context.l10n.macroFat,
         value: total.fat,
         goal: goals.fat,
         color: AppColors.fat,
+        icon: Icons.water_drop_rounded,
       ),
     ];
 
@@ -406,7 +452,7 @@ class _MacroRail extends StatelessWidget {
       return Column(
         children: [
           for (var index = 0; index < macros.length; index++) ...[
-            if (index > 0) const SizedBox(height: AppSpacing.md),
+            if (index > 0) const SizedBox(height: AppSpacing.sm),
             macros[index],
           ],
         ],
@@ -431,12 +477,14 @@ class _MacroMetric extends StatelessWidget {
     required this.value,
     required this.goal,
     required this.color,
+    required this.icon,
   });
 
   final String label;
   final double value;
   final double goal;
   final Color color;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -446,6 +494,7 @@ class _MacroMetric extends StatelessWidget {
       en: '{current} / {goal} g',
       replacements: {'current': value.round(), 'goal': goal.round()},
     );
+    final progress = goal > 0 ? (value / goal).clamp(0.0, 1.0) : 0.0;
     return Semantics(
       container: true,
       label: context.ota(
@@ -462,30 +511,55 @@ class _MacroMetric extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.muted,
-                fontWeight: FontWeight.w600,
-              ),
+            Row(
+              children: [
+                Container(
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.14),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, size: 15, color: color),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontSize: 11,
+                          height: 1.1,
+                          color: AppColors.muted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        amounts,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          fontSize: 13,
+                          height: 1.2,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: AppSpacing.xxs),
-            Text(
-              amounts,
-              maxLines: 1,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                fontSize: 13,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
+            const SizedBox(height: AppSpacing.tiny),
             ClipRRect(
               borderRadius: BorderRadius.circular(_pillRadius),
               child: LinearProgressIndicator(
                 minHeight: AppSpacing.tiny,
-                value: (value / goal).clamp(0.0, 1.0),
+                value: progress,
                 backgroundColor: AppColors.surfaceMuted,
                 valueColor: AlwaysStoppedAnimation(color),
               ),
