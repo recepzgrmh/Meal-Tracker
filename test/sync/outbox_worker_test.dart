@@ -29,16 +29,18 @@ void main() {
   tearDown(() => database.close());
 
   test('processes exactly one operation and marks it succeeded', () async {
-    await database.into(database.localMeals).insert(
-      LocalMealsCompanion.insert(
-        id: 'meal-first',
-        userId: 'user-a',
-        name: 'Kahvaltı',
-        eatenAt: now,
-        syncStatus: const Value('pending'),
-        localUpdatedAt: now,
-      ),
-    );
+    await database
+        .into(database.localMeals)
+        .insert(
+          LocalMealsCompanion.insert(
+            id: 'meal-first',
+            userId: 'user-a',
+            name: 'Kahvaltı',
+            eatenAt: now,
+            syncStatus: const Value('pending'),
+            localUpdatedAt: now,
+          ),
+        );
     await _insert(database, _operation('first', now));
     await _insert(database, _operation('second', now));
 
