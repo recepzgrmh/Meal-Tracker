@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-
+import '../../l10n/l10n.dart';
 import '../domain/models.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_surfaces.dart';
+import '../widgets/liquid_glass_bottom_bar.dart';
 
 class TodayScreen extends StatelessWidget {
   const TodayScreen({
@@ -9,15 +11,15 @@ class TodayScreen extends StatelessWidget {
     required this.meals,
     required this.onAddMeal,
     required this.onMealTap,
-    this.onHistoryTap,
-    this.onProfileTap,
+    required this.onNavigationSelected,
+    this.showBottomNavigationBar = true,
   });
 
   final List<LoggedMeal> meals;
   final VoidCallback onAddMeal;
   final ValueChanged<LoggedMeal> onMealTap;
-  final VoidCallback? onHistoryTap;
-  final VoidCallback? onProfileTap;
+  final ValueChanged<int> onNavigationSelected;
+  final bool showBottomNavigationBar;
 
   Nutrition get _total =>
       meals.fold(Nutrition.zero, (total, meal) => total + meal.nutrition);
@@ -25,57 +27,54 @@ class TodayScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final total = _total;
-    const calorieGoal = 2100.0;
     return Scaffold(
+      extendBody: true,
       body: SafeArea(
         bottom: false,
         child: CustomScrollView(
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(22, 18, 22, 32),
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 104),
               sliver: SliverList.list(
                 children: [
                   const _TodayHeader(),
-                  const SizedBox(height: 28),
-                  _CalorieSummary(total: total, goal: calorieGoal),
-                  const SizedBox(height: 26),
-                  _MacroSummary(total: total),
-                  const SizedBox(height: 30),
-                  _QuickComposer(onTap: onAddMeal),
-                  const SizedBox(height: 32),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Bugünün öğünleri',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        '${meals.length} öğün',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
-                  ),
+                  const SizedBox(height: 18),
+                  _DailySummary(total: total),
                   const SizedBox(height: 12),
-                  ...meals.map(
-                    (meal) => _MealRow(meal, onTap: () => onMealTap(meal)),
+                  _QuickComposer(onTap: onAddMeal),
+                  const SizedBox(height: 26),
+                  _SectionHeader(
+                    title: context.ota(
+                      'todayMealsTitle',
+                      tr: 'Bugünün öğünleri',
+                      en: "Today's meals",
+                    ),
+                    detail: context.ota(
+                      'mealCount',
+                      tr: '{count} öğün',
+                      en: '{count} meals',
+                      replacements: {'count': meals.length},
+                    ),
                   ),
+                  const SizedBox(height: 11),
+                  if (meals.isEmpty)
+                    _EmptyMeals(onAddMeal: onAddMeal)
+                  else
+                    ...meals.map(
+                      (meal) => _MealRow(meal, onTap: () => onMealTap(meal)),
+                    ),
                 ],
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: _TodayBottomBar(
-        onAddMeal: onAddMeal,
-        onHistoryTap: onHistoryTap,
-        onProfileTap: onProfileTap,
-      ),
+      bottomNavigationBar: showBottomNavigationBar
+          ? LiquidGlassBottomBar(
+              selectedIndex: 0,
+              onDestinationSelected: onNavigationSelected,
+            )
+          : null,
     );
   }
 }
@@ -85,87 +84,17 @@ class _TodayHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Row(
-            children: [
-              Text('Bugün', style: Theme.of(context).textTheme.displaySmall),
-              const SizedBox(width: 7),
-              const Icon(Icons.keyboard_arrow_down_rounded, size: 27),
-            ],
-          ),
-        ),
-        Semantics(
-          label: 'Takvimi aç',
-          button: true,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(14),
-            onTap: () {},
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                border: Border.all(color: AppColors.line),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(Icons.calendar_today_rounded, size: 21),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _CalorieSummary extends StatelessWidget {
-  const _CalorieSummary({required this.total, required this.goal});
-
-  final Nutrition total;
-  final double goal;
-
-  @override
-  Widget build(BuildContext context) {
-    final calories = total.calories.round();
-    final remaining = (goal - total.calories).clamp(0, goal).round();
+    final now = DateTime.now();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Kalori', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 6),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              _formatNumber(calories),
-              style: Theme.of(context).textTheme.displaySmall,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 8, bottom: 4),
-              child: Text(
-                '/ ${_formatNumber(goal.round())} kcal',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.muted,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(100),
-          child: LinearProgressIndicator(
-            minHeight: 10,
-            value: (total.calories / goal).clamp(0, 1),
-            backgroundColor: AppColors.line,
-            valueColor: const AlwaysStoppedAnimation(AppColors.lime),
-          ),
-        ),
-        const SizedBox(height: 9),
         Text(
-          '$remaining kcal kaldı',
+          context.ota('todayTitle', tr: 'Bugün', en: 'Today'),
+          style: Theme.of(context).textTheme.displaySmall,
+        ),
+        const SizedBox(height: 5),
+        Text(
+          _formatHeaderDate(now, Localizations.localeOf(context).languageCode),
           style: Theme.of(context).textTheme.bodyMedium,
         ),
       ],
@@ -173,62 +102,168 @@ class _CalorieSummary extends StatelessWidget {
   }
 }
 
-class _MacroSummary extends StatelessWidget {
-  const _MacroSummary({required this.total});
+class _DailySummary extends StatelessWidget {
+  const _DailySummary({required this.total});
 
+  static const calorieGoal = 2100.0;
   final Nutrition total;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final remaining = (calorieGoal - total.calories)
+        .clamp(0, calorieGoal)
+        .toDouble();
+    final largeText = MediaQuery.textScalerOf(context).scale(14) >= 20;
+    return HeroCardSurface(
+      color: AppColors.brandSoft,
+      padding: const EdgeInsets.fromLTRB(22, 20, 22, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (largeText) ...[
+            _RemainingCalories(remaining: remaining),
+            const SizedBox(height: 10),
+            _CalorieGoalProgress(total: total),
+          ] else
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(child: _RemainingCalories(remaining: remaining)),
+                _CalorieGoalProgress(total: total),
+              ],
+            ),
+          const SizedBox(height: 15),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: LinearProgressIndicator(
+              minHeight: 7,
+              value: (total.calories / calorieGoal).clamp(0, 1),
+              backgroundColor: AppColors.surfaceMuted,
+              valueColor: const AlwaysStoppedAnimation(AppColors.limeDark),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Container(height: 1, color: AppColors.line),
+          const SizedBox(height: 13),
+          if (largeText)
+            Column(
+              children: [
+                _MacroMetric(
+                  label: context.l10n.macroProtein,
+                  value: total.protein,
+                  goal: 160,
+                  color: AppColors.protein,
+                ),
+                const SizedBox(height: 16),
+                _MacroMetric(
+                  label: context.l10n.macroCarbs,
+                  value: total.carbs,
+                  goal: 240,
+                  color: AppColors.carbs,
+                ),
+                const SizedBox(height: 16),
+                _MacroMetric(
+                  label: context.l10n.macroFat,
+                  value: total.fat,
+                  goal: 70,
+                  color: AppColors.fat,
+                ),
+              ],
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: _MacroMetric(
+                    label: context.l10n.macroProtein,
+                    value: total.protein,
+                    goal: 160,
+                    color: AppColors.protein,
+                  ),
+                ),
+                const SizedBox(width: 18),
+                Expanded(
+                  child: _MacroMetric(
+                    label: context.l10n.macroCarbs,
+                    value: total.carbs,
+                    goal: 240,
+                    color: AppColors.carbs,
+                  ),
+                ),
+                const SizedBox(width: 18),
+                Expanded(
+                  child: _MacroMetric(
+                    label: context.l10n.macroFat,
+                    value: total.fat,
+                    goal: 70,
+                    color: AppColors.fat,
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RemainingCalories extends StatelessWidget {
+  const _RemainingCalories({required this.remaining});
+
+  final double remaining;
+
+  @override
+  Widget build(BuildContext context) => Text.rich(
+    TextSpan(
+      text: _formatNumber(remaining.round()),
+      style: const TextStyle(
+        color: AppColors.ink,
+        fontSize: 40,
+        height: 1,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -1.1,
+      ),
       children: [
-        Expanded(
-          child: _MacroCell(
-            label: 'Protein',
-            value: total.protein,
-            goal: 160,
-            color: AppColors.protein,
+        TextSpan(
+          text: context.ota(
+            'caloriesRemainingSuffix',
+            tr: ' kcal kaldı',
+            en: ' kcal left',
           ),
-        ),
-        const _VerticalDivider(),
-        Expanded(
-          child: _MacroCell(
-            label: 'Karbonhidrat',
-            value: total.carbs,
-            goal: 240,
-            color: AppColors.carbs,
-          ),
-        ),
-        const _VerticalDivider(),
-        Expanded(
-          child: _MacroCell(
-            label: 'Yağ',
-            value: total.fat,
-            goal: 70,
-            color: AppColors.fat,
+          style: const TextStyle(
+            color: AppColors.muted,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0,
           ),
         ),
       ],
-    );
-  }
+    ),
+  );
 }
 
-class _VerticalDivider extends StatelessWidget {
-  const _VerticalDivider();
+class _CalorieGoalProgress extends StatelessWidget {
+  const _CalorieGoalProgress({required this.total});
+
+  final Nutrition total;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 60,
-      width: 1,
-      margin: const EdgeInsets.symmetric(horizontal: 14),
-      color: AppColors.line,
-    );
-  }
+  Widget build(BuildContext context) => Text(
+    context.ota(
+      'calorieGoalProgress',
+      tr: '{current} / 2.100',
+      en: '{current} / 2,100',
+      replacements: {'current': _formatNumber(total.calories.round())},
+    ),
+    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+      color: AppColors.ink,
+      fontWeight: FontWeight.w600,
+    ),
+  );
 }
 
-class _MacroCell extends StatelessWidget {
-  const _MacroCell({
+class _MacroMetric extends StatelessWidget {
+  const _MacroMetric({
     required this.label,
     required this.value,
     required this.goal,
@@ -249,36 +284,28 @@ class _MacroCell extends StatelessWidget {
           label,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 12),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppColors.muted),
         ),
         const SizedBox(height: 4),
-        Text.rich(
-          TextSpan(
-            text: '${value.round()}',
-            style: const TextStyle(
-              color: AppColors.ink,
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
-            children: [
-              TextSpan(
-                text: ' / ${goal.round()} g',
-                style: const TextStyle(
-                  color: AppColors.muted,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+        Text(
+          context.ota(
+            'macroGoalProgress',
+            tr: '{current} / {goal} g',
+            en: '{current} / {goal} g',
+            replacements: {'current': value.round(), 'goal': goal.round()},
           ),
+          maxLines: 1,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 13),
         ),
-        const SizedBox(height: 9),
+        const SizedBox(height: 7),
         ClipRRect(
           borderRadius: BorderRadius.circular(99),
           child: LinearProgressIndicator(
-            minHeight: 5,
+            minHeight: 4,
             value: (value / goal).clamp(0, 1),
-            backgroundColor: AppColors.line,
+            backgroundColor: AppColors.surfaceMuted,
             valueColor: AlwaysStoppedAnimation(color),
           ),
         ),
@@ -294,51 +321,82 @@ class _QuickComposer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'Ne yediğini yaz',
-      child: InkWell(
-        key: const Key('quick-composer'),
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Ink(
-          padding: const EdgeInsets.fromLTRB(18, 19, 14, 19),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.line),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Ne yedin?',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      'Kendi cümlelerinle anlat',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.compactCard),
+          border: Border.all(color: AppColors.line),
+          boxShadow: AppShadows.card,
+        ),
+        child: InkWell(
+          key: const Key('quick-composer'),
+          borderRadius: BorderRadius.circular(AppRadius.compactCard),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 14, 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: AppColors.limeSoft,
+                    borderRadius: BorderRadius.circular(AppRadius.large),
+                  ),
+                  child: const Icon(Icons.photo_camera_outlined, size: 22),
                 ),
-              ),
-              Container(
-                width: 48,
-                height: 48,
-                decoration: const BoxDecoration(
-                  color: AppColors.lime,
-                  shape: BoxShape.circle,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.ota(
+                          'quickAddTitle',
+                          tr: 'Yemeğini göster',
+                          en: 'Show your meal',
+                        ),
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        context.ota(
+                          'quickAddBody',
+                          tr: 'Fotoğrafla başla; gerekirse düzelt',
+                          en: 'Start with a photo, adjust if needed',
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
                 ),
-                child: const Icon(Icons.mic_none_rounded, size: 25),
-              ),
-            ],
+                const Icon(Icons.chevron_right_rounded),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title, required this.detail});
+
+  final String title;
+  final String detail;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(title, style: Theme.of(context).textTheme.titleLarge),
+        ),
+        Text(detail, style: Theme.of(context).textTheme.bodyMedium),
+      ],
     );
   }
 }
@@ -353,66 +411,86 @@ class _MealRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 9),
-      child: Semantics(
-        button: true,
-        label: '${meal.name}, ${meal.nutrition.calories.round()} kalori',
-        child: InkWell(
-          key: Key('meal-${meal.id}'),
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(17),
-          child: Ink(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              border: Border.all(color: AppColors.line),
-              borderRadius: BorderRadius.circular(17),
-            ),
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: meal.imageAsset == null
-                      ? Container(
-                          width: 56,
-                          height: 56,
-                          color: const Color(0xFFF0F3E5),
-                          child: const Icon(
-                            Icons.restaurant_rounded,
-                            color: AppColors.limeDark,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.compactCard),
+          boxShadow: AppShadows.card,
+        ),
+        child: Material(
+          color: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.compactCard),
+            side: const BorderSide(color: AppColors.line),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            key: Key('meal-${meal.id}'),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
+                    child: meal.imageAsset == null
+                        ? Container(
+                            width: 88,
+                            height: 88,
+                            color: AppColors.surfaceMuted,
+                            child: const Icon(
+                              Icons.restaurant_rounded,
+                              size: 21,
+                            ),
+                          )
+                        : Image.asset(
+                            meal.imageAsset!,
+                            width: 88,
+                            height: 88,
+                            fit: BoxFit.cover,
+                            cacheWidth: 240,
                           ),
-                        )
-                      : Image.asset(
-                          meal.imageAsset!,
-                          width: 56,
-                          height: 56,
-                          fit: BoxFit.cover,
-                          cacheWidth: 168,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          meal.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleMedium,
                         ),
-                ),
-                const SizedBox(width: 13),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                        const SizedBox(height: 3),
+                        Text(
+                          meal.timeLabel,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        meal.name,
+                        '${meal.nutrition.calories.round()}',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
-                      const SizedBox(height: 3),
                       Text(
-                        meal.timeLabel,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        'kcal',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 8),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        size: 20,
+                        color: AppColors.muted,
                       ),
                     ],
                   ),
-                ),
-                Text(
-                  '${meal.nutrition.calories.round()} kcal',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(width: 4),
-                const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -421,57 +499,50 @@ class _MealRow extends StatelessWidget {
   }
 }
 
-class _TodayBottomBar extends StatelessWidget {
-  const _TodayBottomBar({
-    required this.onAddMeal,
-    this.onHistoryTap,
-    this.onProfileTap,
-  });
+class _EmptyMeals extends StatelessWidget {
+  const _EmptyMeals({required this.onAddMeal});
 
   final VoidCallback onAddMeal;
-  final VoidCallback? onHistoryTap;
-  final VoidCallback? onProfileTap;
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: AppColors.surface,
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.line),
+      ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(22, 12, 22, 4),
-            child: FilledButton.icon(
-              key: const Key('add-meal-button'),
-              onPressed: onAddMeal,
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('Öğün ekle'),
+          Text(
+            context.ota(
+              'todayEmptyTitle',
+              tr: 'Henüz öğün eklemedin',
+              en: 'No meals yet',
             ),
+            style: Theme.of(context).textTheme.titleMedium,
           ),
-          NavigationBar(
-            height: 72,
-            selectedIndex: 0,
-            backgroundColor: AppColors.surface,
-            indicatorColor: const Color(0xFFEAF7B8),
-            onDestinationSelected: (index) {
-              if (index == 1) onHistoryTap?.call();
-              if (index == 2) onProfileTap?.call();
-            },
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home_rounded),
-                label: 'Bugün',
+          const SizedBox(height: 5),
+          Text(
+            context.ota(
+              'todayEmptyBody',
+              tr: 'İlk kaydınla günlük özetin oluşmaya başlayacak.',
+              en: 'Your daily summary will appear after your first entry.',
+            ),
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 14),
+          TextButton(
+            onPressed: onAddMeal,
+            child: Text(
+              context.ota(
+                'todayEmptyAction',
+                tr: 'İlk öğünü ekle',
+                en: 'Add your first meal',
               ),
-              NavigationDestination(
-                icon: Icon(Icons.history_rounded),
-                label: 'Geçmiş',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.person_outline_rounded),
-                label: 'Profil',
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -484,4 +555,57 @@ String _formatNumber(int value) {
     RegExp(r'\B(?=(\d{3})+(?!\d))'),
     (_) => '.',
   );
+}
+
+String _formatHeaderDate(DateTime date, String languageCode) {
+  const trWeekdays = [
+    'Pazartesi',
+    'Salı',
+    'Çarşamba',
+    'Perşembe',
+    'Cuma',
+    'Cumartesi',
+    'Pazar',
+  ];
+  const trMonths = [
+    'Ocak',
+    'Şubat',
+    'Mart',
+    'Nisan',
+    'Mayıs',
+    'Haziran',
+    'Temmuz',
+    'Ağustos',
+    'Eylül',
+    'Ekim',
+    'Kasım',
+    'Aralık',
+  ];
+  const enWeekdays = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
+  const enMonths = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  final english = languageCode == 'en';
+  final weekdays = english ? enWeekdays : trWeekdays;
+  final months = english ? enMonths : trMonths;
+  return '${weekdays[date.weekday - 1]}, ${date.day} ${months[date.month - 1]}';
 }
