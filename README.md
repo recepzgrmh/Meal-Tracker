@@ -35,6 +35,23 @@ flutter pub get
 flutter run --dart-define-from-file=config/app_config.dev.json
 ```
 
+Run the internal AI quality console as a separate React web app:
+
+```sh
+cd admin-dashboard
+npm install
+npm run dev
+```
+
+Demo metrics are labeled `DEMO DATA`. The investigation path connects Overview,
+AI Quality, Meal Inspector, and Trace Inspector with shareable URL state.
+
+The admin interface supports Turkish and English. Its Mobile App area models
+the existing Supabase OTA translation contract (`tr`/`en`, monotonic version,
+500-character values, 64 KB payload, ARB fallback), including draft validation,
+staging promotion, production role gating, history, rollback, feature flags,
+minimum-version control, and percentage rollout.
+
 ## Verify
 
 ```sh
