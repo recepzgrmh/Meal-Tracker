@@ -147,6 +147,34 @@ void main() {
         expect(viewModel.draft?.reviewCount, 1);
       },
     );
+
+    test(
+      'keeps manual additions distinct and allows predicted food removal',
+      () async {
+        final catalog = _FakeCatalogRepository();
+        final ids = ['manual-1'].iterator;
+        final viewModel = MealFlowViewModel(
+          repository: _ImmediateRepository(draft),
+          catalogRepository: catalog,
+          manualItemIdFactory: () {
+            ids.moveNext();
+            return ids.current;
+          },
+        );
+
+        await viewModel.analyze(_input('peynir'));
+        await viewModel.searchCatalog('beyaz peynir', 'tr-TR');
+        viewModel.addManualFood(
+          viewModel.catalogResults.single,
+          'beyaz peynir',
+        );
+
+        expect(viewModel.draft?.items, hasLength(2));
+        expect(viewModel.draft?.items.last.matchMethod, 'manual');
+        viewModel.removeItem('cheese');
+        expect(viewModel.draft?.items.single.id, 'manual-1');
+      },
+    );
   });
 
   test('MealDetailViewModel recalculates nutrition after portion editing', () {
@@ -184,6 +212,15 @@ class _ThrowingRepository implements MealRepository {
   Future<MealDraft> analyze(MealAnalysisInput input) async {
     throw StateError('network unavailable');
   }
+}
+
+class _ImmediateRepository implements MealRepository {
+  const _ImmediateRepository(this.draft);
+
+  final MealDraft draft;
+
+  @override
+  Future<MealDraft> analyze(MealAnalysisInput input) async => draft;
 }
 
 class _DomainFailureRepository implements MealRepository {

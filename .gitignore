@@ -32,6 +32,7 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+/test/failures/
 
 # Local dart-define files may contain environment-specific publishable keys.
 /config/*.json

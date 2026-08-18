@@ -8,6 +8,7 @@ import 'package:meal_clarity/src/domain/meal_analysis_input.dart';
 import 'package:meal_clarity/src/features/meal_flow.dart';
 import 'package:meal_clarity/src/media/meal_photo_picker.dart';
 import 'package:meal_clarity/src/theme/app_theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   testWidgets('photo-only input enables analysis after gallery selection', (
@@ -37,6 +38,45 @@ void main() {
       find.byKey(const Key('analyze-button')),
     );
     expect(analyze.onPressed, isNotNull);
+
+    await tester.ensureVisible(find.byKey(const Key('analyze-button')));
+    await tester.tap(find.byKey(const Key('analyze-button')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('review-photo-preview')), findsOneWidget);
+  });
+
+  testWidgets('camera entry skips text composer and explains meal scanning', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final picker = _FakePhotoPicker();
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('tr'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        theme: buildTheme(),
+        home: MealFlow(
+          repository: MockMealRepository(),
+          photoPicker: picker,
+          initialPhotoSource: MealPhotoSource.camera,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Yemeğini nasıl taratırsın?'), findsOneWidget);
+    expect(find.text('Aydınlık bir ortam kullan'), findsOneWidget);
+    await tester.ensureVisible(
+      find.byKey(const Key('open-meal-camera-button')),
+    );
+    await tester.tap(find.byKey(const Key('open-meal-camera-button')));
+    await tester.pumpAndSettle();
+
+    expect(picker.lastSource, MealPhotoSource.camera);
+    expect(find.byKey(const Key('meal-input')), findsNothing);
+    expect(find.byKey(const Key('dedicated-photo-preview')), findsOneWidget);
+    expect(find.byKey(const Key('analyze-photo-button')), findsOneWidget);
   });
 }
 

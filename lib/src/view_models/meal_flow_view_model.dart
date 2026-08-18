@@ -26,6 +26,7 @@ class MealFlowViewModel extends ChangeNotifier {
   MealFlowStep _step = MealFlowStep.compose;
   MealDraft? _draft;
   String? _error;
+  MealAnalysisFailureKind? _errorKind;
   bool _manualSearchSuggested = false;
   bool _isSearchingCatalog = false;
   List<CatalogFoodCandidate> _catalogResults = const [];
@@ -34,6 +35,7 @@ class MealFlowViewModel extends ChangeNotifier {
   MealFlowStep get step => _step;
   MealDraft? get draft => _draft;
   String? get error => _error;
+  MealAnalysisFailureKind? get errorKind => _errorKind;
   bool get manualSearchSuggested => _manualSearchSuggested;
   bool get canSearchCatalog => _catalogRepository != null;
   bool get isSearchingCatalog => _isSearchingCatalog;
@@ -49,6 +51,7 @@ class MealFlowViewModel extends ChangeNotifier {
     );
     _step = MealFlowStep.analyzing;
     _error = null;
+    _errorKind = null;
     _manualSearchSuggested = false;
     notifyListeners();
     try {
@@ -56,10 +59,12 @@ class MealFlowViewModel extends ChangeNotifier {
       _step = MealFlowStep.review;
     } on MealAnalysisException catch (error) {
       _error = _messageFor(error.kind);
+      _errorKind = error.kind;
       _manualSearchSuggested = error.kind == MealAnalysisFailureKind.noMatch;
       _step = MealFlowStep.compose;
     } catch (_) {
       _error = 'Öğünü analiz edemedik. Bağlantını kontrol edip tekrar dene.';
+      _errorKind = MealAnalysisFailureKind.unknown;
       _step = MealFlowStep.compose;
     }
     notifyListeners();
@@ -84,32 +89,59 @@ class MealFlowViewModel extends ChangeNotifier {
   }
 
   void selectManualFood(CatalogFoodCandidate candidate, String sourceText) {
+    final item = MealItem(
+      id: _manualItemIdFactory(),
+      foodId: candidate.foodId,
+      name: naturalFoodDisplayName(candidate.name),
+      canonicalName: candidate.name,
+      sourceText: sourceText,
+      portionLabel: candidate.defaultPortionLabel,
+      grams: candidate.defaultGrams,
+      nutritionPer100g: Nutrition(
+        calories: candidate.caloriesPer100g,
+        protein: candidate.proteinPer100g,
+        carbs: candidate.carbsPer100g,
+        fat: candidate.fatPer100g,
+      ),
+      matchState: MatchState.checkAmount,
+      sourceName: candidate.nutritionSource,
+      confidence: candidate.score,
+      matchMethod: 'manual',
+    );
     _draft = MealDraft(
       inputText: sourceText,
       mealName: _mealName(DateTime.now()),
-      items: [
-        MealItem(
-          id: _manualItemIdFactory(),
-          foodId: candidate.foodId,
-          name: candidate.name,
-          sourceText: sourceText,
-          portionLabel: candidate.defaultPortionLabel,
-          grams: candidate.defaultGrams,
-          nutritionPer100g: Nutrition(
-            calories: candidate.caloriesPer100g,
-            protein: candidate.proteinPer100g,
-            carbs: candidate.carbsPer100g,
-            fat: candidate.fatPer100g,
-          ),
-          matchState: MatchState.checkAmount,
-          sourceName: candidate.nutritionSource,
-          confidence: candidate.score,
-          matchMethod: 'manual',
-        ),
-      ],
+      items: [item],
     );
     _step = MealFlowStep.review;
     _manualSearchSuggested = false;
+    notifyListeners();
+  }
+
+  void addManualFood(CatalogFoodCandidate candidate, String sourceText) {
+    final draft = _draft;
+    if (draft == null) return;
+    _draft = draft.addItem(
+      MealItem(
+        id: _manualItemIdFactory(),
+        foodId: candidate.foodId,
+        name: naturalFoodDisplayName(candidate.name),
+        canonicalName: candidate.name,
+        sourceText: sourceText,
+        portionLabel: candidate.defaultPortionLabel,
+        grams: candidate.defaultGrams,
+        nutritionPer100g: Nutrition(
+          calories: candidate.caloriesPer100g,
+          protein: candidate.proteinPer100g,
+          carbs: candidate.carbsPer100g,
+          fat: candidate.fatPer100g,
+        ),
+        matchState: MatchState.checkAmount,
+        sourceName: candidate.nutritionSource,
+        confidence: candidate.score,
+        matchMethod: 'manual',
+      ),
+    );
     notifyListeners();
   }
 
@@ -139,6 +171,12 @@ class MealFlowViewModel extends ChangeNotifier {
   void updateItem(MealItem updated) {
     if (_draft == null) return;
     _draft = _draft!.updateItem(updated);
+    notifyListeners();
+  }
+
+  void removeItem(String itemId) {
+    if (_draft == null) return;
+    _draft = _draft!.removeItem(itemId);
     notifyListeners();
   }
 

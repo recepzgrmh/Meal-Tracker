@@ -15,7 +15,7 @@ import {
   type CatalogPortion,
 } from './deterministic.ts'
 import { parseAnalyzeMealRequest, RequestValidationError } from './request.ts'
-import { reconcileModalities } from './reconcile.ts'
+import { applyVisionEvidence, reconcileModalities } from './reconcile.ts'
 import {
   extractFoodsFromPhoto,
   extractVisionWithTextFallback,
@@ -128,7 +128,10 @@ export default {
       const catalog = await loadCatalog(context, body.locale ?? 'tr-TR')
       const textAnalysis = analyzeDeterministically(body.input, catalog)
       const visionAnalysis = vision
-        ? analyzeDeterministically(vision.normalizedDescription, catalog)
+        ? applyVisionEvidence(
+          analyzeDeterministically(vision.normalizedDescription, catalog),
+          vision.foods,
+        )
         : null
       const analysis = reconcileModalities(textAnalysis, visionAnalysis)
       const grounding = await groundUnmatchedText(context, {
@@ -281,10 +284,9 @@ async function loadCatalog(
       'locale',
       locale,
     ),
-    context.supabaseAdmin.from('food_portions').select('food_id,label,grams,is_default').eq(
-      'locale',
-      locale,
-    ),
+    context.supabaseAdmin.from('food_portions').select(
+      'food_id,label,grams,is_default,size_class,reference_image_path',
+    ).eq('locale', locale),
   ])
   for (const result of [foodsResult, aliasesResult, portionsResult]) {
     if (result.error) throw result.error
@@ -294,11 +296,22 @@ async function loadCatalog(
     value: String(row.alias),
     priority: Number(row.priority),
   }))
-  const portionsByFood = groupByFood<CatalogPortion>(portionsResult.data, (row) => ({
-    label: String(row.label),
-    grams: Number(row.grams),
-    isDefault: Boolean(row.is_default),
-  }))
+  const portionsByFood = groupByFood<CatalogPortion>(portionsResult.data, (row) => {
+    const imagePath = String(row.reference_image_path ?? '').trim()
+    return {
+      label: String(row.label),
+      grams: Number(row.grams),
+      isDefault: Boolean(row.is_default),
+      sizeClass: normalizeSizeClass(row.size_class),
+      ...(imagePath
+        ? {
+          imageUrl: context.supabaseAdmin.storage
+            .from('food-portion-references')
+            .getPublicUrl(imagePath).data.publicUrl,
+        }
+        : {}),
+    }
+  })
 
   return (foodsResult.data ?? []).map((row: Record<string, unknown>) => ({
     id: String(row.id),
@@ -583,6 +596,11 @@ function toAnalysisItems(
       matchMethod: 'llm' as const,
       needsClarification: true,
       clarificationReason: 'portion' as const,
+      portionOptions: [{
+        label: candidate.defaultPortionLabel,
+        grams: candidate.defaultGrams,
+        sizeClass: 'regular' as const,
+      }],
       nutritionPer100g: candidate.nutritionPer100g,
     }]
   })
@@ -613,6 +631,14 @@ function groupByFood<T>(
     grouped.set(foodId, [...(grouped.get(foodId) ?? []), map(row)])
   }
   return grouped
+}
+
+function normalizeSizeClass(
+  value: unknown,
+): 'small' | 'regular' | 'large' | 'custom' | undefined {
+  return value === 'small' || value === 'regular' || value === 'large' || value === 'custom'
+    ? value
+    : undefined
 }
 
 function userIdFromClaims(claims?: Record<string, unknown>): string | null {

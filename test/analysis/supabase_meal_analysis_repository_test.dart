@@ -28,7 +28,11 @@ void main() {
       expect(draft.unmatchedText, ['maydanoz']);
       expect(draft.items, hasLength(2));
       expect(draft.items.first.foodId, 'food-egg');
+      expect(draft.items.first.canonicalName, 'Tavuk Yumurtası, Haşlanmış');
+      expect(draft.items.first.displayName, 'Haşlanmış yumurta');
       expect(draft.items.first.matchState, MatchState.matched);
+      expect(draft.items.first.portionOptions, hasLength(3));
+      expect(draft.items.first.portionOptions[1].sizeClass, 'regular');
       expect(draft.items.last.matchState, MatchState.checkType);
       expect(draft.items.last.confidence, 0.72);
     },
@@ -121,6 +125,11 @@ Map<String, dynamic> _response() => {
       'confidence': 0.98,
       'matchMethod': 'exact',
       'needsClarification': false,
+      'portionOptions': [
+        {'label': '1 adet', 'grams': 50, 'sizeClass': 'small'},
+        {'label': '2 adet', 'grams': 100, 'sizeClass': 'regular'},
+        {'label': '3 adet', 'grams': 150, 'sizeClass': 'large'},
+      ],
       'nutritionPer100g': {
         'calories': 155,
         'protein': 12.6,

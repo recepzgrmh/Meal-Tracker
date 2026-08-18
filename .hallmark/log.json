@@ -1,0 +1,38 @@
+{
+  "project": "Meal Clarity",
+  "genre": "vibrant health utility",
+  "appFamily": "Workbench",
+  "audience": "people who want fast, reliable daily meal logging",
+  "use": "show a meal, correct only uncertainty, save, move on",
+  "tone": ["energetic", "trustworthy", "warm", "food-centric"],
+  "palette": ["#F3F7F4", "#FFFFFF", "#102019", "#087A4C", "#B6F04A"],
+  "imagery": "real food photography only",
+  "avoid": ["gradients", "AI sparkles", "neon", "glass-heavy panels", "fabricated insights"],
+  "runs": [
+    {
+      "date": "2026-08-18",
+      "scope": "app",
+      "macrostructure": "photo-led Workbench journal",
+      "theme": "custom warm food utility",
+      "enrichment": "real food photography",
+      "brief": "second-pass state retention, large-text resilience, and hierarchy cleanup"
+    },
+    {
+      "date": "2026-08-18",
+      "scope": "primary navigation and semantic color system",
+      "macrostructure": "fixed bottom navigation over horizontally paged content",
+      "theme": "custom emerald and fresh-lime health utility",
+      "enrichment": "stronger surface hierarchy and directional continuity",
+      "brief": "swipeable primary tabs and a more vivid accessible palette"
+    },
+    {
+      "date": "2026-08-18",
+      "scope": "food recognition, portion clarification, and meal review",
+      "macrostructure": "camera-first input followed by exception-based review",
+      "theme": "custom emerald utility with amber reserved for uncertainty",
+      "enrichment": "curated portion references with honest relative-size fallback",
+      "brief": "centered capture and loading states, clearer review hierarchy, and visual portion correction"
+    }
+  ],
+  "updated": "2026-08-18"
+}

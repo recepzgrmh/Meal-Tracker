@@ -1,219 +1,266 @@
-import 'dart:collection';
-
 import 'package:flutter/material.dart';
 
 import '../domain/models.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_surfaces.dart';
+import '../widgets/liquid_glass_bottom_bar.dart';
+import '../../l10n/l10n.dart';
 
-class HistoryScreen extends StatelessWidget {
+class HistoryScreen extends StatefulWidget {
   const HistoryScreen({
     required this.meals,
     required this.onMealTap,
-    required this.onTodayTap,
-    this.onProfileTap,
+    required this.onNavigationSelected,
+    this.selectedDayIndex,
+    this.onSelectedDayIndexChanged,
+    this.showBottomNavigationBar = true,
     super.key,
   });
 
   final List<LoggedMeal> meals;
   final ValueChanged<LoggedMeal> onMealTap;
-  final VoidCallback onTodayTap;
-  final VoidCallback? onProfileTap;
+  final ValueChanged<int> onNavigationSelected;
+  final int? selectedDayIndex;
+  final ValueChanged<int>? onSelectedDayIndexChanged;
+  final bool showBottomNavigationBar;
+
+  @override
+  State<HistoryScreen> createState() => _HistoryScreenState();
+}
+
+class _HistoryScreenState extends State<HistoryScreen> {
+  int _localSelectedDayIndex = 0;
+
+  int get _selectedDayIndex =>
+      widget.selectedDayIndex ?? _localSelectedDayIndex;
+
+  void _selectDay(int index) {
+    setState(() => _localSelectedDayIndex = index);
+    widget.onSelectedDayIndexChanged?.call(index);
+  }
+
+  List<DateTime> get _days {
+    final values = widget.meals
+        .map((meal) => meal.occurredAt)
+        .whereType<DateTime>()
+        .map((date) => DateTime(date.year, date.month, date.day))
+        .toSet()
+        .toList(growable: false);
+    values.sort((left, right) => right.compareTo(left));
+    return values;
+  }
+
+  List<LoggedMeal> _mealsFor(DateTime day) => widget.meals
+      .where((meal) {
+        final date = meal.occurredAt;
+        return date != null &&
+            date.year == day.year &&
+            date.month == day.month &&
+            date.day == day.day;
+      })
+      .toList(growable: false);
 
   @override
   Widget build(BuildContext context) {
-    final groups = _groupMeals(meals);
+    final days = _days;
+    final safeIndex = days.isEmpty
+        ? 0
+        : _selectedDayIndex.clamp(0, days.length - 1);
+    final selectedDay = days.isEmpty ? null : days[safeIndex];
+    final selectedMeals = selectedDay == null
+        ? const <LoggedMeal>[]
+        : _mealsFor(selectedDay);
+    final nutrition = selectedMeals.fold(
+      Nutrition.zero,
+      (total, meal) => total + meal.nutrition,
+    );
     return Scaffold(
+      extendBody: true,
       body: SafeArea(
         bottom: false,
         child: CustomScrollView(
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(22, 22, 22, 36),
+              padding: const EdgeInsets.fromLTRB(22, 22, 22, 96),
               sliver: SliverList.list(
                 children: [
                   Text(
-                    'Geçmiş',
+                    context.ota('historyTitle', tr: 'Geçmiş', en: 'History'),
                     style: Theme.of(context).textTheme.displaySmall,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Öğünlerin cihazında saklanır ve bağlantı geldiğinde güvenle eşitlenir.',
-                    style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  const SizedBox(height: 28),
-                  if (groups.isEmpty)
+                  const SizedBox(height: 24),
+                  if (selectedDay == null)
                     const _EmptyHistory()
-                  else
-                    for (final entry in groups.entries) ...[
-                      _DayHeader(date: entry.key, meals: entry.value),
-                      const SizedBox(height: 10),
-                      for (final meal in entry.value)
-                        _HistoryMealCard(
-                          meal: meal,
-                          onTap: () => onMealTap(meal),
-                        ),
-                      const SizedBox(height: 22),
+                  else ...[
+                    if (days.length > 1) ...[
+                      _DayRail(
+                        days: days,
+                        selectedIndex: safeIndex,
+                        onSelected: _selectDay,
+                      ),
+                      const SizedBox(height: 16),
                     ],
+                    StandardCardSurface(
+                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+                      child: Column(
+                        children: [
+                          Text(
+                            _formatHistoryDate(
+                              selectedDay,
+                              Localizations.localeOf(context).languageCode,
+                            ),
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            context.ota(
+                              'calorieAmount',
+                              tr: '{amount} kcal',
+                              en: '{amount} kcal',
+                              replacements: {
+                                'amount': nutrition.calories.round(),
+                              },
+                            ),
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ),
+                          const SizedBox(height: 7),
+                          Text(
+                            context.ota(
+                              'historySummary',
+                              tr: '{count} öğün · {protein} g protein',
+                              en: '{count} meals · {protein} g protein',
+                              replacements: {
+                                'count': selectedMeals.length,
+                                'protein': nutrition.protein.round(),
+                              },
+                            ),
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    for (
+                      var index = 0;
+                      index < selectedMeals.length;
+                      index++
+                    ) ...[
+                      _HistoryMealCard(
+                        meal: selectedMeals[index],
+                        onTap: () => widget.onMealTap(selectedMeals[index]),
+                      ),
+                    ],
+                  ],
                 ],
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: NavigationBar(
-        height: 72,
-        selectedIndex: 1,
-        backgroundColor: AppColors.surface,
-        indicatorColor: const Color(0xFFEAF7B8),
-        onDestinationSelected: (index) {
-          if (index == 0) onTodayTap();
-          if (index == 2) onProfileTap?.call();
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded),
-            label: 'Bugün',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.history_rounded),
-            label: 'Geçmiş',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline_rounded),
-            label: 'Profil',
-          ),
-        ],
-      ),
-    );
-  }
-
-  SplayTreeMap<DateTime, List<LoggedMeal>> _groupMeals(List<LoggedMeal> meals) {
-    final groups = SplayTreeMap<DateTime, List<LoggedMeal>>(
-      (left, right) => right.compareTo(left),
-    );
-    for (final meal in meals) {
-      final occurredAt = meal.occurredAt;
-      if (occurredAt == null) continue;
-      final day = DateTime(occurredAt.year, occurredAt.month, occurredAt.day);
-      groups.putIfAbsent(day, () => []).add(meal);
-    }
-    return groups;
-  }
-}
-
-class _DayHeader extends StatelessWidget {
-  const _DayHeader({required this.date, required this.meals});
-
-  final DateTime date;
-  final List<LoggedMeal> meals;
-
-  @override
-  Widget build(BuildContext context) {
-    final calories = meals.fold<double>(
-      0,
-      (total, meal) => total + meal.nutrition.calories,
-    );
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            _formatDay(date),
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-        ),
-        Text(
-          '${calories.round()} kcal',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-      ],
+      bottomNavigationBar: widget.showBottomNavigationBar
+          ? LiquidGlassBottomBar(
+              selectedIndex: 1,
+              onDestinationSelected: widget.onNavigationSelected,
+            )
+          : null,
     );
   }
 }
 
-class _HistoryMealCard extends StatelessWidget {
-  const _HistoryMealCard({required this.meal, required this.onTap});
+class _DayRail extends StatelessWidget {
+  const _DayRail({
+    required this.days,
+    required this.selectedIndex,
+    required this.onSelected,
+  });
 
-  final LoggedMeal meal;
-  final VoidCallback onTap;
+  final List<DateTime> days;
+  final int selectedIndex;
+  final ValueChanged<int> onSelected;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Material(
-        color: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
-          side: const BorderSide(color: AppColors.line),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: ListTile(
-          onTap: onTap,
-          contentPadding: const EdgeInsets.all(12),
-          leading: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: SizedBox.square(
-              dimension: 58,
-              child: meal.imageAsset == null
-                  ? const ColoredBox(
-                      color: AppColors.canvas,
-                      child: Icon(Icons.restaurant_rounded),
-                    )
-                  : Image.asset(meal.imageAsset!, fit: BoxFit.cover),
+    final languageCode = Localizations.localeOf(context).languageCode;
+    return SizedBox(
+      height: 68,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: days.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final day = days[index];
+          final selected = index == selectedIndex;
+          return Semantics(
+            button: true,
+            selected: selected,
+            label: _formatHistoryDate(day, languageCode),
+            child: Material(
+              color: selected ? AppColors.lime : AppColors.surface,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadius.input),
+                side: BorderSide(
+                  color: selected ? AppColors.limeDark : AppColors.line,
+                ),
+              ),
+              child: InkWell(
+                key: Key('history-day-$index'),
+                onTap: () => onSelected(index),
+                borderRadius: BorderRadius.circular(AppRadius.input),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 64),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _shortWeekday(day, languageCode),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: selected
+                                    ? AppColors.ink
+                                    : AppColors.muted,
+                              ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${day.day}',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
-          title: Text(
-            meal.name,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          subtitle: Text('${meal.timeLabel} · ${meal.items.length} yiyecek'),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('${meal.nutrition.calories.round()} kcal'),
-              const Icon(Icons.chevron_right_rounded),
-            ],
-          ),
-        ),
+          );
+        },
       ),
     );
   }
 }
 
-class _EmptyHistory extends StatelessWidget {
-  const _EmptyHistory();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(26),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.line),
-      ),
-      child: Column(
-        children: [
-          const Icon(Icons.history_toggle_off_rounded, size: 42),
-          const SizedBox(height: 12),
-          Text(
-            'Henüz geçmiş öğün yok',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Kaydettiğin öğünler burada günlere göre görünecek.',
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
+String _shortWeekday(DateTime date, String languageCode) {
+  const tr = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+  const en = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  return (languageCode == 'en' ? en : tr)[date.weekday - 1];
 }
 
-String _formatDay(DateTime date) {
-  const months = [
+String _formatHistoryDate(DateTime date, String languageCode) {
+  const trWeekdays = [
+    'Pazartesi',
+    'Salı',
+    'Çarşamba',
+    'Perşembe',
+    'Cuma',
+    'Cumartesi',
+    'Pazar',
+  ];
+  const trMonths = [
     'Ocak',
     'Şubat',
     'Mart',
@@ -227,5 +274,162 @@ String _formatDay(DateTime date) {
     'Kasım',
     'Aralık',
   ];
-  return '${date.day} ${months[date.month - 1]}';
+  const enWeekdays = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
+  ];
+  const enMonths = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  final english = languageCode == 'en';
+  final weekdays = english ? enWeekdays : trWeekdays;
+  final months = english ? enMonths : trMonths;
+  return '${date.day} ${months[date.month - 1]}, '
+      '${weekdays[date.weekday - 1]}';
+}
+
+class _HistoryMealCard extends StatelessWidget {
+  const _HistoryMealCard({required this.meal, required this.onTap});
+
+  final LoggedMeal meal;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppRadius.compactCard),
+          boxShadow: AppShadows.card,
+        ),
+        child: Material(
+          color: AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.compactCard),
+            side: const BorderSide(color: AppColors.line),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.large),
+                    child: SizedBox.square(
+                      dimension: 88,
+                      child: meal.imageAsset == null
+                          ? const ColoredBox(
+                              color: AppColors.canvas,
+                              child: Icon(Icons.restaurant_rounded),
+                            )
+                          : Image.asset(meal.imageAsset!, fit: BoxFit.cover),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          meal.name,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          context.ota(
+                            'mealFoodCount',
+                            tr: '{time} · {count} yiyecek',
+                            en: '{time} · {count} foods',
+                            replacements: {
+                              'time': meal.timeLabel,
+                              'count': meal.items.length,
+                            },
+                          ),
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${meal.nutrition.calories.round()}',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      Text(
+                        'kcal',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 8),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        size: 20,
+                        color: AppColors.muted,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyHistory extends StatelessWidget {
+  const _EmptyHistory();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 36),
+      child: Column(
+        children: [
+          Text(
+            context.ota(
+              'historyEmptyTitle',
+              tr: 'Henüz geçmiş öğün yok',
+              en: 'No meal history yet',
+            ),
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            context.ota(
+              'historyEmptyBody',
+              tr: 'Kaydettiğin öğünler burada günlere göre görünecek.',
+              en: 'Meals you log will appear here grouped by day.',
+            ),
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ],
+      ),
+    );
+  }
 }

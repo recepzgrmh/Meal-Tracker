@@ -72,7 +72,7 @@ Deno.test('returns unknown tokens instead of inventing a catalog match', () => {
   const result = analyzeDeterministically('bir tabak menemen ve avokado', catalog)
 
   assertEquals(result.items, [])
-  assertEquals(result.unmatchedText, ['tabak', 'menemen', 'avokado'])
+  assertEquals(result.unmatchedText, ['menemen', 'avokado'])
 })
 
 Deno.test('does not leak a neighboring item quantity across matches', () => {
@@ -113,6 +113,22 @@ Deno.test('resolves Turkish genitive halves and one-and-a-half portions', () => 
   const oneAndHalf = analyzeDeterministically('bir buçuk simit', catalog)
   assertEquals(half.items[0].grams, 50)
   assertEquals(oneAndHalf.items[0].grams, 150)
+})
+
+Deno.test('resolves catalog household measures without leaking unit tokens', () => {
+  const yogurtCatalog: CatalogFood[] = [{
+    id: 'yogurt',
+    canonicalName: 'Yoğurt',
+    nutritionPer100g: { calories: 61, protein: 3.5, carbs: 4.7, fat: 3.3 },
+    aliases: [{ value: 'yoğurt', priority: 100 }],
+    portions: [{ label: '1 kase', grams: 200, isDefault: true }],
+  }]
+
+  const result = analyzeDeterministically('iki kase yoğurt', yogurtCatalog)
+  assertEquals(result.items[0].grams, 400)
+  assertEquals(result.items[0].portionLabel, '2 kase')
+  assertEquals(result.items[0].needsClarification, false)
+  assertEquals(result.unmatchedText, [])
 })
 
 function assertEquals(actual: unknown, expected: unknown): void {

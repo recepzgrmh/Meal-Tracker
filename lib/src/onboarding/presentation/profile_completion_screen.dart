@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../bootstrap/app_coordinator.dart';
 
 class ProfileCompletionScreen extends StatefulWidget {
@@ -40,7 +41,11 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
                         const CircularProgressIndicator(),
                         const SizedBox(height: 22),
                         Text(
-                          'Başlangıç tercihlerin kaydediliyor…',
+                          context.ota(
+                            'profileSavingPreferences',
+                            tr: 'Başlangıç tercihlerin kaydediliyor…',
+                            en: 'Saving your initial preferences…',
+                          ),
                           style: Theme.of(context).textTheme.titleLarge,
                           textAlign: TextAlign.center,
                         ),
@@ -48,7 +53,11 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
                         const Icon(Icons.cloud_off_outlined, size: 48),
                         const SizedBox(height: 18),
                         Text(
-                          widget.coordinator.profileError!,
+                          context.ota(
+                            'profileSaveError',
+                            tr: 'Tercihler kaydedilemedi. Bağlantını kontrol edip tekrar dene.',
+                            en: 'Preferences could not be saved. Check your connection and try again.',
+                          ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 20),
@@ -56,7 +65,13 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
                           onPressed: widget.coordinator.isCompletingProfile
                               ? null
                               : widget.coordinator.completeProfile,
-                          child: const Text('Tekrar dene'),
+                          child: Text(
+                            context.ota(
+                              'commonRetry',
+                              tr: 'Tekrar dene',
+                              en: 'Try again',
+                            ),
+                          ),
                         ),
                       ],
                     ],

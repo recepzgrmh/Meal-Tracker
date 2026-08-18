@@ -9,6 +9,8 @@ export interface CatalogPortion {
   label: string
   grams: number
   isDefault: boolean
+  sizeClass?: 'small' | 'regular' | 'large' | 'custom'
+  imageUrl?: string
 }
 
 export interface CatalogFood {
@@ -78,6 +80,22 @@ const ignoredTokens = new Set([
   'pieces',
   'serving',
   'slice',
+  'kase',
+  'tabak',
+  'bardak',
+  'fincan',
+  'kaşık',
+  'kasik',
+  'yemek',
+  'tatlı',
+  'tatli',
+  'çay',
+  'cay',
+  'bowl',
+  'plate',
+  'cup',
+  'tablespoon',
+  'teaspoon',
   'half',
   'buçuk',
   'bucuk',
@@ -168,6 +186,15 @@ function toAnalysisItem(input: string, match: PhraseMatch, index: number): Analy
     ...(needsClarification
       ? { clarificationReason: identityAmbiguous ? 'identity' as const : 'portion' as const }
       : {}),
+    portionOptions: match.food.portions
+      .slice()
+      .sort((left, right) => left.grams - right.grams)
+      .map((option) => ({
+        label: option.label,
+        grams: option.grams,
+        ...(option.sizeClass ? { sizeClass: option.sizeClass } : {}),
+        ...(option.imageUrl ? { imageUrl: option.imageUrl } : {}),
+      })),
     nutritionPer100g: match.food.nutritionPer100g,
   }
 }
@@ -227,6 +254,13 @@ function resolvePortion(input: string, match: PhraseMatch): PortionResolution {
     }
   }
 
+  const householdPortion = resolveHouseholdPortion(
+    before,
+    after,
+    match.food.portions,
+  )
+  if (householdPortion) return householdPortion
+
   const vagueLabel = before.match(/(?:^|\s)(biraz|az|fazla)\s*$/u)?.[1]
   if (vagueLabel) {
     const catalogLabel = vagueLabel === 'biraz' ? 'az' : vagueLabel
@@ -281,6 +315,37 @@ function resolvePortion(input: string, match: PhraseMatch): PortionResolution {
     quantity: 1,
     inferred: true,
   }
+}
+
+function resolveHouseholdPortion(
+  before: string,
+  after: string,
+  portions: CatalogPortion[],
+): PortionResolution | null {
+  const quantityPattern = '(\\d{1,2}|bir|iki|üç|uc|dört|dort|beş|bes|one|two|three|four|five)'
+  for (const portion of portions) {
+    const normalized = normalizeTurkishInput(portion.label)
+    const unit = normalized.replace(/^(?:1|bir|one)\s+/u, '').trim()
+    if (!unit || /^(?:g|gr|gram|az|fazla|small|large)$/u.test(unit)) continue
+    const escapedUnit = escapeRegExp(unit)
+    const beforeMatch = before.match(
+      new RegExp(`(?:^|\\s)${quantityPattern}\\s+${escapedUnit}\\s*$`, 'u'),
+    )
+    const afterMatch = after.match(
+      new RegExp(`^${quantityPattern}\\s+${escapedUnit}(?:\\s|$)`, 'u'),
+    )
+    const token = beforeMatch?.[1] ?? afterMatch?.[1]
+    if (!token) continue
+    const quantity = Number(token) || numberWords[token]
+    if (!quantity) continue
+    return {
+      label: `${quantity} ${unit}`,
+      grams: portion.grams * quantity,
+      quantity,
+      inferred: false,
+    }
+  }
+  return null
 }
 
 function extractUnmatchedTokens(input: string, matches: PhraseMatch[]): string[] {

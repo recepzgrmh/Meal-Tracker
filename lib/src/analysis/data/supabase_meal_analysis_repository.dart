@@ -52,7 +52,8 @@ class SupabaseMealAnalysisRepository implements MealRepository {
               (item) => MealItem(
                 id: item.itemKey,
                 foodId: item.foodId,
-                name: item.canonicalName,
+                name: naturalFoodDisplayName(item.canonicalName),
+                canonicalName: item.canonicalName,
                 sourceText: item.sourceText,
                 portionLabel: item.portionLabel,
                 grams: item.grams,
@@ -66,6 +67,16 @@ class SupabaseMealAnalysisRepository implements MealRepository {
                 sourceName: 'Curated food catalog · exact-alias-v1',
                 confidence: item.confidence,
                 matchMethod: item.matchMethod,
+                portionOptions: item.portionOptions
+                    .map(
+                      (option) => FoodPortionOption(
+                        label: option.label,
+                        grams: option.grams,
+                        sizeClass: option.sizeClass,
+                        imageUrl: option.imageUrl,
+                      ),
+                    )
+                    .toList(growable: false),
               ),
             )
             .toList(growable: false),

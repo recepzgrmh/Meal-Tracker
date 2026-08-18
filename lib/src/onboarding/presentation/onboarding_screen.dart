@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../theme/app_theme.dart';
 import '../domain/onboarding_draft.dart';
 import 'onboarding_view_model.dart';
@@ -50,7 +51,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       _calorieController.text,
     );
     if (error != null) {
-      setState(() => _calorieError = error);
+      setState(
+        () => _calorieError = context.ota(
+          'calorieTargetValidation',
+          tr: '500–10.000 kcal arasında bir değer gir veya alanı boş bırak.',
+          en: 'Enter a value between 500–10,000 kcal or leave the field blank.',
+        ),
+      );
       return;
     }
     await widget.viewModel.setCalorieTarget(_calorieController.text);
@@ -65,7 +72,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       builder: (context, _) {
         if (widget.viewModel.isLoading) {
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+            body: SafeArea(child: Center(child: CircularProgressIndicator())),
           );
         }
         final step = widget.viewModel.draft.step.clamp(0, 2);
@@ -135,16 +142,26 @@ class _OnboardingHeader extends StatelessWidget {
             child: onBack == null
                 ? null
                 : IconButton(
-                    tooltip: 'Geri',
+                    tooltip: context.ota('commonBack', tr: 'Geri', en: 'Back'),
                     onPressed: onBack,
                     icon: const Icon(Icons.arrow_back_rounded),
                   ),
           ),
           const Spacer(),
           Semantics(
-            label: '3 adımdan ${step + 1}.si',
+            label: context.ota(
+              'onboardingStepSemantics',
+              tr: '3 adımdan {step}.si',
+              en: 'Step {step} of 3',
+              replacements: {'step': step + 1},
+            ),
             child: Text(
-              '${step + 1} / 3',
+              context.ota(
+                'onboardingStepCounter',
+                tr: '{step} / 3',
+                en: '{step} / 3',
+                replacements: {'step': step + 1},
+              ),
               style: Theme.of(context).textTheme.labelLarge,
             ),
           ),
@@ -172,11 +189,23 @@ class _WelcomeStep extends StatelessWidget {
           FilledButton(
             key: const Key('onboarding-continue'),
             onPressed: onContinue,
-            child: const Text('Nasıl çalıştığını gör'),
+            child: Text(
+              context.ota(
+                'onboardingSeeHowAction',
+                tr: 'Nasıl çalıştığını gör',
+                en: 'See how it works',
+              ),
+            ),
           ),
           TextButton(
             onPressed: onSignIn,
-            child: const Text('Zaten hesabım var'),
+            child: Text(
+              context.ota(
+                'onboardingExistingAccount',
+                tr: 'Zaten hesabım var',
+                en: 'I already have an account',
+              ),
+            ),
           ),
         ],
       ),
@@ -193,17 +222,25 @@ class _WelcomeStep extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Yemeğini anlat. Gerisini birlikte netleştirelim.',
+            context.ota(
+              'onboardingWelcomeTitle',
+              tr: 'Yemeğini anlat. Gerisini birlikte netleştirelim.',
+              en: 'Describe your meal. We will clarify the rest together.',
+            ),
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: 12),
           Text(
-            'Doğal şekilde yaz; yalnızca sonucu gerçekten etkileyen noktaları kontrol et.',
+            context.ota(
+              'onboardingWelcomeBody',
+              tr: 'Doğal şekilde yaz; yalnızca sonucu gerçekten etkileyen noktaları kontrol et.',
+              en: 'Write naturally; only review details that truly affect the result.',
+            ),
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: 22),
           ClipRRect(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(AppRadius.feature),
             child: AspectRatio(
               aspectRatio: 4 / 3,
               child: Image.asset(
@@ -241,18 +278,38 @@ class _AccuracyDemoStep extends StatelessWidget {
       footer: FilledButton(
         key: const Key('demo-continue'),
         onPressed: analyzed ? onContinue : onAnalyze,
-        child: Text(analyzed ? 'Anladım, devam et' : 'Örneği analiz et'),
+        child: Text(
+          analyzed
+              ? context.ota(
+                  'onboardingDemoContinue',
+                  tr: 'Anladım, devam et',
+                  en: 'Got it, continue',
+                )
+              : context.ota(
+                  'onboardingAnalyzeExample',
+                  tr: 'Örneği analiz et',
+                  en: 'Analyze the example',
+                ),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Emin olduğumuzu çözeriz.',
+            context.ota(
+              'onboardingAccuracyTitle',
+              tr: 'Emin olduğumuzu çözeriz.',
+              en: 'We resolve what we are sure about.',
+            ),
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: 10),
           Text(
-            'Belirsizliği saklamayız. Yalnızca önemli olduğunda sana sorarız.',
+            context.ota(
+              'onboardingAccuracyBody',
+              tr: 'Belirsizliği saklamayız. Yalnızca önemli olduğunda sana sorarız.',
+              en: 'We do not hide uncertainty. We ask only when it matters.',
+            ),
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: 20),
@@ -263,40 +320,64 @@ class _AccuracyDemoStep extends StatelessWidget {
             child: analyzed
                 ? Column(
                     children: [
-                      const _DetectedItem(
-                        title: '2 Yumurta',
-                        detail: '2 adet · yüksek güven',
+                      _DetectedItem(
+                        title: context.ota(
+                          'demoEggsTitle',
+                          tr: '2 Yumurta',
+                          en: '2 Eggs',
+                        ),
+                        detail: context.ota(
+                          'demoEggsDetail',
+                          tr: '2 adet · yüksek güven',
+                          en: '2 pieces · high confidence',
+                        ),
                         needsReview: false,
                       ),
-                      const _DetectedItem(
-                        title: 'Simit',
-                        detail: '½ adet · yüksek güven',
+                      _DetectedItem(
+                        title: context.ota(
+                          'demoSimitTitle',
+                          tr: 'Simit',
+                          en: 'Simit',
+                        ),
+                        detail: context.ota(
+                          'demoSimitDetail',
+                          tr: '½ adet · yüksek güven',
+                          en: '½ piece · high confidence',
+                        ),
                         needsReview: false,
                       ),
-                      const _DetectedItem(
-                        title: 'Beyaz peynir',
-                        detail: 'Miktarı kontrol et',
+                      _DetectedItem(
+                        title: context.ota(
+                          'demoCheeseTitle',
+                          tr: 'Beyaz peynir',
+                          en: 'White cheese',
+                        ),
+                        detail: context.ota(
+                          'demoCheeseDetail',
+                          tr: 'Miktarı kontrol et',
+                          en: 'Check the amount',
+                        ),
                         needsReview: true,
                       ),
                       const SizedBox(height: 12),
                       Row(
                         children: [
                           _PortionChoice(
-                            label: 'Az',
+                            label: context.l10n.portionSmall,
                             asset: 'assets/images/portion_cheese_small.webp',
                             selected: selectedPortion == 'small',
                             onTap: () => onSelectPortion('small'),
                           ),
                           const SizedBox(width: 8),
                           _PortionChoice(
-                            label: 'Tahmin',
+                            label: context.l10n.portionEstimate,
                             asset: 'assets/images/portion_cheese_regular.webp',
                             selected: selectedPortion == 'regular',
                             onTap: () => onSelectPortion('regular'),
                           ),
                           const SizedBox(width: 8),
                           _PortionChoice(
-                            label: 'Fazla',
+                            label: context.l10n.portionLarge,
                             asset: 'assets/images/portion_cheese_large.webp',
                             selected: selectedPortion == 'large',
                             onTap: () => onSelectPortion('large'),
@@ -305,7 +386,11 @@ class _AccuracyDemoStep extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Görseller göreli seçimdir; kesin miktarı her zaman girebilirsin.',
+                        context.ota(
+                          'onboardingPortionHint',
+                          tr: 'Görseller göreli seçimdir; kesin miktarı her zaman girebilirsin.',
+                          en: 'Images are relative choices; you can always enter the exact amount.',
+                        ),
                         style: Theme.of(context).textTheme.bodySmall,
                         textAlign: TextAlign.center,
                       ),
@@ -332,7 +417,13 @@ class _DemoInput extends StatelessWidget {
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.line),
       ),
-      child: const Text('“2 yumurta, biraz peynir ve yarım simit”'),
+      child: Text(
+        context.ota(
+          'onboardingDemoInput',
+          tr: '“2 yumurta, biraz peynir ve yarım simit”',
+          en: '“2 eggs, some cheese, and half a simit”',
+        ),
+      ),
     );
   }
 }
@@ -384,7 +475,12 @@ class _PortionChoice extends StatelessWidget {
       child: Semantics(
         button: true,
         selected: selected,
-        label: '$label peynir porsiyonu',
+        label: context.ota(
+          'cheesePortionSemantics',
+          tr: '{label} peynir porsiyonu',
+          en: '{label} cheese portion',
+          replacements: {'label': label},
+        ),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
@@ -453,35 +549,62 @@ class _PersonalizationStep extends StatelessWidget {
       footer: FilledButton(
         key: const Key('onboarding-finish'),
         onPressed: intention == null ? null : onFinish,
-        child: const Text('Hesabımı oluştur'),
+        child: Text(
+          context.ota(
+            'createAccountAction',
+            tr: 'Hesabımı oluştur',
+            en: 'Create my account',
+          ),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Sana uygun bir başlangıç yapalım.',
+            context.ota(
+              'personalizationTitle',
+              tr: 'Sana uygun bir başlangıç yapalım.',
+              en: 'Let us tailor your starting point.',
+            ),
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: 10),
           Text(
-            'Burada yalnızca uygulamanın neyi öne çıkaracağını seçiyorsun.',
+            context.ota(
+              'personalizationBody',
+              tr: 'Burada yalnızca uygulamanın neyi öne çıkaracağını seçiyorsun.',
+              en: 'Here you only choose what the app should emphasize.',
+            ),
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: 20),
           _IntentTile(
-            title: 'Ne yediğimi daha iyi anlamak',
+            key: const Key('intent-understand'),
+            title: context.ota(
+              'intentUnderstand',
+              tr: 'Ne yediğimi daha iyi anlamak',
+              en: 'Better understand what I eat',
+            ),
             value: TrackingIntention.understand,
             groupValue: intention,
             onChanged: onIntentionChanged,
           ),
           _IntentTile(
-            title: 'Proteinimi takip etmek',
+            title: context.ota(
+              'intentProtein',
+              tr: 'Proteinimi takip etmek',
+              en: 'Track my protein',
+            ),
             value: TrackingIntention.protein,
             groupValue: intention,
             onChanged: onIntentionChanged,
           ),
           _IntentTile(
-            title: 'Kalori hedefimi takip etmek',
+            title: context.ota(
+              'intentCalories',
+              tr: 'Kalori hedefimi takip etmek',
+              en: 'Track my calorie goal',
+            ),
             value: TrackingIntention.calories,
             groupValue: intention,
             onChanged: onIntentionChanged,
@@ -493,18 +616,29 @@ class _PersonalizationStep extends StatelessWidget {
               controller: calorieController,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                labelText: 'Günlük hedef (isteğe bağlı)',
+                labelText: context.ota(
+                  'dailyGoalOptional',
+                  tr: 'Günlük hedef (isteğe bağlı)',
+                  en: 'Daily goal (optional)',
+                ),
                 suffixText: 'kcal',
                 errorText: calorieError,
-                helperText:
-                    'Demo önerisi: 2.100 kcal — tıbbi tavsiye değildir.',
+                helperText: context.ota(
+                  'dailyGoalHelper',
+                  tr: 'Demo önerisi: 2.100 kcal — tıbbi tavsiye değildir.',
+                  en: 'Demo suggestion: 2,100 kcal — not medical advice.',
+                ),
               ),
             ),
           ],
           const SizedBox(height: 18),
-          const Text(
-            'Meal Clarity tahmin sunar; tıbbi tavsiye vermez.',
-            style: TextStyle(color: AppColors.muted),
+          Text(
+            context.ota(
+              'medicalDisclaimer',
+              tr: 'Meal Clarity tahmin sunar; tıbbi tavsiye vermez.',
+              en: 'Meal Clarity provides estimates, not medical advice.',
+            ),
+            style: const TextStyle(color: AppColors.muted),
           ),
         ],
       ),
@@ -518,6 +652,7 @@ class _IntentTile extends StatelessWidget {
     required this.value,
     required this.groupValue,
     required this.onChanged,
+    super.key,
   });
 
   final String title;

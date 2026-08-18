@@ -1,5 +1,5 @@
 import type { DeterministicAnalysis } from '../../analyze-meal/deterministic.ts'
-import { reconcileModalities } from '../../analyze-meal/reconcile.ts'
+import { applyVisionEvidence, reconcileModalities } from '../../analyze-meal/reconcile.ts'
 import type { AnalysisItem } from '../../_shared/contracts.ts'
 
 Deno.test('explicit text wins when vision detects the same catalog food', () => {
@@ -29,6 +29,23 @@ Deno.test('vision contributes foods missing from explicit text', () => {
 
   assertEquals(result.items.map((candidate) => candidate.foodId), ['egg', 'cheese'])
   assertEquals(result.items.map((candidate) => candidate.grams), [100, 30])
+})
+
+Deno.test('vision cannot promote a catalog-default portion to high confidence', () => {
+  const result = applyVisionEvidence(
+    analysis([item('rice', 180)]),
+    [{
+      description: 'pilav',
+      estimatedGrams: 180,
+      identityConfidence: 0.94,
+      portionConfidence: 0.48,
+      portionBasis: 'catalog_default',
+    }],
+  )
+
+  assertEquals(result.items[0].needsClarification, true)
+  assertEquals(result.items[0].clarificationReason, 'portion')
+  assertEquals(result.items[0].confidence, 0.48)
 })
 
 function analysis(items: AnalysisItem[]): DeterministicAnalysis {
