@@ -29,6 +29,9 @@ class SupabaseOtaTranslationRepository implements OtaTranslationRepository {
           .from('translation_bundles')
           .select('version,values')
           .eq('locale', locale)
+          .eq('status', 'production')
+          .order('version', ascending: false)
+          .limit(1)
           .single()
           .timeout(const Duration(milliseconds: 1500));
       final remote = _fromRow(row);

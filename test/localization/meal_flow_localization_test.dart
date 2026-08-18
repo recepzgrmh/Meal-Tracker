@@ -8,6 +8,8 @@ void main() {
 
     await tester.tap(find.byKey(const Key('quick-composer')));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('add-meal-text')));
+    await tester.pumpAndSettle();
 
     expect(find.text('Ne yedin?'), findsOneWidget);
     expect(find.text('Öğünü analiz et'), findsOneWidget);
@@ -17,6 +19,8 @@ void main() {
     await tester.pumpWidget(const MealClarityApp(locale: Locale('en')));
 
     await tester.tap(find.byKey(const Key('quick-composer')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('add-meal-text')));
     await tester.pumpAndSettle();
 
     expect(find.text('What did you eat?'), findsOneWidget);
