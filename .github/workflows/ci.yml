@@ -41,7 +41,9 @@ jobs:
         run: flutter analyze
 
       - name: Run tests
-        run: flutter test
+        # Rasterized font pixels differ across macOS and Linux. The committed
+        # golden is verified on macOS; Linux CI runs all portable tests.
+        run: flutter test --exclude-tags golden
 
       - name: Compile Android debug app
         run: flutter build apk --debug --dart-define-from-file=config/app_config.example.json

@@ -2,13 +2,17 @@
 
 CI runs on pull requests and `main` and has four independent gates:
 
-- Flutter formatting, static analysis, 54 unit/widget/golden tests, and an Android compile
+- Flutter formatting, static analysis, 53 portable unit/widget tests, and an Android compile
 - Deno formatting/lint/type-check, 40 tests, and the 60-case free deterministic eval
 - a fresh local Supabase migration rebuild and database lint
 - a tracked-file credential-pattern scan
 
 Action dependencies and tool versions are pinned. CI never receives the OpenAI
 key and never runs a paid model evaluation.
+
+The committed iOS visual golden is verified on macOS because font
+rasterization is not pixel-identical on Linux. It remains part of the normal
+local `flutter test` suite; Linux CI excludes only the `golden` tag.
 
 ## Production Supabase deployment
 

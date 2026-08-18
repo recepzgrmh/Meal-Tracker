@@ -14,5 +14,5 @@ void main() {
       find.byType(MaterialApp),
       matchesGoldenFile('goldens/today.png'),
     );
-  });
+  }, tags: ['golden']);
 }
