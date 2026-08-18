@@ -109,17 +109,12 @@ class _LiquidGlassBottomBarState extends State<LiquidGlassBottomBar> {
                         child: FractionallySizedBox(
                           widthFactor: 1 / _destinationCount,
                           heightFactor: 1,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.xxs,
-                              vertical: AppSpacing.xxs,
-                            ),
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: AppColors.brandSoft,
-                                borderRadius: BorderRadius.circular(
-                                  AppRadius.medium,
-                                ),
+                          child: DecoratedBox(
+                            key: const Key('bottom-nav-selection-fill'),
+                            decoration: BoxDecoration(
+                              color: AppColors.brandSoft,
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.feature,
                               ),
                             ),
                           ),

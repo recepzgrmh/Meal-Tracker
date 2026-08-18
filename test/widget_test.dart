@@ -304,6 +304,19 @@ void main() {
     );
 
     expect(indicator().alignment, Alignment.centerLeft);
+    final surfaceRect = tester.getRect(
+      find.byKey(const Key('liquid-glass-navigation-surface')),
+    );
+    final fillRect = tester.getRect(
+      find.byKey(const Key('bottom-nav-selection-fill')),
+    );
+    // The selection fills the bar's content box; only the 1 px outline stays
+    // visible around it.
+    expect(fillRect.left, closeTo(surfaceRect.left + 1, 0.01));
+    expect(fillRect.top, closeTo(surfaceRect.top + 1, 0.01));
+    expect(fillRect.height, closeTo(surfaceRect.height - 2, 0.01));
+    expect(fillRect.width, closeTo((surfaceRect.width - 2) / 5, 0.01));
+
     await tester.tap(find.byKey(const Key('nav-destination-1')));
     await tester.pump(const Duration(milliseconds: 40));
     expect(indicator().alignment, const Alignment(-0.5, 0));
