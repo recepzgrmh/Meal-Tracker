@@ -210,6 +210,38 @@ void main() {
     );
   });
 
+  testWidgets('bottom navigation skips intermediate destinations', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MealClarityApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('nav-destination-4')));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(
+      tester
+          .getSemantics(find.byKey(const Key('nav-destination-4')))
+          .toString(),
+      contains('isSelected'),
+    );
+    expect(
+      tester
+          .getSemantics(find.byKey(const Key('nav-destination-1')))
+          .toString(),
+      isNot(contains('isSelected')),
+    );
+    expect(
+      tester
+          .getSemantics(find.byKey(const Key('nav-destination-3')))
+          .toString(),
+      isNot(contains('isSelected')),
+    );
+    expect(find.text('Profil'), findsWidgets);
+  });
+
   testWidgets('analysis period survives tab changes', (tester) async {
     await tester.pumpWidget(const MealClarityApp());
     await tester.pumpAndSettle();
@@ -236,6 +268,56 @@ void main() {
           .toString(),
       contains('isSelected'),
     );
+  });
+
+  testWidgets('analysis period indicator replaces interrupted selection', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MealClarityApp());
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('nav-destination-3')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('analysis-period-30')));
+    await tester.pump(const Duration(milliseconds: 40));
+    await tester.tap(find.byKey(const Key('analysis-period-90')));
+    await tester.pump(const Duration(milliseconds: 40));
+
+    final indicator = tester.widget<AnimatedAlign>(
+      find.byKey(const Key('analysis-period-indicator')),
+    );
+    expect(indicator.alignment, Alignment.centerRight);
+    expect(
+      tester
+          .getSemantics(find.byKey(const Key('analysis-period-90')))
+          .toString(),
+      contains('isSelected'),
+    );
+    expect(tester.takeException(), isNull);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('navigation and period selection respect reduced motion', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MediaQuery(
+        data: MediaQueryData(disableAnimations: true),
+        child: MealClarityApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('nav-destination-3')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('analysis-period-90')));
+    await tester.pump();
+
+    final indicator = tester.widget<AnimatedAlign>(
+      find.byKey(const Key('analysis-period-indicator')),
+    );
+    expect(indicator.duration, Duration.zero);
+    expect(indicator.alignment, Alignment.centerRight);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('primary tabs remain usable at 200 percent text scale', (

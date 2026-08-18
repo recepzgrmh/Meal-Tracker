@@ -42,8 +42,12 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   void _selectDays(int days) {
-    setState(() => _localSelectedDays = days);
-    widget.onSelectedDaysChanged?.call(days);
+    if (days == _selectedDays) return;
+    final onChanged = widget.onSelectedDaysChanged;
+    if (widget.selectedDays == null || onChanged == null) {
+      setState(() => _localSelectedDays = days);
+    }
+    onChanged?.call(days);
   }
 
   DateTime get _today {
@@ -222,6 +226,7 @@ class _PeriodSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Container(
       key: const Key('analysis-period-selector'),
       padding: const EdgeInsets.all(4),
@@ -229,25 +234,53 @@ class _PeriodSelector extends StatelessWidget {
         color: AppColors.surfaceMuted,
         borderRadius: BorderRadius.circular(AppRadius.input),
       ),
-      child: Row(
+      child: Stack(
         children: [
-          _PeriodSegment(
-            key: const Key('analysis-period-7'),
-            label: context.ota('period7Days', tr: '7 Gün', en: '7 Days'),
-            selected: selectedDays == 7,
-            onTap: () => onChanged(7),
+          Positioned.fill(
+            child: AnimatedAlign(
+              key: const Key('analysis-period-indicator'),
+              alignment: switch (selectedDays) {
+                30 => Alignment.center,
+                90 => Alignment.centerRight,
+                _ => Alignment.centerLeft,
+              },
+              duration: reduceMotion ? Duration.zero : AppMotion.fast,
+              curve: Curves.easeOutCubic,
+              child: FractionallySizedBox(
+                widthFactor: 1 / 3,
+                heightFactor: 1,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.separator),
+                    boxShadow: AppShadows.card,
+                  ),
+                ),
+              ),
+            ),
           ),
-          _PeriodSegment(
-            key: const Key('analysis-period-30'),
-            label: context.ota('period30Days', tr: '30 Gün', en: '30 Days'),
-            selected: selectedDays == 30,
-            onTap: () => onChanged(30),
-          ),
-          _PeriodSegment(
-            key: const Key('analysis-period-90'),
-            label: context.ota('period3Months', tr: '3 Ay', en: '3 Months'),
-            selected: selectedDays == 90,
-            onTap: () => onChanged(90),
+          Row(
+            children: [
+              _PeriodSegment(
+                key: const Key('analysis-period-7'),
+                label: context.ota('period7Days', tr: '7 Gün', en: '7 Days'),
+                selected: selectedDays == 7,
+                onTap: () => onChanged(7),
+              ),
+              _PeriodSegment(
+                key: const Key('analysis-period-30'),
+                label: context.ota('period30Days', tr: '30 Gün', en: '30 Days'),
+                selected: selectedDays == 30,
+                onTap: () => onChanged(30),
+              ),
+              _PeriodSegment(
+                key: const Key('analysis-period-90'),
+                label: context.ota('period3Months', tr: '3 Ay', en: '3 Months'),
+                selected: selectedDays == 90,
+                onTap: () => onChanged(90),
+              ),
+            ],
           ),
         ],
       ),
@@ -276,21 +309,21 @@ class _PeriodSegment extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
-          child: AnimatedContainer(
-            duration: AppMotion.fast,
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: BoxDecoration(
-              color: selected ? AppColors.surface : Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
-              border: selected ? Border.all(color: AppColors.separator) : null,
-              boxShadow: selected ? AppShadows.card : null,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: AppTouchTarget.minimum,
             ),
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: selected ? AppColors.ink : AppColors.muted,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            child: Center(
+              child: AnimatedDefaultTextStyle(
+                duration: MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : AppMotion.fast,
+                curve: Curves.easeOutCubic,
+                style: Theme.of(context).textTheme.labelLarge!.copyWith(
+                  color: selected ? AppColors.ink : AppColors.muted,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
+                child: Text(label, textAlign: TextAlign.center),
               ),
             ),
           ),
