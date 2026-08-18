@@ -431,6 +431,7 @@ class _MacroRail extends StatelessWidget {
         goal: goals.carbs,
         color: AppColors.carbs,
         icon: Icons.bakery_dining_rounded,
+        horizontal: !stacked,
       ),
       _MacroMetric(
         label: context.l10n.macroProtein,
@@ -438,6 +439,7 @@ class _MacroRail extends StatelessWidget {
         goal: goals.protein,
         color: AppColors.protein,
         icon: Icons.egg_alt_rounded,
+        horizontal: !stacked,
       ),
       _MacroMetric(
         label: context.l10n.macroFat,
@@ -445,6 +447,7 @@ class _MacroRail extends StatelessWidget {
         goal: goals.fat,
         color: AppColors.fat,
         icon: Icons.water_drop_rounded,
+        horizontal: !stacked,
       ),
     ];
 
@@ -463,7 +466,7 @@ class _MacroRail extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (var index = 0; index < macros.length; index++) ...[
-          if (index > 0) const SizedBox(width: AppSpacing.sm),
+          if (index > 0) const SizedBox(width: AppSpacing.xs),
           Expanded(child: macros[index]),
         ],
       ],
@@ -478,6 +481,7 @@ class _MacroMetric extends StatelessWidget {
     required this.goal,
     required this.color,
     required this.icon,
+    required this.horizontal,
   });
 
   final String label;
@@ -485,6 +489,7 @@ class _MacroMetric extends StatelessWidget {
   final double goal;
   final Color color;
   final IconData icon;
+  final bool horizontal;
 
   @override
   Widget build(BuildContext context) {
@@ -511,49 +516,20 @@ class _MacroMetric extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 26,
-                  height: 26,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.14),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(icon, size: 15, color: color),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontSize: 11,
-                          height: 1.1,
-                          color: AppColors.muted,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        amounts,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          fontSize: 13,
-                          height: 1.2,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+            if (horizontal)
+              _HorizontalMacroHeading(
+                label: label,
+                amounts: amounts,
+                color: color,
+                icon: icon,
+              )
+            else
+              _StackedMacroHeading(
+                label: label,
+                amounts: amounts,
+                color: color,
+                icon: icon,
+              ),
             const SizedBox(height: AppSpacing.tiny),
             ClipRRect(
               borderRadius: BorderRadius.circular(_pillRadius),
@@ -567,6 +543,138 @@ class _MacroMetric extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _HorizontalMacroHeading extends StatelessWidget {
+  const _HorizontalMacroHeading({
+    required this.label,
+    required this.amounts,
+    required this.color,
+    required this.icon,
+  });
+
+  final String label;
+  final String amounts;
+  final Color color;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              label,
+              maxLines: 1,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontSize: 12,
+                height: 1.15,
+                color: AppColors.muted,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xxs),
+        Row(
+          children: [
+            _MacroIcon(color: color, icon: icon, size: 24),
+            const SizedBox(width: AppSpacing.tiny),
+            Expanded(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  amounts,
+                  maxLines: 1,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontSize: 14,
+                    height: 1.15,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _StackedMacroHeading extends StatelessWidget {
+  const _StackedMacroHeading({
+    required this.label,
+    required this.amounts,
+    required this.color,
+    required this.icon,
+  });
+
+  final String label;
+  final String amounts;
+  final Color color;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _MacroIcon(color: color, icon: icon),
+        const SizedBox(width: AppSpacing.xs),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                maxLines: 1,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.muted,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                amounts,
+                maxLines: 1,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  fontSize: 13,
+                  height: 1.2,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MacroIcon extends StatelessWidget {
+  const _MacroIcon({required this.color, required this.icon, this.size = 26});
+
+  final Color color;
+  final IconData icon;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, size: 15, color: color),
     );
   }
 }
