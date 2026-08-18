@@ -1,6 +1,6 @@
 # Meal Clarity — Technical Architecture Specification
 
-Status: implementation-ready draft  
+Status: implemented case-study baseline; target-state notes are marked
 Date: 17 August 2026  
 Scope: Flutter client, Supabase, Edge Functions, Storage, offline sync, tests,
 security, observability, and delivery
@@ -11,9 +11,9 @@ security, observability, and delivery
 |---|---|
 | Mobile | Flutter, iOS + Android |
 | Presentation | MVVM; widgets render immutable view state |
-| State/DI | Riverpod providers around ViewModels and repositories |
+| State/DI | Explicit constructor injection + `ChangeNotifier` ViewModels |
 | Navigation | `go_router` with bootstrap/auth/onboarding redirects |
-| Serialization | `freezed` + `json_serializable` |
+| Serialization | Immutable hand-written domain models and boundary DTOs |
 | Remote backend | Supabase Auth, Postgres, Storage, Edge Functions |
 | Local persistence | Drift/SQLite |
 | Sync | custom transactional outbox + pull refresh |
@@ -21,7 +21,7 @@ security, observability, and delivery
 | AI provider | OpenAI Responses API through server-side secret |
 | Retrieval | alias/lexical first, pgvector fallback, constrained rerank |
 | Observability | structured function logs + database traces; Sentry optional |
-| DB tests | pgTAP and client-level integration tests |
+| DB tests | RLS integration checks, migration lint, and client integration tests; pgTAP next |
 | CI | Flutter gates + Supabase migration/lint/test + Edge Function tests |
 
 This is a modular monolith, not a microservice system. One deployable Flutter

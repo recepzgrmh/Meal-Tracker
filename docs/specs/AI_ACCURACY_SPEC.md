@@ -1,6 +1,6 @@
 # Meal Clarity — AI Accuracy, Retrieval & Evaluation Specification
 
-Status: implementation-ready draft  
+Status: implemented baseline; production hardening remains
 Date: 17 August 2026  
 Scope: text/photo/mixed meal analysis, catalog retrieval, structured extraction,
 clarification policy, nutrition computation, caching, and evals
@@ -52,10 +52,11 @@ This is catalog-grounded semantic retrieval, not open-ended document RAG.
 
 ### Extraction baseline
 
-Baseline candidate: `gpt-5.6-luna` through the Responses API with Structured
-Outputs and `reasoning.effort: low` or `none`, selected by eval. It is positioned
-for high-volume, cost-sensitive workloads and supports Structured Outputs.
-Source: [GPT-5.6 Luna](https://developers.openai.com/api/docs/models/gpt-5.6-luna).
+The implemented default is `gpt-5.4-nano` through the Responses API with strict
+Structured Outputs. It is configurable independently for vision and candidate
+selection and must be compared with a stronger pinned model on the same live
+gold set before a production choice is finalized. Source:
+[GPT-5.4 nano](https://developers.openai.com/api/docs/models/gpt-5.4-nano).
 
 Do not hardcode the alias as an unchangeable product dependency. Configuration:
 

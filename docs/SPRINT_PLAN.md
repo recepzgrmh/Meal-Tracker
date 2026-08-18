@@ -1,6 +1,6 @@
 # Meal Clarity — Delivery Sprints
 
-Status: ready to execute  
+Status: Sprints 1–5 implemented; Sprint 6 delivery gates active
 Planning date: 17 August 2026  
 Cadence: seven-day case-study delivery, focused daily sprints
 
@@ -15,7 +15,7 @@ Cadence: seven-day case-study delivery, focused daily sprints
 - The demo must remain runnable if the model provider is unavailable; a
   deterministic fixture mode is retained.
 
-## 2. Current delivery status — Sprint 3 complete, Sprint 4 active
+## 2. Current delivery status — Sprint 5 complete, Sprint 6 active
 
 Already delivered:
 
@@ -42,18 +42,24 @@ Already delivered:
 - private `meal-photos` Storage bucket design with per-user path RLS
 - strict bilingual multimodal Edge Function request validation
 - vision extraction through a strict JSON schema followed by catalog-only matching
+- idempotent embedding backfill with source/model/document hashes
+- exact + full-text/trigram + pgvector retrieval fused with RRF
+- strict-schema LLM selection limited to the retrieved candidate ID enum
+- private retrieval/response caches with catalog and prompt fingerprints
+- Turkish morphology, regional aliases, typo retrieval, and English aliases
+- `NO_MATCH` manual search/correction UI with persisted manual provenance
+- bilingual text and controlled photo live-eval datasets with cost telemetry
+- bounded vision timeout/429/5xx retry, refusal handling, and text fallback
+- versioned OTA Turkish/English copy with validated local cache and ARB fallback
 
 Current limitations:
 
-- `commit-meal` is not implemented; the current outbox writes reviewed meals
-  through the conflict-safe RPC
+- the catalog is intentionally limited to a curated case-study slice
 - deterministic analysis currently covers the curated egg, white-cheese, and
   simit catalog slice
-- photo analysis requires the hosted `OPENAI_API_KEY` secret before its live smoke test
-- the current vision stage extracts visible foods; vector fallback and constrained
-  catalog reranking are not implemented yet
+- paid live eval requires a short-lived dedicated eval-user JWT and explicit cost acknowledgement
 - client photo re-encoding/EXIF stripping and retention cleanup remain privacy hardening
-- no pgTAP suites
+- no pgTAP suites; current coverage is Deno, RLS integration, migration lint, Flutter unit/widget/golden, and device integration
 - live OTP and authenticated function smoke tests remain manual environment gates
 
 ## 3. Dependency path
@@ -252,9 +258,9 @@ atomic RPC snapshots nutrition from the canonical catalog before completing the
 analysis. Client-supplied calories and macros are never accepted. Manual search
 backend is deployed with bounded exact alias, full-text, and trigram ranking.
 The versioned 60-case Turkish gold set and deterministic eval runner are also
-complete; the first measured iteration improved exact-case accuracy from 85.00%
-to 93.33% and portion MAPE from 10.51% to 1.28%. Secure manual-candidate
-registration and its Flutter correction UI remain.
+complete. The current parser reaches 60/60 exact cases, identity F1 1.00,
+portion MAPE 0, and no-match specificity 1.00. Manual catalog correction is
+implemented in Flutter and persisted with manual match provenance.
 
 ### Backlog
 
@@ -325,7 +331,7 @@ improves accuracy.
 - server secret and spend guard
 - Responses API client
 - strict extraction JSON Schema
-- `gpt-5.6-luna` baseline with configurable reasoning effort
+- `gpt-5.4-nano` default with independently configurable vision/selection models
 - provider timeout, 429, refusal, invalid-output behavior
 - prompt/schema/model version fields
 
