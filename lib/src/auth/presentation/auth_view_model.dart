@@ -21,6 +21,7 @@ class AuthViewModel extends ChangeNotifier {
   String _email = '';
   bool _isBusy = false;
   String? _errorMessage;
+  AuthFailureCode? _errorCode;
   int _resendSeconds = 0;
   Timer? _timer;
 
@@ -28,6 +29,7 @@ class AuthViewModel extends ChangeNotifier {
   String get email => _email;
   bool get isBusy => _isBusy;
   String? get errorMessage => _errorMessage;
+  AuthFailureCode? get errorCode => _errorCode;
   int get resendSeconds => _resendSeconds;
   bool get canResend => !_isBusy && _resendSeconds == 0;
 
@@ -42,6 +44,7 @@ class AuthViewModel extends ChangeNotifier {
       return true;
     } on AuthFailure catch (error) {
       _errorMessage = error.message;
+      _errorCode = error.code;
       return false;
     } finally {
       _setBusy(false);
@@ -61,6 +64,7 @@ class AuthViewModel extends ChangeNotifier {
       return session;
     } on AuthFailure catch (error) {
       _errorMessage = error.message;
+      _errorCode = error.code;
       return null;
     } finally {
       _setBusy(false);
@@ -76,6 +80,7 @@ class AuthViewModel extends ChangeNotifier {
     _timer?.cancel();
     _step = AuthStep.email;
     _errorMessage = null;
+    _errorCode = null;
     _resendSeconds = 0;
     notifyListeners();
   }
@@ -89,6 +94,7 @@ class AuthViewModel extends ChangeNotifier {
   void _setBusy(bool value) {
     _isBusy = value;
     if (value) _errorMessage = null;
+    if (value) _errorCode = null;
     notifyListeners();
   }
 

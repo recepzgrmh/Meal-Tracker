@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../l10n/l10n.dart';
 import '../../theme/app_theme.dart';
+import '../domain/auth_failure.dart';
 import 'auth_view_model.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -67,15 +69,34 @@ class _AuthScreenState extends State<AuthScreen> {
                       const SizedBox(height: 28),
                       Text(
                         otpStep
-                            ? 'E-postandaki kodu gir.'
-                            : 'İlerlemeni cihazların arasında koru.',
+                            ? context.ota(
+                                'authOtpTitle',
+                                tr: 'E-postandaki kodu gir.',
+                                en: 'Enter the code in your email.',
+                              )
+                            : context.ota(
+                                'authEmailTitle',
+                                tr: 'İlerlemeni cihazların arasında koru.',
+                                en: 'Keep your progress across devices.',
+                              ),
                         style: Theme.of(context).textTheme.headlineMedium,
                       ),
                       const SizedBox(height: 10),
                       Text(
                         otpStep
-                            ? 'Altı haneli kodu ${_maskEmail(widget.viewModel.email)} adresine gönderdik.'
-                            : 'Şifre yok. Giriş ve kayıt için e-postana tek kullanımlık bir kod göndeririz.',
+                            ? context.ota(
+                                'authOtpBody',
+                                tr: 'Altı haneli kodu {email} adresine gönderdik.',
+                                en: 'We sent a six-digit code to {email}.',
+                                replacements: {
+                                  'email': _maskEmail(widget.viewModel.email),
+                                },
+                              )
+                            : context.ota(
+                                'authEmailBody',
+                                tr: 'Şifre yok. Giriş ve kayıt için e-postana tek kullanımlık bir kod göndeririz.',
+                                en: 'No password. We send a one-time code to your email to sign in or register.',
+                              ),
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
                       const SizedBox(height: 28),
@@ -88,9 +109,17 @@ class _AuthScreenState extends State<AuthScreen> {
                           autofillHints: const [AutofillHints.email],
                           textInputAction: TextInputAction.done,
                           onSubmitted: (_) => _submit(),
-                          decoration: const InputDecoration(
-                            labelText: 'E-posta',
-                            hintText: 'sen@ornek.com',
+                          decoration: InputDecoration(
+                            labelText: context.ota(
+                              'authEmailLabel',
+                              tr: 'E-posta',
+                              en: 'Email',
+                            ),
+                            hintText: context.ota(
+                              'authEmailHint',
+                              tr: 'sen@ornek.com',
+                              en: 'you@example.com',
+                            ),
                           ),
                         )
                       else
@@ -109,9 +138,17 @@ class _AuthScreenState extends State<AuthScreen> {
                           onChanged: (value) {
                             if (value.length == 6) _submit();
                           },
-                          decoration: const InputDecoration(
-                            labelText: '6 haneli kod',
-                            hintText: '000000',
+                          decoration: InputDecoration(
+                            labelText: context.ota(
+                              'authOtpLabel',
+                              tr: '6 haneli kod',
+                              en: '6-digit code',
+                            ),
+                            hintText: context.ota(
+                              'authOtpHint',
+                              tr: '000000',
+                              en: '000000',
+                            ),
                           ),
                         ),
                       if (widget.viewModel.errorMessage case final error?) ...[
@@ -119,7 +156,11 @@ class _AuthScreenState extends State<AuthScreen> {
                         Semantics(
                           liveRegion: true,
                           child: Text(
-                            error,
+                            _localizedAuthError(
+                              context,
+                              widget.viewModel.errorCode,
+                              error,
+                            ),
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.error,
                             ),
@@ -137,7 +178,19 @@ class _AuthScreenState extends State<AuthScreen> {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : Text(otpStep ? 'Kodu doğrula' : 'Kod gönder'),
+                            : Text(
+                                otpStep
+                                    ? context.ota(
+                                        'authVerifyCodeAction',
+                                        tr: 'Kodu doğrula',
+                                        en: 'Verify code',
+                                      )
+                                    : context.ota(
+                                        'authSendCodeAction',
+                                        tr: 'Kod gönder',
+                                        en: 'Send code',
+                                      ),
+                              ),
                       ),
                       if (otpStep) ...[
                         const SizedBox(height: 10),
@@ -147,7 +200,13 @@ class _AuthScreenState extends State<AuthScreen> {
                               onPressed: widget.viewModel.isBusy
                                   ? null
                                   : widget.viewModel.editEmail,
-                              child: const Text('E-postayı değiştir'),
+                              child: Text(
+                                context.ota(
+                                  'authChangeEmailAction',
+                                  tr: 'E-postayı değiştir',
+                                  en: 'Change email',
+                                ),
+                              ),
                             ),
                             const Spacer(),
                             TextButton(
@@ -156,8 +215,20 @@ class _AuthScreenState extends State<AuthScreen> {
                                   : null,
                               child: Text(
                                 widget.viewModel.canResend
-                                    ? 'Kodu yeniden gönder'
-                                    : '${widget.viewModel.resendSeconds} sn',
+                                    ? context.ota(
+                                        'authResendCodeAction',
+                                        tr: 'Kodu yeniden gönder',
+                                        en: 'Resend code',
+                                      )
+                                    : context.ota(
+                                        'secondsShort',
+                                        tr: '{seconds} sn',
+                                        en: '{seconds} sec',
+                                        replacements: {
+                                          'seconds':
+                                              widget.viewModel.resendSeconds,
+                                        },
+                                      ),
                               ),
                             ),
                           ],
@@ -165,7 +236,11 @@ class _AuthScreenState extends State<AuthScreen> {
                       ],
                       const SizedBox(height: 24),
                       Text(
-                        'Devam ederek Kullanım Koşulları ve Gizlilik Politikasını kabul edersin.',
+                        context.ota(
+                          'authLegalNotice',
+                          tr: 'Devam ederek Kullanım Koşulları ve Gizlilik Politikasını kabul edersin.',
+                          en: 'By continuing, you agree to the Terms of Use and Privacy Policy.',
+                        ),
                         style: Theme.of(context).textTheme.bodySmall,
                         textAlign: TextAlign.center,
                       ),
@@ -179,6 +254,45 @@ class _AuthScreenState extends State<AuthScreen> {
       },
     );
   }
+}
+
+String _localizedAuthError(
+  BuildContext context,
+  AuthFailureCode? code,
+  String fallback,
+) {
+  return switch (code) {
+    AuthFailureCode.invalidEmail => context.ota(
+      'authErrorInvalidEmail',
+      tr: 'Geçerli bir e-posta adresi gir.',
+      en: 'Enter a valid email address.',
+    ),
+    AuthFailureCode.invalidOtp => context.ota(
+      'authErrorInvalidOtp',
+      tr: 'Kod geçersiz. Kontrol edip tekrar dene.',
+      en: 'The code is invalid. Check it and try again.',
+    ),
+    AuthFailureCode.expiredOtp => context.ota(
+      'authErrorExpiredOtp',
+      tr: 'Kodun süresi dolmuş. Yeni bir kod iste.',
+      en: 'The code has expired. Request a new one.',
+    ),
+    AuthFailureCode.rateLimited => context.ota(
+      'authErrorRateLimited',
+      tr: 'Çok sık deneme yapıldı. Geri sayım bitince tekrar dene.',
+      en: 'Too many attempts. Try again when the countdown ends.',
+    ),
+    AuthFailureCode.network => context.ota(
+      'authErrorNetwork',
+      tr: 'Bağlantı zaman aşımına uğradı. Tekrar dene.',
+      en: 'The connection timed out. Try again.',
+    ),
+    AuthFailureCode.unknown || null => context.ota(
+      'authErrorUnknown',
+      tr: 'İşlem tamamlanamadı. Lütfen tekrar dene.',
+      en: 'The operation could not be completed. Please try again.',
+    ),
+  };
 }
 
 String _maskEmail(String email) {
