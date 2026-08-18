@@ -147,6 +147,8 @@ Implementation specifications and the dependency-ordered sprint backlog are in
 [`docs/specs`](docs/specs/README.md) and [`docs/SPRINT_PLAN.md`](docs/SPRINT_PLAN.md).
 
 Generated food asset disclosure is in `docs/ASSET_PROVENANCE.md`.
+CI, protected production deployment, and paid-eval setup are documented in
+[`docs/CI_CD.md`](docs/CI_CD.md).
 
 ## Trade-off, limits, and next steps
 

@@ -1,0 +1,120 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flutter:
+    name: Flutter analyze, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: 3.41.2
+          channel: stable
+          cache: true
+
+      - name: Install packages
+        run: flutter pub get
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test integration_test
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Compile Android debug app
+        run: flutter build apk --debug --dart-define-from-file=config/app_config.example.json
+
+  edge-functions:
+    name: Edge Functions and AI eval
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+        with:
+          deno-version: 2.8.3
+          cache: true
+
+      - name: Type-check, lint, and format
+        run: deno task --config supabase/deno.json check
+
+      - name: Run unit and provider-failure tests
+        run: deno task --config supabase/deno.json test
+
+      - name: Run deterministic accuracy regression
+        run: deno task --config supabase/deno.json eval
+
+  database:
+    name: Supabase migration reset and lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520 # v3.0.0
+        with:
+          version: 2.114.0
+
+      - name: Start local database
+        run: supabase db start
+
+      - name: Rebuild from committed migrations
+        run: supabase db reset
+
+      - name: Lint database
+        run: supabase db lint --local --level warning
+
+      - name: Stop local database
+        if: always()
+        run: supabase stop --no-backup
+
+  secret-scan:
+    name: Reject committed credentials
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out full history
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Scan tracked content
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git grep -I -qE '(^|[^A-Za-z0-9_])(sk-[A-Za-z0-9_-]{20,}|re_[A-Za-z0-9_-]{20,}|sbp_[a-f0-9]{32,}|sb_secret_[A-Za-z0-9_-]{20,})' -- . ':(exclude).github/workflows/ci.yml'; then
+            echo 'Potential credential detected in tracked content.'
+            exit 1
+          fi

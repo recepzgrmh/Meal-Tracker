@@ -1,0 +1,45 @@
+# CI/CD runbook
+
+CI runs on pull requests and `main` and has four independent gates:
+
+- Flutter formatting, static analysis, 54 unit/widget/golden tests, and an Android compile
+- Deno formatting/lint/type-check, 40 tests, and the 60-case free deterministic eval
+- a fresh local Supabase migration rebuild and database lint
+- a tracked-file credential-pattern scan
+
+Action dependencies and tool versions are pinned. CI never receives the OpenAI
+key and never runs a paid model evaluation.
+
+## Production Supabase deployment
+
+The deployment job applies database migrations before deploying all Edge
+Functions. It is inert until the repository variable
+`SUPABASE_DEPLOY_ENABLED=true` exists. Configure the GitHub `production`
+environment with:
+
+- `SUPABASE_ACCESS_TOKEN`
+- `SUPABASE_DB_PASSWORD`
+- `SUPABASE_PROJECT_ID`
+
+Use environment approval rules if the repository plan supports them. Keep the
+deploy switch disabled until the first CI run is green. A failed migration
+prevents function deployment; migrations are forward-only and are not
+automatically rolled back.
+
+## Paid live evaluation
+
+The manual `Paid live AI eval` workflow requires an explicit cost checkbox,
+caps the runner at 100 cases, and uses the protected `ai-evaluation`
+environment. Configure a dedicated low-privilege eval user:
+
+- `EVAL_SUPABASE_URL`
+- `EVAL_SUPABASE_PUBLISHABLE_KEY`
+- `EVAL_USER_JWT` (short-lived; rotate before each run)
+
+Provider secrets remain hosted in Supabase and are never copied into GitHub.
+The runner prints aggregate metrics and does not print JWTs, raw image URLs, or
+provider payloads.
+
+The deployment structure follows the official Supabase recommendations for
+[GitHub Actions function deployment](https://supabase.com/docs/guides/functions/deploy)
+and [migration environments](https://supabase.com/docs/guides/deployment/managing-environments).
