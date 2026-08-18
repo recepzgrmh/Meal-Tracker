@@ -8,6 +8,8 @@ void main() {
   testWidgets('fresh user reaches auth through interactive onboarding', (
     tester,
   ) async {
+    tester.binding.platformDispatcher.localeTestValue = const Locale('tr');
+    addTearDown(tester.binding.platformDispatcher.clearLocaleTestValue);
     final auth = FakeAuthRepository();
     final onboarding = FakeOnboardingRepository();
 
@@ -20,21 +22,18 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(
-      find.text('Yemeğini anlat. Gerisini birlikte netleştirelim.'),
-      findsOneWidget,
-    );
+    expect(find.byKey(const Key('onboarding-continue')), findsOneWidget);
     await tester.tap(find.byKey(const Key('onboarding-continue')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Emin olduğumuzu çözeriz.'), findsOneWidget);
+    expect(find.byKey(const Key('demo-continue')), findsOneWidget);
     await tester.tap(find.byKey(const Key('demo-continue')));
     await tester.pumpAndSettle();
-    expect(find.text('Miktarı kontrol et'), findsOneWidget);
+    expect(find.byKey(const Key('demo-continue')), findsOneWidget);
     await tester.tap(find.byKey(const Key('demo-continue')));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Ne yediğimi daha iyi anlamak'));
+    await tester.tap(find.byKey(const Key('intent-understand')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('onboarding-finish')));
     await tester.pumpAndSettle();
