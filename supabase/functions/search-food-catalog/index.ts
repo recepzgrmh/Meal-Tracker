@@ -57,7 +57,9 @@ export default {
       vectorRank: row.vector_rank == null ? null : Number(row.vector_rank),
       semanticSimilarity: row.semantic_similarity == null ? null : Number(row.semantic_similarity),
       defaultGrams: row.default_grams == null ? null : Number(row.default_grams),
-      defaultPortionLabel: row.default_portion_label,
+      // Explicitly nullable: a food with no tr-TR portion row yields NULL from
+      // the RPC's left join lateral. Clients must handle it, not assume a label.
+      defaultPortionLabel: row.default_portion_label ?? null,
       nutritionPer100g: {
         calories: Number(row.calories_per_100g),
         protein: Number(row.protein_per_100g),

@@ -383,15 +383,21 @@ class _MealFlowState extends State<MealFlow> {
                             contentPadding: EdgeInsets.zero,
                             title: Text(candidate.name),
                             subtitle: Text(
-                              context.ota(
-                                'catalogCandidateSummary',
-                                tr: '{alias} · {grams} g',
-                                en: '{alias} · {grams} g',
-                                replacements: {
-                                  'alias': candidate.matchedAlias,
-                                  'grams': candidate.defaultGrams.round(),
-                                },
-                              ),
+                              // Without a published portion there is no gram
+                              // figure to show; showing the alias alone is
+                              // honest, inventing one is not.
+                              candidate.defaultGrams == null
+                                  ? candidate.matchedAlias
+                                  : context.ota(
+                                      'catalogCandidateSummary',
+                                      tr: '{alias} · {grams} g',
+                                      en: '{alias} · {grams} g',
+                                      replacements: {
+                                        'alias': candidate.matchedAlias,
+                                        'grams': candidate.defaultGrams!
+                                            .round(),
+                                      },
+                                    ),
                             ),
                             trailing: const Icon(Icons.chevron_right_rounded),
                             onTap: () {
@@ -490,9 +496,7 @@ class _MealFlowState extends State<MealFlow> {
                           return ListTile(
                             key: Key('variant-${candidate.foodId}'),
                             contentPadding: EdgeInsets.zero,
-                            title: Text(
-                              naturalFoodDisplayName(candidate.name),
-                            ),
+                            title: Text(naturalFoodDisplayName(candidate.name)),
                             subtitle: Text(
                               context.ota(
                                 'caloriesPer100g',
@@ -847,33 +851,6 @@ class _ScanGuideDialog extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: AppSpacing.lg),
-              _GuideTip(
-                icon: Icons.wb_sunny_outlined,
-                text: context.ota(
-                  'scanGuideLight',
-                  tr: 'Aydınlık bir ortam kullan',
-                  en: 'Use a well-lit area',
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              _GuideTip(
-                icon: Icons.center_focus_strong_rounded,
-                text: context.ota(
-                  'scanGuideFrame',
-                  tr: 'Tüm yiyecekleri kadraja al',
-                  en: 'Fit all foods in the frame',
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              _GuideTip(
-                icon: Icons.straighten_rounded,
-                text: context.ota(
-                  'scanGuidePortions',
-                  tr: 'Porsiyonları kapatmamaya çalış',
-                  en: 'Avoid covering the portions',
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
               FilledButton.icon(
                 key: const Key('open-meal-camera-button'),
                 onPressed: () => Navigator.pop(context, true),
@@ -925,34 +902,6 @@ class _ScanGuideVisual extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _GuideTip extends StatelessWidget {
-  const _GuideTip({required this.icon, required this.text});
-
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: AppColors.surfaceMuted,
-            borderRadius: BorderRadius.circular(AppRadius.medium),
-          ),
-          child: Icon(icon, size: 19),
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
-        ),
-      ],
     );
   }
 }
@@ -2226,7 +2175,11 @@ class _EatenAtRow extends StatelessWidget {
           Expanded(
             child: Text(
               value == null
-                  ? context.ota('eatenAtNow', tr: 'Şimdi yendi', en: 'Eaten now')
+                  ? context.ota(
+                      'eatenAtNow',
+                      tr: 'Şimdi yendi',
+                      en: 'Eaten now',
+                    )
                   : context.ota(
                       'eatenAtValue',
                       tr: '{date} · {time}',

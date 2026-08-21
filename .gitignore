@@ -48,3 +48,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Catalog tooling: raw fetched source pages are a rebuildable local cache.
+# Only promoted, hash-indexed snapshots under tool/catalog/snapshots/ are committed.
+tool/catalog/.cache/

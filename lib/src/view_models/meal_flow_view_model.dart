@@ -156,8 +156,13 @@ class MealFlowViewModel extends ChangeNotifier {
         name: naturalFoodDisplayName(candidate.name),
         canonicalName: candidate.name,
         sourceText: sourceText,
-        portionLabel: candidate.defaultPortionLabel,
-        grams: candidate.defaultGrams,
+        // A catalog food may carry no published portion. Falling back to the
+        // 100 g basis the nutrition is already expressed in keeps the item
+        // arithmetically correct; `matchState` below is already `checkAmount`,
+        // so the user is asked for the real amount instead of being shown a
+        // number the catalog never published.
+        portionLabel: candidate.defaultPortionLabel ?? '100 g',
+        grams: candidate.defaultGrams ?? 100,
         nutritionPer100g: Nutrition(
           calories: candidate.caloriesPer100g,
           protein: candidate.proteinPer100g,

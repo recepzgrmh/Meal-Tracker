@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "note": "Raw source snapshots. Every catalog value in assets/portion_reference/pilot_portion_manifest.json must be traceable to one of these artifacts. Re-fetch with: dart run tool/catalog/bin/fetch_sources.dart",
+  "artifacts": [
+    {
+      "id": "tuber-2022-pdf",
+      "sourceName": "TÜBER 2022 — Türkiye Beslenme Rehberi",
+      "publisher": "T.C. Sağlık Bakanlığı, Halk Sağlığı Genel Müdürlüğü (Yayın No: 1031)",
+      "sourceRelease": "TÜBER 2022 (baskı tarihi 2023-08-08)",
+      "sourceUrl": "https://hsgm.saglik.gov.tr/depo/birimler/saglikli-beslenme-ve-hareketli-hayat-db/Dokumanlar/Rehberler/Turkiye_Beslenme_Rehber_TUBER_2022_min.pdf",
+      "retrievedAt": "2026-08-18T20:30:00Z",
+      "bytes": 70965644,
+      "sha256": "b82f37a56ce0f1147062dc459a562f8bfa0639a115a2f9625256b7e4be112759",
+      "storedInRepo": false,
+      "reason": "70 MB; only the cited appendix slices are committed. Verify the PDF hash before re-deriving.",
+      "extraction": "pdftotext -layout -enc UTF-8 <pdf> <txt>  (poppler-utils)"
+    },
+    {
+      "id": "tuber-ek-2-1",
+      "sourceName": "TÜBER 2022 Ek 2.1 — Standart porsiyon ölçüleri ve miktarları",
+      "sourcePageOrTable": "Ek 2.1.1 (s.262), Ek 2.1.3 (s.264), Ek 2.1.5 (s.266)",
+      "derivedFrom": "tuber-2022-pdf",
+      "path": "tool/catalog/snapshots/tuber/ek_2_1_portion_measures.txt",
+      "retrievedAt": "2026-08-18T20:30:00Z",
+      "sha256": "5c3247d751f43b68e41a030eac727c9cc24576f52a9c9109142472f262a0da09"
+    },
+    {
+      "id": "tuber-ek-2-3-1",
+      "sourceName": "TÜBER 2022 Ek 2.3.1 — Besinlerin standart porsiyonlarının enerji ve besin ögesi içerikleri",
+      "sourcePageOrTable": "Ek 2.3.1 (s.283-284)",
+      "derivedFrom": "tuber-2022-pdf",
+      "path": "tool/catalog/snapshots/tuber/ek_2_3_1_portion_nutrients.txt",
+      "retrievedAt": "2026-08-18T20:30:00Z",
+      "sha256": "c6ef33ad3c28788c3f58fd29034b99cd913969c0ef8ef110a9115d2b5312770f"
+    },
+    {
+      "id": "tuber-10-2",
+      "sourceName": "TÜBER 2022 Bölüm 10.2 — Standart ölçü araçları ve porsiyon tanımları",
+      "sourcePageOrTable": "Bölüm 10.2 (s.228-232)",
+      "derivedFrom": "tuber-2022-pdf",
+      "path": "tool/catalog/snapshots/tuber/section_10_2_household_measures.txt",
+      "retrievedAt": "2026-08-18T20:30:00Z",
+      "sha256": "59af111ab63f85bea8796ea824e6a6e3a5b1924d2b38bcbeb507ba3b54cf47b1"
+    },
+    {
+      "id": "turkomp-01.02.0004",
+      "sourceName": "TürKomp — Ulusal Gıda Kompozisyon Veri Tabanı",
+      "publisher": "T.C. Tarım ve Orman Bakanlığı",
+      "sourceRecordId": "01.02.0004",
+      "recordName": "Peynir, beyaz, tam yağlı (yağ, kuru maddede > % 45)",
+      "sourceUrl": "https://turkomp.tarimorman.gov.tr/food-peynir-beyaz-tam-yagli-yag-kuru-maddede---45-8",
+      "path": "tool/catalog/snapshots/turkomp/peynir-beyaz-tam-yagli-8.html.gz",
+      "retrievedAt": "2026-08-18T20:30:00Z",
+      "sha256": "c9042476c700e6282354ee5948cf8352c5f819767679c9f77e9162f9d89dd366"
+    },
+    {
+      "id": "turkomp-01.02.0015",
+      "sourceName": "TürKomp — Ulusal Gıda Kompozisyon Veri Tabanı",
+      "publisher": "T.C. Tarım ve Orman Bakanlığı",
+      "sourceRecordId": "01.02.0015",
+      "recordName": "Yoğurt, homojenize, tam yağlı (süt yağı ≥ % 3.8)",
+      "sourceUrl": "https://turkomp.tarimorman.gov.tr/food-yogurt-homojenize-tam-yagli-sut-yagi---3-8-4",
+      "path": "tool/catalog/snapshots/turkomp/yogurt-homojenize-tam-yagli-4.html.gz",
+      "retrievedAt": "2026-08-18T20:30:00Z",
+      "sha256": "5f342defd0e22660536ddacb69712d3e3a2e9f762f962da2addba753e2bf6b83"
+    }
+  ]
+}

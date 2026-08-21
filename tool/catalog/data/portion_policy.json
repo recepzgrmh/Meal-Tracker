@@ -1,0 +1,44 @@
+{
+  "policyVersion": "portion-policy-v1",
+  "effectiveFrom": "2026-08-18",
+  "statement": "A `regular` portion is ALWAYS an officially published standard portion (TÜBER). `small` and `large` are product-derived reference sizes unless an official source publishes them explicitly. Derived values must never be presented as published values; every derived row carries the derivation in `transformation_notes`.",
+  "derivedFactorBands": {
+    "small": { "min": 0.60, "max": 0.70 },
+    "large": { "min": 1.40, "max": 1.60 }
+  },
+  "categories": {
+    "dairy_cheese": {
+      "smallFactor": 0.67,
+      "largeFactor": 1.50,
+      "roundToGrams": 5,
+      "rationale": "Cheese is served in fingers/matchbox units; 5 g steps keep the derived sizes on a realistic breakfast plate."
+    },
+    "dairy_yogurt": {
+      "smallFactor": 0.625,
+      "largeFactor": 1.50,
+      "roundToGrams": 10,
+      "rationale": "Bowl fill level scales continuously; 10 g steps avoid implying weighing precision the reference photo cannot support.",
+      "bandExemption": "smallFactor 0.625 is below the 0.60-0.70 band floor by design: it lands on 150 g, the ~small-bowl fill that reads clearly against the 240 g cup portion."
+    },
+    "grain_cooked": {
+      "smallSource": "published",
+      "smallPublishedRule": "TÜBER Ek 2.1.5 footnote 4 — one standard portion of rice/bulgur/pasta is the GARNISH serving; the second-course serving eaten at home equals 2 standard portions. `small` therefore uses the published 1-portion garnish weight and `regular` uses the published 2-portion serving weight.",
+      "largeFactor": 1.50,
+      "roundToGrams": 5,
+      "rationale": "Both small and regular are published by TÜBER; only `large` is product-derived."
+    },
+    "legume_cooked": {
+      "smallFactor": 0.65,
+      "largeFactor": 1.50,
+      "roundToGrams": 5,
+      "rationale": "Ladle-served; 5 g steps match the 2-küçük-kepçe household measure TÜBER prints."
+    },
+    "meat_cooked": {
+      "smallFactor": 0.625,
+      "largeFactor": 1.50,
+      "roundToGrams": 5,
+      "rationale": "Cooked meat portions are palm-sized units; 50 g reads as a half palm against the published 80 g palm portion.",
+      "bandExemption": "smallFactor 0.625 is below the 0.60-0.70 band floor by design so the derived weight lands on 50 g rather than 52.5 g."
+    }
+  }
+}

@@ -1,0 +1,397 @@
+{
+  "schemaVersion": 1,
+  "batchId": "pilot-portion-references-2026-08",
+  "locale": "tr-TR",
+  "curatedBy": null,
+  "curatedAt": null,
+  "note": "Human-curated mapping ONLY. No nutrition or gram value is written here; every number is pulled from the hashed snapshots in tool/catalog/snapshots by tool/catalog/bin/build_pilot_manifest.dart. Editing this file changes WHICH published row is used, never WHAT it says.",
+  "sourcePriority": [
+    "100 g composition: TürKomp (T.C. Tarım ve Orman Bakanlığı)",
+    "standard portion + household measure: TÜBER 2022 (T.C. Sağlık Bakanlığı)",
+    "USDA FoodData Central: generic foods only, never as an analogue for a Turkish dish"
+  ],
+  "foods": [
+    {
+      "pilotName": "Beyaz peynir",
+      "foodSlug": "beyaz-peynir",
+      "status": "mapped",
+      "canonicalNameTr": "Peynir, beyaz, tam yağlı",
+      "canonicalNameEn": "White cheese, full fat",
+      "portionCategory": "dairy_cheese",
+      "container": "plate",
+      "nutrition": {
+        "artifactId": "turkomp-01.02.0004",
+        "basis": "per_100g_published",
+        "sourceRecordId": "01.02.0004"
+      },
+      "portion": {
+        "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Beyaz peynir, tam yağlı",
+        "householdMeasureArtifactId": "tuber-ek-2-1",
+        "householdMeasureRow": "Beyaz peynir",
+        "regularMultiplier": 1
+      },
+      "sourceConflicts": [
+        "TürKomp 01.02.0004 publishes 309 kcal/100 g; TÜBER Ek 2.3.1 implies 275 kcal/100 g (165 kcal per 60 g). TürKomp is primary for composition, so the 309 kcal figure is used and the ~11% gap is left visible rather than averaged away.",
+        "The app's existing supabase/seed.sql record ('Beyaz Peynir, Tam Yağlı', source curated-demo) states 289 kcal / 2.5 g carbs per 100 g and portions 15/30/50 g. None of those values is traceable to a published source and all differ materially from TürKomp/TÜBER."
+      ],
+      "reviewerNotes": "TürKomp record is 'yağ, kuru maddede > %45'. Confirm the app's default white cheese should be full-fat rather than the half-fat 01.02.0020 record before publishing.",
+      "aliases": {
+        "tr-TR": [
+          {
+            "alias": "beyaz peynir",
+            "priority": 100,
+            "conflict": "CONFLICT: supabase/seed.sql already maps this alias to the unsourced curated-demo record 10000000-0000-0000-0000-000000000002. Resolve which record is canonical before applying."
+          },
+          {
+            "alias": "peynir",
+            "priority": 30,
+            "conflict": "CONFLICT: same curated-demo record already owns this alias."
+          },
+          {
+            "alias": "tam yağlı beyaz peynir",
+            "priority": 95
+          }
+        ],
+        "en-US": [
+          {
+            "alias": "white cheese",
+            "priority": 100,
+            "conflict": "CONFLICT: owned by the curated-demo record."
+          },
+          {
+            "alias": "Turkish white cheese",
+            "priority": 90
+          }
+        ]
+      }
+    },
+    {
+      "pilotName": "Pilav",
+      "foodSlug": "pirinc-pisirilmis",
+      "status": "mapped",
+      "canonicalNameTr": "Beyaz pirinç, pişmiş (yağ ilavesi hariç)",
+      "canonicalNameEn": "White rice, cooked (added cooking fat excluded)",
+      "portionCategory": "grain_cooked",
+      "container": "plate",
+      "nutrition": {
+        "artifactId": "tuber-ek-2-3-1",
+        "basis": "per_portion_published",
+        "rowName": "Beyaz pirinç, pişmiş"
+      },
+      "portion": {
+        "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Beyaz pirinç, pişmiş",
+        "householdMeasureArtifactId": "tuber-ek-2-1",
+        "householdMeasureRow": "Pirinç, pişmiş",
+        "regularMultiplier": 2
+      },
+      "sourceConflicts": [
+        "The pilot food was requested as 'Pilav'. TÜBER Ek 2.1.5 footnote 5 states that fat added during cooking is NOT included in these figures, so this record is cooked rice without the butter/oil of a Turkish pilav. It must not be labelled 'Pilav' in the catalog until a pilav-with-fat composition is sourced.",
+        "TürKomp has no cooked-rice record; only raw 'Pirinç, Osmancık' (06.02.0003). Raw-to-cooked yield was NOT applied."
+      ],
+      "reviewerNotes": "Blocks the colloquial 'pilav' alias. Either source a pilav (tereyağlı) composition or ship this as an explicitly fat-free cooked-rice reference.",
+      "aliases": {
+        "tr-TR": [
+          {
+            "alias": "pişmiş pirinç",
+            "priority": 100
+          },
+          {
+            "alias": "haşlanmış pirinç",
+            "priority": 90
+          }
+        ],
+        "en-US": [
+          {
+            "alias": "cooked white rice",
+            "priority": 100
+          },
+          {
+            "alias": "boiled rice",
+            "priority": 90
+          }
+        ]
+      },
+      "aliasPolicyNote": "The colloquial alias 'pilav' is deliberately withheld: TÜBER excludes added cooking fat, so this record is not a buttered pilav."
+    },
+    {
+      "pilotName": "Bulgur pilavı",
+      "foodSlug": "bulgur-pisirilmis",
+      "status": "mapped",
+      "canonicalNameTr": "Bulgur, pişmiş (yağ ilavesi hariç)",
+      "canonicalNameEn": "Bulgur, cooked (added cooking fat excluded)",
+      "portionCategory": "grain_cooked",
+      "container": "plate",
+      "nutrition": {
+        "artifactId": "tuber-ek-2-3-1",
+        "basis": "per_portion_published",
+        "rowName": "Bulgur, pişmiş"
+      },
+      "portion": {
+        "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Bulgur, pişmiş",
+        "householdMeasureArtifactId": "tuber-ek-2-1",
+        "householdMeasureRow": "Bulgur, pişmiş",
+        "regularMultiplier": 2
+      },
+      "sourceConflicts": [
+        "TÜBER Ek 2.1.5 footnote 6 publishes a separate 100-110 g standard portion for 'bol sebzeli pişirilmiş bulgur pilavı'. That is a different food (vegetable bulgur pilaf) and is NOT used here.",
+        "Added cooking fat is excluded (Ek 2.1.5 footnote 5), so this is not a full bulgur pilavı composition.",
+        "TürKomp has only raw 'Bulgur, pilavlık' records (12.02.0058, 12.02.0077). No raw-to-cooked conversion was applied."
+      ],
+      "reviewerNotes": "Same fat caveat as cooked rice. Decide whether the catalog needs a separate 'bol sebzeli bulgur pilavı' record.",
+      "aliases": {
+        "tr-TR": [
+          {
+            "alias": "pişmiş bulgur",
+            "priority": 100
+          },
+          {
+            "alias": "haşlanmış bulgur",
+            "priority": 90
+          }
+        ],
+        "en-US": [
+          {
+            "alias": "cooked bulgur",
+            "priority": 100
+          }
+        ]
+      },
+      "aliasPolicyNote": "The colloquial alias 'bulgur pilavı' is deliberately withheld for the same fat reason."
+    },
+    {
+      "pilotName": "Makarna",
+      "foodSlug": "makarna-haslanmis",
+      "status": "mapped",
+      "canonicalNameTr": "Makarna, haşlanmış",
+      "canonicalNameEn": "Pasta, boiled",
+      "portionCategory": "grain_cooked",
+      "container": "plate",
+      "nutrition": {
+        "artifactId": "tuber-ek-2-3-1",
+        "basis": "per_portion_published",
+        "rowName": "Makarna / hazır erişte pişmiş"
+      },
+      "portion": {
+        "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Makarna / hazır erişte pişmiş",
+        "householdMeasureArtifactId": "tuber-ek-2-1",
+        "householdMeasureRow": "Makarna, haşlanmış",
+        "regularMultiplier": 2
+      },
+      "sourceConflicts": [
+        "The TÜBER row combines pasta and ready-made noodles ('Makarna / hazır erişte pişmiş'); it is not pasta-specific.",
+        "Sauce and added fat are excluded (Ek 2.1.5 footnote 5)."
+      ],
+      "reviewerNotes": "Plain boiled pasta only. Sauced pasta needs its own catalog record.",
+      "aliases": {
+        "tr-TR": [
+          {
+            "alias": "haşlanmış makarna",
+            "priority": 100
+          },
+          {
+            "alias": "makarna",
+            "priority": 70
+          }
+        ],
+        "en-US": [
+          {
+            "alias": "boiled pasta",
+            "priority": 100
+          },
+          {
+            "alias": "pasta",
+            "priority": 70
+          }
+        ]
+      }
+    },
+    {
+      "pilotName": "Yoğurt",
+      "foodSlug": "yogurt-tam-yagli",
+      "status": "mapped",
+      "canonicalNameTr": "Yoğurt, homojenize, tam yağlı",
+      "canonicalNameEn": "Yogurt, homogenized, full fat",
+      "portionCategory": "dairy_yogurt",
+      "container": "bowl",
+      "nutrition": {
+        "artifactId": "turkomp-01.02.0015",
+        "basis": "per_100g_published",
+        "sourceRecordId": "01.02.0015"
+      },
+      "portion": {
+        "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Yoğurt, tam yağlı",
+        "householdMeasureArtifactId": "tuber-ek-2-1",
+        "householdMeasureRow": "Yoğurt",
+        "regularMultiplier": 1
+      },
+      "sourceConflicts": [
+        "TÜBER prints two different standard portions for yogurt: Ek 2.1.1 says '1 küçük kase veya 200 mL' while Ek 2.3.1 tabulates the portion as 240 g. The 240 g figure is used because it is printed in grams and needs no volume-to-mass assumption; the 200 mL variant is recorded here unresolved."
+      ],
+      "reviewerNotes": "Resolve the 200 mL / 240 g discrepancy with a dietitian before publishing. Do not convert mL to g by assuming a density.",
+      "aliases": {
+        "tr-TR": [
+          {
+            "alias": "yoğurt",
+            "priority": 80
+          },
+          {
+            "alias": "tam yağlı yoğurt",
+            "priority": 100
+          }
+        ],
+        "en-US": [
+          {
+            "alias": "yogurt",
+            "priority": 80
+          },
+          {
+            "alias": "full fat yogurt",
+            "priority": 100
+          }
+        ]
+      }
+    },
+    {
+      "pilotName": "Menemen",
+      "foodSlug": "menemen",
+      "status": "blocked",
+      "canonicalNameTr": null,
+      "canonicalNameEn": null,
+      "blockedReason": "No published composition or standard portion found. TürKomp (645 records, incl. 122 traditional foods) has no menemen entry; TÜBER Ek 2.1.x and Ek 2.3.x do not list it. Per the source policy a Turkish composite dish must not be mapped to a USDA analogue (e.g. 'egg omelet with tomato').",
+      "searchedSources": [
+        "TürKomp full food index — no match for 'menemen'",
+        "TÜBER 2022 Ek 2.1.1/2.1.3/2.1.5/2.3.1/2.3.2 — no match",
+        "USDA FoodData Central — deliberately not used (Turkish dish)"
+      ],
+      "resolutionPath": "Needs a weighed recipe study: standardised menemen recipe, ingredient weights from TürKomp (yumurta 02.01.0007, domates, biber, ayçiçek yağı), cooked yield measured, then reviewed by a dietitian and published as a recipe-derived record with its own provenance."
+    },
+    {
+      "pilotName": "Tavuk göğsü",
+      "foodSlug": "tavuk-gogsu-pismis",
+      "status": "mapped",
+      "canonicalNameTr": "Tavuk göğüs eti, pişmiş",
+      "canonicalNameEn": "Chicken breast, cooked",
+      "portionCategory": "meat_cooked",
+      "container": "plate",
+      "nutrition": {
+        "artifactId": "tuber-ek-2-3-1",
+        "basis": "per_portion_published",
+        "rowName": "Tavuk göğüs eti, pişmiş"
+      },
+      "portion": {
+        "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Tavuk göğüs eti, pişmiş",
+        "householdMeasureArtifactId": "tuber-ek-2-1",
+        "householdMeasureRow": "Tavuk eti pişmiş",
+        "regularMultiplier": 1
+      },
+      "sourceConflicts": [
+        "TürKomp has no cooked poultry record, so composition falls back to the TÜBER per-portion table rather than the primary composition source."
+      ],
+      "reviewerNotes": "Ek 2.1.3 ('1 orta boy baget veya 1 el ayası kadar et veya 80 g') and Ek 2.3.1 (80 g) agree on the portion weight. Cooking method (grilled/boiled) is unspecified by the source.",
+      "aliases": {
+        "tr-TR": [
+          {
+            "alias": "tavuk göğsü",
+            "priority": 100
+          },
+          {
+            "alias": "tavuk göğüs eti",
+            "priority": 100
+          },
+          {
+            "alias": "pişmiş tavuk göğsü",
+            "priority": 95
+          }
+        ],
+        "en-US": [
+          {
+            "alias": "chicken breast",
+            "priority": 100
+          },
+          {
+            "alias": "cooked chicken breast",
+            "priority": 95
+          }
+        ]
+      }
+    },
+    {
+      "pilotName": "Kuru fasulye",
+      "foodSlug": "kuru-fasulye-haslanmis",
+      "status": "mapped",
+      "canonicalNameTr": "Kuru fasulye, haşlanmış (yağsız)",
+      "canonicalNameEn": "Dry beans, boiled (no added fat)",
+      "portionCategory": "legume_cooked",
+      "container": "bowl",
+      "nutrition": {
+        "artifactId": "tuber-ek-2-3-1",
+        "basis": "per_portion_published",
+        "rowName": "Kuru fasulye. pişmiş"
+      },
+      "portion": {
+        "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Kuru fasulye. pişmiş",
+        "householdMeasureArtifactId": "tuber-ek-2-1",
+        "householdMeasureRow": "Nohut, fasulye, barbunya, iç bakla, börülce (haşlanmış)",
+        "regularMultiplier": 1
+      },
+      "sourceConflicts": [
+        "The pilot food was requested as 'Kuru fasulye', which in Turkish usage means the stew with oil, onion and tomato paste. The TÜBER row is boiled beans at 1 g fat per 130 g portion. This record is therefore named after the source, and the 'kuru fasulye (yemek)' dish remains unsourced.",
+        "TÜBER Ek 2.1.3 groups 'Nohut, fasulye, barbunya, iç bakla, börülce (haşlanmış)' into a single 130 g row; the household measure is not bean-specific."
+      ],
+      "reviewerNotes": "Do not expose the alias 'kuru fasulye' for this record without a UI note that it is the plain boiled form.",
+      "aliases": {
+        "tr-TR": [
+          {
+            "alias": "haşlanmış kuru fasulye",
+            "priority": 100
+          },
+          {
+            "alias": "haşlanmış fasulye",
+            "priority": 90
+          }
+        ],
+        "en-US": [
+          {
+            "alias": "boiled dry beans",
+            "priority": 100
+          }
+        ]
+      },
+      "aliasPolicyNote": "The colloquial alias 'kuru fasulye' is deliberately withheld: it denotes the stew, not boiled beans."
+    },
+    {
+      "pilotName": "Mercimek çorbası",
+      "foodSlug": "mercimek-corbasi",
+      "status": "blocked",
+      "canonicalNameTr": null,
+      "canonicalNameEn": null,
+      "blockedReason": "Portion measure exists but composition does not. TÜBER Ek 2.1.5 publishes 'Çorba çeşitleri (tahıl, kuru baklagil, sebze vb.) = ¾ kupa veya 1.5 orta kepçe veya 180 mL veya 1 küçük kase' (footnote 10: this equals ½ standard portion) — a volume, with no gram weight and no per-portion nutrient row in Ek 2.3.1. TürKomp only has the dry powder 'Kuru Çorba Karışımı, Mercimek' (12.02.0156), not prepared soup.",
+      "searchedSources": [
+        "TÜBER 2022 Ek 2.1.5 — portion measure only (180 mL), no grams",
+        "TÜBER 2022 Ek 2.3.1 / 2.3.2 — no soup nutrient row",
+        "TürKomp — 12.02.0156 is a dry soup mix, not prepared soup; 07.02.0001 is dry red lentils"
+      ],
+      "resolutionPath": "Either (a) source a prepared-soup composition and a measured mL-to-g density for lentil soup, or (b) publish the record with the household measure '1 küçük kase (180 mL)' and no gram value, which the current schema cannot express (food_portions.grams is NOT NULL)."
+    },
+    {
+      "pilotName": "Patates kızartması",
+      "foodSlug": "patates-kizartmasi",
+      "status": "blocked",
+      "canonicalNameTr": null,
+      "canonicalNameEn": null,
+      "blockedReason": "No published composition or standard portion for fried potato. TÜBER Ek 2.3.1 lists only 'Patates, pişmiş' (90 g, boiled) and Ek 2.3.2 (isteğe bağlı besinler) does not include chips or fries. TürKomp has 'Patates, kızartmalık, dondurulmuş' (08.02.0002, raw frozen) and 'Cips, patates' (12.02.0031, crisps) — neither is prepared french fries.",
+      "searchedSources": [
+        "TÜBER 2022 Ek 2.1.5 / 2.1.7 / 2.3.1 / 2.3.2 — no fried potato row",
+        "TürKomp — 08.02.0002 raw frozen, 12.02.0031 crisps"
+      ],
+      "resolutionPath": "Frying oil uptake is preparation-dependent and must be measured, not assumed. Requires either a weighed frying study or an authorised composition source; USDA is not an acceptable fallback while the record is framed as a Turkish dish."
+    }
+  ]
+}
