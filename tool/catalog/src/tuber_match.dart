@@ -184,21 +184,30 @@ TuberAnchor? findTuberAnchor(
   String turkompName, {
   required List<TuberPortionNutrients> nutrientRows,
   required List<TuberHouseholdMeasure> measureRows,
+  String? sourceRecordId,
 }) {
   if (hasDistinctSpecies(turkompName)) return null;
+
+  final recordGroup = sourceRecordId == null
+      ? FoodGroup.other
+      : groupFromRecordCode(sourceRecordId);
 
   final normalized = normalizeFoodName(turkompName);
   final base = baseFoodName(turkompName);
   final state = preparationState(turkompName);
 
-  TuberAnchor anchorFor(String rowName, TuberMatchMode mode, {double? grams}) =>
-      TuberAnchor(
-        rowName: rowName,
-        mode: mode,
-        turkompState: state,
-        tuberState: preparationState(rowName),
-        statedGrams: grams,
-      );
+  // A cross-group hit is a name collision, not a match: drop it rather than
+  // surface it, because no curation decision can make a fish a legume.
+  TuberAnchor? anchorFor(String rowName, TuberMatchMode mode, {double? grams}) {
+    if (!groupsCompatible(recordGroup, groupFromRowName(rowName))) return null;
+    return TuberAnchor(
+      rowName: rowName,
+      mode: mode,
+      turkompState: state,
+      tuberState: preparationState(rowName),
+      statedGrams: grams,
+    );
+  }
 
   // 1. Ek 2.3.1, preferring a row whose state already agrees.
   final nutrientHits = nutrientRows
@@ -221,11 +230,12 @@ TuberAnchor? findTuberAnchor(
   for (final row in gramRows) {
     if (normalizeFoodName(row.foodName) == normalized ||
         normalizeFoodName(row.foodName) == base) {
-      return anchorFor(
+      final anchor = anchorFor(
         row.foodName,
         TuberMatchMode.tuberMeasureGrams,
         grams: row.statedGrams,
       );
+      if (anchor != null) return anchor;
     }
   }
 
@@ -233,13 +243,87 @@ TuberAnchor? findTuberAnchor(
   for (final row in gramRows) {
     final members = memberNames(row.foodName);
     if (members.contains(normalized) || members.contains(base)) {
-      return anchorFor(
+      final anchor = anchorFor(
         row.foodName,
         TuberMatchMode.tuberGroupMemberGrams,
         grams: row.statedGrams,
       );
+      if (anchor != null) return anchor;
     }
   }
 
   return null;
 }
+
+/// Coarse food group, used to stop a head-noun collision across groups.
+///
+/// TürKomp record codes are `GG.SS.NNNN` where the first pair is the food
+/// group. The trap this exists for: "Barbunya (barbun)" is 04.01 — a red
+/// mullet — but its head noun collides with the bean named in the TÜBER row
+/// "Nohut, fasulye, barbunya, iç bakla, börülce (haşlanmış)". Matching on name
+/// alone would serve a fish a legume's portion.
+enum FoodGroup {
+  dairy,
+  egg,
+  meat,
+  fish,
+  fat,
+  grain,
+  legumeSeed,
+  vegetable,
+  fruit,
+  prepared,
+  other,
+}
+
+/// Group implied by a TürKomp record code (`GG.SS.NNNN`).
+FoodGroup groupFromRecordCode(String sourceRecordId) =>
+    switch (sourceRecordId.split('.').first) {
+      '01' => FoodGroup.dairy,
+      '02' => FoodGroup.egg,
+      '03' => FoodGroup.meat,
+      '04' => FoodGroup.fish,
+      '05' => FoodGroup.fat,
+      '06' => FoodGroup.grain,
+      '07' => FoodGroup.legumeSeed,
+      '08' => FoodGroup.vegetable,
+      '09' => FoodGroup.fruit,
+      '12' => FoodGroup.prepared,
+      _ => FoodGroup.other,
+    };
+
+const List<(FoodGroup, String)> _rowGroupPatterns = <(FoodGroup, String)>[
+  (FoodGroup.dairy, r'sut|yogurt|peynir|kefir|ayran|kaymak'),
+  (FoodGroup.egg, r'yumurta'),
+  (FoodGroup.fish, r'balik|hamsi|alabalik|somon|palamut|ton\b'),
+  (FoodGroup.meat, r'\bet\b|tavuk|kirmizi et|sakatat|sucuk|jambon|pastirma'),
+  (
+    FoodGroup.legumeSeed,
+    r'nohut|fasulye|barbunya|bakla|borulce|mercimek|findik|badem|ceviz|fistik|tohum|cekirdek',
+  ),
+  (
+    FoodGroup.grain,
+    r'ekmek|bulgur|pirinc|makarna|yufka|simit|bazlama|lavas|pide|galeta|grissini|gevrek|musli|yulaf|misir gevregi|patlamis',
+  ),
+  (FoodGroup.fat, r'\byag\b|margarin|tereyag|zeytinyag'),
+];
+
+/// Group implied by a TÜBER row name.
+FoodGroup groupFromRowName(String rowName) {
+  final normalized = normalizeFoodName(rowName);
+  for (final (group, pattern) in _rowGroupPatterns) {
+    if (RegExp(pattern).hasMatch(normalized)) return group;
+  }
+  return FoodGroup.other;
+}
+
+/// True when a record's group can legitimately take a row's portion.
+///
+/// [FoodGroup.other] on either side is permissive: the row-name patterns above
+/// do not cover fruit and vegetable rows, which are named after the food
+/// itself and therefore carry no group keyword.
+bool groupsCompatible(FoodGroup record, FoodGroup row) =>
+    record == row ||
+    row == FoodGroup.other ||
+    record == FoodGroup.other ||
+    record == FoodGroup.prepared;

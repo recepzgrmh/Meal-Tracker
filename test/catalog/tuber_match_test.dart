@@ -80,6 +80,32 @@ void main() {
     });
   });
 
+  group('food-group guard', () {
+    test('reads the group from a TürKomp record code', () {
+      expect(groupFromRecordCode('04.01.0002'), FoodGroup.fish);
+      expect(groupFromRecordCode('07.02.0011'), FoodGroup.legumeSeed);
+      expect(groupFromRecordCode('09.01.0002'), FoodGroup.fruit);
+    });
+
+    test('refuses a fish the legume row its head noun collides with', () {
+      // "Barbunya (barbun)" is 04.01 — a red mullet — but its head noun
+      // appears in "Nohut, fasulye, barbunya, iç bakla, börülce (haşlanmış)".
+      final row = groupFromRowName(
+        'Nohut, fasulye, barbunya, iç bakla, börülce (haşlanmış)',
+      );
+      expect(row, FoodGroup.legumeSeed);
+      expect(groupsCompatible(FoodGroup.fish, row), isFalse);
+      expect(groupsCompatible(FoodGroup.legumeSeed, row), isTrue);
+    });
+
+    test('stays permissive where rows carry no group keyword', () {
+      // Fruit and vegetable rows are named after the food itself, so the
+      // keyword table cannot classify them and must not block them.
+      expect(groupFromRowName('Elma'), FoodGroup.other);
+      expect(groupsCompatible(FoodGroup.fruit, FoodGroup.other), isTrue);
+    });
+  });
+
   group('hasDistinctSpecies', () {
     test('rejects a record the head noun would wrongly match', () {
       // TÜBER "Yumurta" is 100 g = 2 hen eggs.

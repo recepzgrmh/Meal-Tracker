@@ -71,6 +71,7 @@ void main(List<String> args) {
       name,
       nutrientRows: nutrientRows,
       measureRows: measureRows,
+      sourceRecordId: meta['sourceRecordId'] as String,
     );
 
     var score = 0;
