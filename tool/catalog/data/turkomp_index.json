@@ -1,0 +1,3237 @@
+{
+  "schemaVersion": 1,
+  "note": "Enumeration of the public TürKomp food list. Regenerate with: dart run tool/catalog/bin/fetch_sources.dart index",
+  "sourceName": "TürKomp — Ulusal Gıda Kompozisyon Veri Tabanı",
+  "publisher": "T.C. Tarım ve Orman Bakanlığı",
+  "indexUrl": "https://turkomp.tarimorman.gov.tr/database?type=foods",
+  "retrievedAt": "2026-08-21T07:38:42Z",
+  "indexSha256": "33d9deef15ac98e2e47f9e550faf313a27fd92d9e4b7bfd3f2634e3b331c7b17",
+  "entryCount": 645,
+  "entries": [
+    {
+      "href": "food-acur-204",
+      "listName": "Acur",
+      "turkompId": "204"
+    },
+    {
+      "href": "food-afyon-pastirmasi-518",
+      "listName": "Afyon pastırması",
+      "turkompId": "518"
+    },
+    {
+      "href": "food-ahududu-381",
+      "listName": "Ahududu",
+      "turkompId": "381"
+    },
+    {
+      "href": "food-ahududu-dondurulmus-383",
+      "listName": "Ahududu, dondurulmuş",
+      "turkompId": "383"
+    },
+    {
+      "href": "food-ak-sirken-723",
+      "listName": "Ak sirken",
+      "turkompId": "723"
+    },
+    {
+      "href": "food-alabalik-gokkusagi-yetistirme-513",
+      "listName": "Alabalık, Gökkuşağı, yetiştirme",
+      "turkompId": "513"
+    },
+    {
+      "href": "food-alagomec-708",
+      "listName": "Alagömeç",
+      "turkompId": "708"
+    },
+    {
+      "href": "food-ananas-403",
+      "listName": "Ananas",
+      "turkompId": "403"
+    },
+    {
+      "href": "food-antep-baklavasi-fistikli-586",
+      "listName": "Antep baklavası, fıstıklı",
+      "turkompId": "586"
+    },
+    {
+      "href": "food-antep-fistigi-ic-kavlatilmamis-taze-405",
+      "listName": "Antep fıstığı, iç, kavlatılmamış, taze",
+      "turkompId": "405"
+    },
+    {
+      "href": "food-antep-fistigi-ic-kavrulmus-688",
+      "listName": "Antep fıstığı, iç, kavrulmuş",
+      "turkompId": "688"
+    },
+    {
+      "href": "food-armut-kislik-deveci-cesidi-357",
+      "listName": "Armut, kışlık, Deveci çeşidi",
+      "turkompId": "357"
+    },
+    {
+      "href": "food-armut-yazlik-santa-maria-cesidi-358",
+      "listName": "Armut, yazlık, Santa Maria çeşidi",
+      "turkompId": "358"
+    },
+    {
+      "href": "food-aromali-icecek-gazli-portakal-aromali-410",
+      "listName": "Aromalı içecek, gazlı, portakal aromalı",
+      "turkompId": "410"
+    },
+    {
+      "href": "food-aromali-icecek-gazli-sade-412",
+      "listName": "Aromalı içecek, gazlı, sade",
+      "turkompId": "412"
+    },
+    {
+      "href": "food-arpa-alti-sirali-112",
+      "listName": "Arpa, altı sıralı",
+      "turkompId": "112"
+    },
+    {
+      "href": "food-arpa-iki-sirali-111",
+      "listName": "Arpa, iki sıralı",
+      "turkompId": "111"
+    },
+    {
+      "href": "food-arpa-unu-113",
+      "listName": "Arpa unu",
+      "turkompId": "113"
+    },
+    {
+      "href": "food-asma-yapragi-salamura-331",
+      "listName": "Asma yaprağı, salamura",
+      "turkompId": "331"
+    },
+    {
+      "href": "food-asure-ankara-452",
+      "listName": "Aşure, Ankara",
+      "turkompId": "452"
+    },
+    {
+      "href": "food-asure-istanbul-609",
+      "listName": "Aşure, İstanbul",
+      "turkompId": "609"
+    },
+    {
+      "href": "food-asure-izmir-608",
+      "listName": "Aşure, İzmir",
+      "turkompId": "608"
+    },
+    {
+      "href": "food-asure-konya-683",
+      "listName": "Aşure, Konya",
+      "turkompId": "683"
+    },
+    {
+      "href": "food-atelmasi-733",
+      "listName": "Atelması",
+      "turkompId": "733"
+    },
+    {
+      "href": "food-avokado-317",
+      "listName": "Avokado",
+      "turkompId": "317"
+    },
+    {
+      "href": "food-aycicegi-tohumu-cerezlik-alaca-kavrulmus-167",
+      "listName": "Ayçiçeği tohumu, çerezlik, Alaca, kavrulmuş",
+      "turkompId": "167"
+    },
+    {
+      "href": "food-aycicek-yagi-101",
+      "listName": "Ayçiçek yağı",
+      "turkompId": "101"
+    },
+    {
+      "href": "food-ayran-tam-yagli-700",
+      "listName": "ayran, tam yağlı",
+      "turkompId": "700"
+    },
+    {
+      "href": "food-ayran-yayik-bursa-462",
+      "listName": "Ayran, yayık, Bursa",
+      "turkompId": "462"
+    },
+    {
+      "href": "food-ayran-yayik-cevizli-antalya-577",
+      "listName": "Ayran, yayık, Cevizli, Antalya",
+      "turkompId": "577"
+    },
+    {
+      "href": "food-ayran-yayik-diyarbakir-595",
+      "listName": "Ayran, yayık, Diyarbakır",
+      "turkompId": "595"
+    },
+    {
+      "href": "food-ayran-yayik-mersin-553",
+      "listName": "Ayran, yayık, Mersin",
+      "turkompId": "553"
+    },
+    {
+      "href": "food-ayva-esme-cesidi-336",
+      "listName": "Ayva, Eşme çeşidi",
+      "turkompId": "336"
+    },
+    {
+      "href": "food-badem-ezmesi-edirne-492",
+      "listName": "Badem ezmesi, Edirne",
+      "turkompId": "492"
+    },
+    {
+      "href": "food-badem-ezmesi-istanbul-613",
+      "listName": "Badem ezmesi, İstanbul",
+      "turkompId": "613"
+    },
+    {
+      "href": "food-badem-ic-kavulmus-387",
+      "listName": "Badem, iç, kavulmuş",
+      "turkompId": "387"
+    },
+    {
+      "href": "food-badem-kabuklu-tatli-cagla-386",
+      "listName": "Badem, kabuklu, tatlı, çağla",
+      "turkompId": "386"
+    },
+    {
+      "href": "food-baharat-karisimi-kofte-harci-436",
+      "listName": "Baharat karışımı, köfte harcı",
+      "turkompId": "436"
+    },
+    {
+      "href": "food-bakla-216",
+      "listName": "Bakla",
+      "turkompId": "216"
+    },
+    {
+      "href": "food-bakla-kuru-217",
+      "listName": "Bakla, kuru",
+      "turkompId": "217"
+    },
+    {
+      "href": "food-baklava-cevizli-safranbolu-682",
+      "listName": "Baklava, cevizli, Safranbolu",
+      "turkompId": "682"
+    },
+    {
+      "href": "food-baklava-fistikli-istanbul-463",
+      "listName": "Baklava, fıstıklı, İstanbul",
+      "turkompId": "463"
+    },
+    {
+      "href": "food-bal-cam-287",
+      "listName": "Bal, çam",
+      "turkompId": "287"
+    },
+    {
+      "href": "food-bal-cicek-288",
+      "listName": "Bal, çiçek",
+      "turkompId": "288"
+    },
+    {
+      "href": "food-bamya-221",
+      "listName": "Bamya",
+      "turkompId": "221"
+    },
+    {
+      "href": "food-bamya-dondurulmus-224",
+      "listName": "Bamya, dondurulmuş",
+      "turkompId": "224"
+    },
+    {
+      "href": "food-bamya-konserve-222",
+      "listName": "Bamya, konserve",
+      "turkompId": "222"
+    },
+    {
+      "href": "food-bamya-kuru-223",
+      "listName": "Bamya, kuru",
+      "turkompId": "223"
+    },
+    {
+      "href": "food-barbunya-barbun-91",
+      "listName": "Barbunya (barbun)",
+      "turkompId": "91"
+    },
+    {
+      "href": "food-barbunya-fasulyesi-konserve-510",
+      "listName": "Barbunya fasulyesi, konserve",
+      "turkompId": "510"
+    },
+    {
+      "href": "food-barbunya-fasulyesi-kuru-211",
+      "listName": "Barbunya fasulyesi, kuru",
+      "turkompId": "211"
+    },
+    {
+      "href": "food-bazlama-677",
+      "listName": "Bazlama",
+      "turkompId": "677"
+    },
+    {
+      "href": "food-bergamot-meyve-kabugu-315",
+      "listName": "Bergamot, meyve kabuğu",
+      "turkompId": "315"
+    },
+    {
+      "href": "food-berlam-89",
+      "listName": "Berlam",
+      "turkompId": "89"
+    },
+    {
+      "href": "food-bezelye-212",
+      "listName": "Bezelye",
+      "turkompId": "212"
+    },
+    {
+      "href": "food-bezelye-dondurulmus-213",
+      "listName": "Bezelye, dondurulmuş",
+      "turkompId": "213"
+    },
+    {
+      "href": "food-bezelye-konserve-214",
+      "listName": "Bezelye, konserve",
+      "turkompId": "214"
+    },
+    {
+      "href": "food-bezelye-kuru-215",
+      "listName": "Bezelye, kuru",
+      "turkompId": "215"
+    },
+    {
+      "href": "food-biber-carliston-tipi-176",
+      "listName": "Biber, Çarliston tipi",
+      "turkompId": "176"
+    },
+    {
+      "href": "food-biber-dolma-175",
+      "listName": "Biber, dolma",
+      "turkompId": "175"
+    },
+    {
+      "href": "food-biber-kirmizi-acili-pul-184",
+      "listName": "Biber, kırmızı, acılı, pul",
+      "turkompId": "184"
+    },
+    {
+      "href": "food-biber-kirmizi-california-wonder-tipi-177",
+      "listName": "Biber, kırmızı, California Wonder tipi",
+      "turkompId": "177"
+    },
+    {
+      "href": "food-biber-kirmizi-dolmalik-kuru-185",
+      "listName": "Biber, kırmızı, dolmalık, kuru",
+      "turkompId": "185"
+    },
+    {
+      "href": "food-biber-kirmizi-toz-183",
+      "listName": "Biber, kırmızı, toz",
+      "turkompId": "183"
+    },
+    {
+      "href": "food-biber-kozlenmis-konserve-182",
+      "listName": "Biber, közlenmiş, konserve",
+      "turkompId": "182"
+    },
+    {
+      "href": "food-biber-salcasi-181",
+      "listName": "Biber salçası",
+      "turkompId": "181"
+    },
+    {
+      "href": "food-biber-sari-california-wonder-tipi-178",
+      "listName": "Biber, sarı, California Wonder tipi",
+      "turkompId": "178"
+    },
+    {
+      "href": "food-biber-sivri-174",
+      "listName": "Biber, sivri",
+      "turkompId": "174"
+    },
+    {
+      "href": "food-biber-sus-tursuluk-179",
+      "listName": "Biber, süs, turşuluk",
+      "turkompId": "179"
+    },
+    {
+      "href": "food-bildircin-eti-derisiz-67",
+      "listName": "Bıldırcın eti, derisiz",
+      "turkompId": "67"
+    },
+    {
+      "href": "food-bira-422",
+      "listName": "Bira",
+      "turkompId": "422"
+    },
+    {
+      "href": "food-biskuvi-bebe-114",
+      "listName": "Bisküvi, bebe",
+      "turkompId": "114"
+    },
+    {
+      "href": "food-biskuvi-dusuk-proteinli-glutensiz-pku-661",
+      "listName": "Bisküvi, düşük proteinli, glutensiz, PKU",
+      "turkompId": "661"
+    },
+    {
+      "href": "food-biskuvi-enerjisi-azaltilmis-limon-lifli-kepek-eklenmis-655",
+      "listName": "Bisküvi, enerjisi azaltılmış, limon lifli, kepek eklenmiş",
+      "turkompId": "655"
+    },
+    {
+      "href": "food-biskuvi-glutensiz-651",
+      "listName": "Bisküvi, glutensiz",
+      "turkompId": "651"
+    },
+    {
+      "href": "food-biskuvi-tatli-petit-beure-115",
+      "listName": "Bisküvi, tatlı (petit beure)",
+      "turkompId": "115"
+    },
+    {
+      "href": "food-bogurtlen-384",
+      "listName": "Böğürtlen",
+      "turkompId": "384"
+    },
+    {
+      "href": "food-borek-ispanakli-dondurulmus-753",
+      "listName": "Börek, ıspanaklı, dondurulmuş",
+      "turkompId": "753"
+    },
+    {
+      "href": "food-borek-peynirli-dondurulmus-752",
+      "listName": "Börek, peynirli, dondurulmuş",
+      "turkompId": "752"
+    },
+    {
+      "href": "food-borulce-218",
+      "listName": "Börülce",
+      "turkompId": "218"
+    },
+    {
+      "href": "food-borulce-konserve-220",
+      "listName": "Börülce, konserve",
+      "turkompId": "220"
+    },
+    {
+      "href": "food-borulce-kuru-219",
+      "listName": "Börülce, kuru",
+      "turkompId": "219"
+    },
+    {
+      "href": "food-boza-istanbul-465",
+      "listName": "Boza, İstanbul",
+      "turkompId": "465"
+    },
+    {
+      "href": "food-bozdag-kestane-sekeri-izmir-601",
+      "listName": "Bozdağ kestane şekeri, İzmir",
+      "turkompId": "601"
+    },
+    {
+      "href": "food-brokoli-249",
+      "listName": "Brokoli",
+      "turkompId": "249"
+    },
+    {
+      "href": "food-bugday-asurelik-755",
+      "listName": "Buğday, aşurelik",
+      "turkompId": "755"
+    },
+    {
+      "href": "food-bugday-ekmeklik-118",
+      "listName": "Buğday, ekmeklik",
+      "turkompId": "118"
+    },
+    {
+      "href": "food-bugday-kepegi-120",
+      "listName": "Buğday kepeği",
+      "turkompId": "120"
+    },
+    {
+      "href": "food-bugday-makarnalik-119",
+      "listName": "Buğday, makarnalık",
+      "turkompId": "119"
+    },
+    {
+      "href": "food-bugday-nisastasi-121",
+      "listName": "Buğday nişastası",
+      "turkompId": "121"
+    },
+    {
+      "href": "food-bugday-ruseymi-122",
+      "listName": "Buğday ruşeymi",
+      "turkompId": "122"
+    },
+    {
+      "href": "food-bugday-siyez-731",
+      "listName": "Buğday, siyez",
+      "turkompId": "731"
+    },
+    {
+      "href": "food-bugday-un-ekmeklik-tip-550-kul-kuru-maddede---0-55-129",
+      "listName": "Buğday, un, ekmeklik, tip 550 (kül, kuru maddede ≤ % 0.55)",
+      "turkompId": "129"
+    },
+    {
+      "href": "food-bugday-un-ekmeklik-tip-650-kul-kuru-maddede---0-65-130",
+      "listName": "Buğday, un, ekmeklik, tip 650 (kül, kuru maddede ≤ % 0.65)",
+      "turkompId": "130"
+    },
+    {
+      "href": "food-bugday-un-ekmeklik-tip-850-kul-kuru-maddede---0-85-131",
+      "listName": "Buğday, un, ekmeklik, tip 850 (kül, kuru maddede ≤ % 0.85)",
+      "turkompId": "131"
+    },
+    {
+      "href": "food-bulgur-pilavlik-gaziantep-460",
+      "listName": "Bulgur, pilavlık, Gaziantep",
+      "turkompId": "460"
+    },
+    {
+      "href": "food-bulgur-pilavlik-karaman-523",
+      "listName": "Bulgur, pilavlık, Karaman",
+      "turkompId": "523"
+    },
+    {
+      "href": "food-cag-kok-729",
+      "listName": "Çağ, kök",
+      "turkompId": "729"
+    },
+    {
+      "href": "food-cam-fistigi-kuru-166",
+      "listName": "Çam fıstığı, kuru",
+      "turkompId": "166"
+    },
+    {
+      "href": "food-cavdar-123",
+      "listName": "Çavdar",
+      "turkompId": "123"
+    },
+    {
+      "href": "food-cavdar-unu-125",
+      "listName": "Çavdar unu",
+      "turkompId": "125"
+    },
+    {
+      "href": "food-cay-kusburnu-398",
+      "listName": "Çay, kuşburnu",
+      "turkompId": "398"
+    },
+    {
+      "href": "food-cay-siyah-kuru-411",
+      "listName": "Çay, siyah, kuru",
+      "turkompId": "411"
+    },
+    {
+      "href": "food-ceviz-ic-kuru-400",
+      "listName": "Ceviz, iç, kuru",
+      "turkompId": "400"
+    },
+    {
+      "href": "food-ceviz-pikan-kuru-402",
+      "listName": "Ceviz, Pikan, kuru",
+      "turkompId": "402"
+    },
+    {
+      "href": "food-cikolata-beyaz-291",
+      "listName": "Çikolata, beyaz",
+      "turkompId": "291"
+    },
+    {
+      "href": "food-cikolata-bitter-292",
+      "listName": "Çikolata, bitter",
+      "turkompId": "292"
+    },
+    {
+      "href": "food-cikolata-sutlu-293",
+      "listName": "Çikolata, sütlü",
+      "turkompId": "293"
+    },
+    {
+      "href": "food-cikolata-sutlu-findikli-760",
+      "listName": "Çikolata, sütlü, fındıklı",
+      "turkompId": "760"
+    },
+    {
+      "href": "food-cikolata-sutlu-fruktozlu-diyabetik-645",
+      "listName": "Çikolata, sütlü, fruktozlu, diyabetik",
+      "turkompId": "645"
+    },
+    {
+      "href": "food-cikolata-sutlu-tatlandiricili-diyabetik-646",
+      "listName": "Çikolata, sütlü, tatlandırıcılı, diyabetik",
+      "turkompId": "646"
+    },
+    {
+      "href": "food-cilek-377",
+      "listName": "Çilek",
+      "turkompId": "377"
+    },
+    {
+      "href": "food-cilek-dondurulmus-380",
+      "listName": "Çilek, dondurulmuş",
+      "turkompId": "380"
+    },
+    {
+      "href": "food-cilek-suyu-378",
+      "listName": "Çilek suyu",
+      "turkompId": "378"
+    },
+    {
+      "href": "food-cintar-mantari-735",
+      "listName": "Çıntar mantarı",
+      "turkompId": "735"
+    },
+    {
+      "href": "food-cips-misir-668",
+      "listName": "Cips, mısır",
+      "turkompId": "668"
+    },
+    {
+      "href": "food-cips-patates-669",
+      "listName": "Cips, patates",
+      "turkompId": "669"
+    },
+    {
+      "href": "food-cipura-yetistirme-511",
+      "listName": "Çipura, yetiştirme",
+      "turkompId": "511"
+    },
+    {
+      "href": "food-ciris-706",
+      "listName": "Çiriş",
+      "turkompId": "706"
+    },
+    {
+      "href": "food-coban-cantasi-707",
+      "listName": "Çoban çantası",
+      "turkompId": "707"
+    },
+    {
+      "href": "food-cokelek-corum-552",
+      "listName": "Çökelek, Çorum",
+      "turkompId": "552"
+    },
+    {
+      "href": "food-cokelek-mersin-456",
+      "listName": "Çökelek, Mersin",
+      "turkompId": "456"
+    },
+    {
+      "href": "food-corek-otu-444",
+      "listName": "Çörek otu",
+      "turkompId": "444"
+    },
+    {
+      "href": "food-corum-leblebisi-499",
+      "listName": "Çorum leblebisi",
+      "turkompId": "499"
+    },
+    {
+      "href": "food-coven-kok-730",
+      "listName": "Çöven, kök",
+      "turkompId": "730"
+    },
+    {
+      "href": "food-cubuk-tursusu-salatalik-ankara-574",
+      "listName": "Çubuk turşusu, salatalık, Ankara",
+      "turkompId": "574"
+    },
+    {
+      "href": "food-dana-eti-bonfile-41",
+      "listName": "Dana eti, bonfile",
+      "turkompId": "41"
+    },
+    {
+      "href": "food-dana-eti-but-45",
+      "listName": "Dana eti, but",
+      "turkompId": "45"
+    },
+    {
+      "href": "food-dana-eti-kol-44",
+      "listName": "Dana eti, kol",
+      "turkompId": "44"
+    },
+    {
+      "href": "food-dana-eti-kontrfile-42",
+      "listName": "Dana eti, kontrfile",
+      "turkompId": "42"
+    },
+    {
+      "href": "food-dana-eti-pirzola-43",
+      "listName": "Dana eti, pirzola",
+      "turkompId": "43"
+    },
+    {
+      "href": "food-deli-kereviz-709",
+      "listName": "Deli kereviz",
+      "turkompId": "709"
+    },
+    {
+      "href": "food-deli-maydanoz-714",
+      "listName": "Deli maydanoz",
+      "turkompId": "714"
+    },
+    {
+      "href": "food-deniz-borulcesi-710",
+      "listName": "Deniz börülcesi",
+      "turkompId": "710"
+    },
+    {
+      "href": "food-denizli-leblebisi-583",
+      "listName": "Denizli leblebisi",
+      "turkompId": "583"
+    },
+    {
+      "href": "food-dereotu-255",
+      "listName": "Dereotu",
+      "turkompId": "255"
+    },
+    {
+      "href": "food-devekusu-eti-but-59",
+      "listName": "Devekuşu eti, but",
+      "turkompId": "59"
+    },
+    {
+      "href": "food-devekusu-eti-gogus-58",
+      "listName": "Devekuşu eti, göğüs",
+      "turkompId": "58"
+    },
+    {
+      "href": "food-dikenucu-722",
+      "listName": "Dikenucu",
+      "turkompId": "722"
+    },
+    {
+      "href": "food-dogal-zengin-mineralli-gazli-icecek-limon-aromali-759",
+      "listName": "Doğal zengin mineralli gazlı içecek, limon aromalı",
+      "turkompId": "759"
+    },
+    {
+      "href": "food-dolambac-720",
+      "listName": "Dolambaç",
+      "turkompId": "720"
+    },
+    {
+      "href": "food-domates-dogranmis-konserve-171",
+      "listName": "Domates, doğranmış, konserve",
+      "turkompId": "171"
+    },
+    {
+      "href": "food-domates-kuru-173",
+      "listName": "Domates, kuru",
+      "turkompId": "173"
+    },
+    {
+      "href": "food-domates-salcasi-170",
+      "listName": "Domates salçası",
+      "turkompId": "170"
+    },
+    {
+      "href": "food-domates-sofralik-168",
+      "listName": "Domates, sofralık",
+      "turkompId": "168"
+    },
+    {
+      "href": "food-domates-sofralik-kiraz-169",
+      "listName": "Domates, sofralık, kiraz",
+      "turkompId": "169"
+    },
+    {
+      "href": "food-domates-suyu-172",
+      "listName": "Domates suyu",
+      "turkompId": "172"
+    },
+    {
+      "href": "food-dondurma-yaniksi-antalya-580",
+      "listName": "Dondurma, yanıksı, Antalya",
+      "turkompId": "580"
+    },
+    {
+      "href": "food-doner-et-kastamonu-pismis-604",
+      "listName": "Döner, et, Kastamonu, pişmiş",
+      "turkompId": "604"
+    },
+    {
+      "href": "food-doner-et-pismis-bursa-615",
+      "listName": "Döner, et, pişmiş, Bursa",
+      "turkompId": "615"
+    },
+    {
+      "href": "food-doner-kiyma-cig-77",
+      "listName": "Döner, kıyma, çiğ",
+      "turkompId": "77"
+    },
+    {
+      "href": "food-doner-pilic-eti-cig-78",
+      "listName": "Döner, piliç eti, çiğ",
+      "turkompId": "78"
+    },
+    {
+      "href": "food-dut-beyaz-kuru-373",
+      "listName": "Dut, beyaz, kuru",
+      "turkompId": "373"
+    },
+    {
+      "href": "food-dut-beyaz-sofralik-371",
+      "listName": "Dut, beyaz, sofralık",
+      "turkompId": "371"
+    },
+    {
+      "href": "food-ebegumeci-279",
+      "listName": "Ebegümeci",
+      "turkompId": "279"
+    },
+    {
+      "href": "food-ecibucu-713",
+      "listName": "Ecibücü",
+      "turkompId": "713"
+    },
+    {
+      "href": "food-edirne-beyaz-peyniri-563",
+      "listName": "Edirne beyaz peyniri",
+      "turkompId": "563"
+    },
+    {
+      "href": "food-ekmek-beyaz-126",
+      "listName": "Ekmek, beyaz",
+      "turkompId": "126"
+    },
+    {
+      "href": "food-ekmek-beyaz-tuzsuz-660",
+      "listName": "Ekmek, beyaz, tuzsuz",
+      "turkompId": "660"
+    },
+    {
+      "href": "food-ekmek-cavdar-124",
+      "listName": "Ekmek, çavdar",
+      "turkompId": "124"
+    },
+    {
+      "href": "food-ekmek-glutensiz-pku-649",
+      "listName": "Ekmek, glutensiz, PKU",
+      "turkompId": "649"
+    },
+    {
+      "href": "food-ekmek-kepekli-127",
+      "listName": "Ekmek, kepekli",
+      "turkompId": "127"
+    },
+    {
+      "href": "food-ekmek-misir-139",
+      "listName": "Ekmek, mısır",
+      "turkompId": "139"
+    },
+    {
+      "href": "food-ekmek-tam-bugday-unlu-128",
+      "listName": "Ekmek, tam buğday unlu",
+      "turkompId": "128"
+    },
+    {
+      "href": "food-ekmek-yulaf-150",
+      "listName": "Ekmek, yulaf",
+      "turkompId": "150"
+    },
+    {
+      "href": "food-elma-guzluk-ve-kislik-fuji-cesidi-333",
+      "listName": "Elma, güzlük ve kışlık, Fuji çeşidi",
+      "turkompId": "333"
+    },
+    {
+      "href": "food-elma-kuru-335",
+      "listName": "Elma, kuru",
+      "turkompId": "335"
+    },
+    {
+      "href": "food-elma-suyu-334",
+      "listName": "Elma suyu",
+      "turkompId": "334"
+    },
+    {
+      "href": "food-elma-yazlik-gala-cesidi-332",
+      "listName": "Elma, yazlık, Gala çeşidi",
+      "turkompId": "332"
+    },
+    {
+      "href": "food-emulsifiye-et-urunu-salam-dana-697",
+      "listName": "Emülsifiye et ürünü, salam, dana",
+      "turkompId": "697"
+    },
+    {
+      "href": "food-emulsifiye-et-urunu-salam-hindi-745",
+      "listName": "Emülsifiye et ürünü, salam, hindi",
+      "turkompId": "745"
+    },
+    {
+      "href": "food-emulsifiye-et-urunu-salam-pilic-743",
+      "listName": "Emülsifiye et ürünü, salam, piliç",
+      "turkompId": "743"
+    },
+    {
+      "href": "food-emulsifiye-et-urunu-sosis-dana-765",
+      "listName": "Emülsifiye Et ürünü, sosis, dana",
+      "turkompId": "765"
+    },
+    {
+      "href": "food-emulsifiye-et-urunu-sosis-hindi-742",
+      "listName": "Emülsifiye Et ürünü, sosis, Hindi",
+      "turkompId": "742"
+    },
+    {
+      "href": "food-emulsifiye-et-urunu-sosis-pilic-740",
+      "listName": "Emülsifiye Et ürünü, sosis, Piliç",
+      "turkompId": "740"
+    },
+    {
+      "href": "food-enginar-241",
+      "listName": "Enginar",
+      "turkompId": "241"
+    },
+    {
+      "href": "food-enginar-dondurulmus-243",
+      "listName": "Enginar, dondurulmuş",
+      "turkompId": "243"
+    },
+    {
+      "href": "food-enginar-konserve-242",
+      "listName": "Enginar, konserve",
+      "turkompId": "242"
+    },
+    {
+      "href": "food-erik-avrupa-erik-grubu-kuru-343",
+      "listName": "Erik, Avrupa erik grubu, kuru",
+      "turkompId": "343"
+    },
+    {
+      "href": "food-erik-avrupa-erik-grubu-stanley-cesidi-341",
+      "listName": "Erik, Avrupa erik Grubu, Stanley çeşidi",
+      "turkompId": "341"
+    },
+    {
+      "href": "food-erik-japon-erik-grubu-black-amber-cesidi-340",
+      "listName": "Erik, Japon erik grubu, Black Amber çeşidi",
+      "turkompId": "340"
+    },
+    {
+      "href": "food-eritme-peyniri-sade-tam-yagli-750",
+      "listName": "Eritme Peyniri, sade, tam yağlı",
+      "turkompId": "750"
+    },
+    {
+      "href": "food-erzincan-tulum-peyniri-547",
+      "listName": "Erzincan tulum peyniri",
+      "turkompId": "547"
+    },
+    {
+      "href": "food-esek-turpu-702",
+      "listName": "Eşek turpu",
+      "turkompId": "702"
+    },
+    {
+      "href": "food-eski-kasar-kars-544",
+      "listName": "Eski kaşar, Kars",
+      "turkompId": "544"
+    },
+    {
+      "href": "food-et-suyu-tablet-bulyon-433",
+      "listName": "Et suyu, tablet (bulyon)",
+      "turkompId": "433"
+    },
+    {
+      "href": "food-ezine-peyniri-591",
+      "listName": "Ezine peyniri",
+      "turkompId": "591"
+    },
+    {
+      "href": "food-fasulye-206",
+      "listName": "Fasulye",
+      "turkompId": "206"
+    },
+    {
+      "href": "food-fasulye-dermason-kuru-210",
+      "listName": "Fasulye, dermason, kuru",
+      "turkompId": "210"
+    },
+    {
+      "href": "food-fasulye-dondurulmus-207",
+      "listName": "Fasulye, dondurulmuş",
+      "turkompId": "207"
+    },
+    {
+      "href": "food-fasulye-konserve-208",
+      "listName": "Fasulye, konserve",
+      "turkompId": "208"
+    },
+    {
+      "href": "food-findik-ezmesi-seker-ilaveli-409",
+      "listName": "Fındık ezmesi, şeker ilaveli",
+      "turkompId": "409"
+    },
+    {
+      "href": "food-findik-ic-beyazlatilmis-407",
+      "listName": "Fındık iç, beyazlatılmış",
+      "turkompId": "407"
+    },
+    {
+      "href": "food-findik-ic-kavrulmus-685",
+      "listName": "Fındık, iç, kavrulmuş",
+      "turkompId": "685"
+    },
+    {
+      "href": "food-findik-kremasi-kakaolu-607",
+      "listName": "Fındık kreması, kakaolu",
+      "turkompId": "607"
+    },
+    {
+      "href": "food-findik-yagi-106",
+      "listName": "Fındık yağı",
+      "turkompId": "106"
+    },
+    {
+      "href": "food-galeta-sade-665",
+      "listName": "Galeta, sade",
+      "turkompId": "665"
+    },
+    {
+      "href": "food-geleboru-506",
+      "listName": "Geleboru",
+      "turkompId": "506"
+    },
+    {
+      "href": "food-gofret-kakao-kremali-sutlu-cikolata-kaplamali-296",
+      "listName": "Gofret, kakao kremalı, sütlü çikolata kaplamalı",
+      "turkompId": "296"
+    },
+    {
+      "href": "food-gofret-kremali-vanilya-aromali-295",
+      "listName": "Gofret, kremalı, vanilya aromalı",
+      "turkompId": "295"
+    },
+    {
+      "href": "food-greyfurt-altintop-rio-red-313",
+      "listName": "Greyfurt, Altıntop, Rio Red",
+      "turkompId": "313"
+    },
+    {
+      "href": "food-greyfurt-altintop-star-ruby-312",
+      "listName": "Greyfurt, Altıntop, Star Ruby",
+      "turkompId": "312"
+    },
+    {
+      "href": "food-gullac-yaprak-istanbul-468",
+      "listName": "Güllaç, yaprak, İstanbul",
+      "turkompId": "468"
+    },
+    {
+      "href": "food-gumushane-dut-pestili-568",
+      "listName": "Gümüşhane dut pestili",
+      "turkompId": "568"
+    },
+    {
+      "href": "food-hamsi-81",
+      "listName": "Hamsi",
+      "turkompId": "81"
+    },
+    {
+      "href": "food-hamsi-konserve-aycicek-yaginda-512",
+      "listName": "Hamsi, konserve, ayçiçek yağında",
+      "turkompId": "512"
+    },
+    {
+      "href": "food-hardal-katkisiz-672",
+      "listName": "Hardal, katkısız",
+      "turkompId": "672"
+    },
+    {
+      "href": "food-hardaliye-kirklareli-602",
+      "listName": "Hardaliye, Kırklareli",
+      "turkompId": "602"
+    },
+    {
+      "href": "food-hashas-tohumu-kuru-162",
+      "listName": "Haşhaş tohumu, kuru",
+      "turkompId": "162"
+    },
+    {
+      "href": "food-havuc-siyah-259",
+      "listName": "Havuç, siyah",
+      "turkompId": "259"
+    },
+    {
+      "href": "food-havuc-turuncu-258",
+      "listName": "Havuç, turuncu",
+      "turkompId": "258"
+    },
+    {
+      "href": "food-helevan-718",
+      "listName": "Helevan",
+      "turkompId": "718"
+    },
+    {
+      "href": "food-hindi-eti-but-derisiz-63",
+      "listName": "Hindi eti, but, derisiz",
+      "turkompId": "63"
+    },
+    {
+      "href": "food-hindi-eti-gogus-fileto-derisiz-62",
+      "listName": "Hindi eti, göğüs fileto, derisiz",
+      "turkompId": "62"
+    },
+    {
+      "href": "food-hindiba-719",
+      "listName": "Hindiba",
+      "turkompId": "719"
+    },
+    {
+      "href": "food-hindistan-cevizi-kuru-rende-441",
+      "listName": "Hindistan cevizi, kuru, rende",
+      "turkompId": "441"
+    },
+    {
+      "href": "food-hurma-kuru-320",
+      "listName": "Hurma, kuru",
+      "turkompId": "320"
+    },
+    {
+      "href": "food-igde-kultur-kuru-408",
+      "listName": "İğde, kültür, kuru",
+      "turkompId": "408"
+    },
+    {
+      "href": "food-ihlamur-kurutulmus-698",
+      "listName": "Ihlamur, kurutulmuş",
+      "turkompId": "698"
+    },
+    {
+      "href": "food-incir-bursa-siyahi-367",
+      "listName": "İncir, Bursa Siyahı",
+      "turkompId": "367"
+    },
+    {
+      "href": "food-incir-kuru-aydin-daglik-kesim-530",
+      "listName": "İncir, kuru, Aydın, dağlık kesim",
+      "turkompId": "530"
+    },
+    {
+      "href": "food-incir-kuru-aydin-ovalik-kesim-461",
+      "listName": "İncir, kuru, Aydın, ovalık kesim",
+      "turkompId": "461"
+    },
+    {
+      "href": "food-incir-kuru-izmir-529",
+      "listName": "İncir, kuru, İzmir",
+      "turkompId": "529"
+    },
+    {
+      "href": "food-irmik-bugday-606",
+      "listName": "İrmik, buğday",
+      "turkompId": "606"
+    },
+    {
+      "href": "food-isil-islem-gormus-sucuk-dana-741",
+      "listName": "Isıl işlem görmüş sucuk, dana",
+      "turkompId": "741"
+    },
+    {
+      "href": "food-isil-islem-gormus-sucuk-hindi-744",
+      "listName": "Isıl işlem görmüş sucuk, Hindi",
+      "turkompId": "744"
+    },
+    {
+      "href": "food-isil-islem-gormus-sucuk-pilic-764",
+      "listName": "Isıl işlem görmüş sucuk, piliç",
+      "turkompId": "764"
+    },
+    {
+      "href": "food-isirgan-278",
+      "listName": "Isırgan",
+      "turkompId": "278"
+    },
+    {
+      "href": "food-iskilip-tursusu-salatalik-corum-582",
+      "listName": "İskilip turşusu, salatalık, Çorum",
+      "turkompId": "582"
+    },
+    {
+      "href": "food-ispanak-268",
+      "listName": "Ispanak",
+      "turkompId": "268"
+    },
+    {
+      "href": "food-ispanak-dondurulmus-270",
+      "listName": "Ispanak, dondurulmuş",
+      "turkompId": "270"
+    },
+    {
+      "href": "food-istavrit-83",
+      "listName": "İstavrit",
+      "turkompId": "83"
+    },
+    {
+      "href": "food-izmit-pismaniyesi-496",
+      "listName": "İzmit pişmaniyesi",
+      "turkompId": "496"
+    },
+    {
+      "href": "food-izotonik-sporcu-icecegi-653",
+      "listName": "İzotonik sporcu içeceği",
+      "turkompId": "653"
+    },
+    {
+      "href": "food-jambon-dana-762",
+      "listName": "Jambon, dana",
+      "turkompId": "762"
+    },
+    {
+      "href": "food-jambon-pilic-763",
+      "listName": "Jambon, piliç",
+      "turkompId": "763"
+    },
+    {
+      "href": "food-jole-toz-673",
+      "listName": "Jöle, toz",
+      "turkompId": "673"
+    },
+    {
+      "href": "food-kabak-cekirdegi-kuru-202",
+      "listName": "Kabak çekirdeği, kuru",
+      "turkompId": "202"
+    },
+    {
+      "href": "food-kabak-kislik-balkabagi-200",
+      "listName": "Kabak, kışlık, balkabağı",
+      "turkompId": "200"
+    },
+    {
+      "href": "food-kabak-kislik-kestane-201",
+      "listName": "Kabak, kışlık, kestane",
+      "turkompId": "201"
+    },
+    {
+      "href": "food-kabak-yazlik-koyu-yesil-199",
+      "listName": "Kabak, yazlık, koyu yeşil",
+      "turkompId": "199"
+    },
+    {
+      "href": "food-kabak-yazlik-sakiz-acik-yesil-198",
+      "listName": "Kabak, yazlık, sakız, açık yeşil",
+      "turkompId": "198"
+    },
+    {
+      "href": "food-kabartma-tozu-429",
+      "listName": "Kabartma tozu",
+      "turkompId": "429"
+    },
+    {
+      "href": "food-kahve-cozunebilir-413",
+      "listName": "Kahve, çözünebilir",
+      "turkompId": "413"
+    },
+    {
+      "href": "food-kahve-kremasi-toz-674",
+      "listName": "Kahve kreması, toz",
+      "turkompId": "674"
+    },
+    {
+      "href": "food-kakao-toz-675",
+      "listName": "Kakao, toz",
+      "turkompId": "675"
+    },
+    {
+      "href": "food-kaldirik-705",
+      "listName": "Kaldirik",
+      "turkompId": "705"
+    },
+    {
+      "href": "food-kalkan-96",
+      "listName": "Kalkan",
+      "turkompId": "96"
+    },
+    {
+      "href": "food-kanola-yagi-107",
+      "listName": "Kanola yağı",
+      "turkompId": "107"
+    },
+    {
+      "href": "food-kara-dut-rum-dutu-suyu-509",
+      "listName": "Kara dut (rum dutu) suyu",
+      "turkompId": "509"
+    },
+    {
+      "href": "food-karabiber-top-676",
+      "listName": "Karabiber, top",
+      "turkompId": "676"
+    },
+    {
+      "href": "food-karakavuk-716",
+      "listName": "Karakavuk",
+      "turkompId": "716"
+    },
+    {
+      "href": "food-karamuk-734",
+      "listName": "Karamuk",
+      "turkompId": "734"
+    },
+    {
+      "href": "food-karayemis-570",
+      "listName": "Karayemiş",
+      "turkompId": "570"
+    },
+    {
+      "href": "food-karides-derin-su-pembe-94",
+      "listName": "Karides, derin su pembe",
+      "turkompId": "94"
+    },
+    {
+      "href": "food-karnabahar-248",
+      "listName": "Karnabahar",
+      "turkompId": "248"
+    },
+    {
+      "href": "food-karnavas-dut-pekmezi-erzurum-565",
+      "listName": "Karnavas dut pekmezi, Erzurum",
+      "turkompId": "565"
+    },
+    {
+      "href": "food-karpuz-cekirdekli-190",
+      "listName": "Karpuz, çekirdekli",
+      "turkompId": "190"
+    },
+    {
+      "href": "food-karpuz-cekirdekli-diyarbakir-192",
+      "listName": "Karpuz, çekirdekli, Diyarbakır",
+      "turkompId": "192"
+    },
+    {
+      "href": "food-karpuz-cekirdeksiz-191",
+      "listName": "Karpuz, çekirdeksiz",
+      "turkompId": "191"
+    },
+    {
+      "href": "food-kasap-kofte-dana-cig-746",
+      "listName": "kasap köfte, dana, çiğ",
+      "turkompId": "746"
+    },
+    {
+      "href": "food-katmer-sade-679",
+      "listName": "Katmer, sade",
+      "turkompId": "679"
+    },
+    {
+      "href": "food-kavun-kislik-kirkagac-196",
+      "listName": "Kavun, kışlık Kırkağaç",
+      "turkompId": "196"
+    },
+    {
+      "href": "food-kavun-yazlik-citili-kavun-kantalop-195",
+      "listName": "Kavun, yazlık, çitili kavun, Kantalop",
+      "turkompId": "195"
+    },
+    {
+      "href": "food-kavurma-et-diyarbakir-616",
+      "listName": "Kavurma, et, Diyarbakır",
+      "turkompId": "616"
+    },
+    {
+      "href": "food-kavurma-et-erzurum-617",
+      "listName": "Kavurma, et, Erzurum",
+      "turkompId": "617"
+    },
+    {
+      "href": "food-kavurma-et-konya-618",
+      "listName": "Kavurma, et, Konya",
+      "turkompId": "618"
+    },
+    {
+      "href": "food-kaya-korugu-711",
+      "listName": "Kaya koruğu",
+      "turkompId": "711"
+    },
+    {
+      "href": "food-kayisi-cekirdegi-ic-404",
+      "listName": "Kayısı çekirdeği, iç",
+      "turkompId": "404"
+    },
+    {
+      "href": "food-kayisi-erkenci-sofralik-tyrinthe-344",
+      "listName": "Kayısı, erkenci, sofralık , Tyrinthe",
+      "turkompId": "344"
+    },
+    {
+      "href": "food-kayisi-hacihaliloglu-gunkurusu-347",
+      "listName": "Kayısı, Hacıhaliloğlu, günkurusu",
+      "turkompId": "347"
+    },
+    {
+      "href": "food-kayisi-hacihaliloglu-kukurtlu-kuru-348",
+      "listName": "Kayısı, Hacıhaliloğlu, kükürtlü, kuru",
+      "turkompId": "348"
+    },
+    {
+      "href": "food-kayisi-konserve-349",
+      "listName": "Kayısı, konserve",
+      "turkompId": "349"
+    },
+    {
+      "href": "food-kayisi-suyu-345",
+      "listName": "Kayısı suyu",
+      "turkompId": "345"
+    },
+    {
+      "href": "food-kaymacik-703",
+      "listName": "Kaymacık",
+      "turkompId": "703"
+    },
+    {
+      "href": "food-kaymak-pastorize-sut-yagi---60-5",
+      "listName": "Kaymak, pastörize (süt yağı ≥ % 60)",
+      "turkompId": "5"
+    },
+    {
+      "href": "food-kayseri-pastirmasi-474",
+      "listName": "Kayseri pastırması",
+      "turkompId": "474"
+    },
+    {
+      "href": "food-kayseri-sucugu-521",
+      "listName": "Kayseri sucuğu",
+      "turkompId": "521"
+    },
+    {
+      "href": "food-kaz-eti-but-derisiz-tuz-ilaveli-61",
+      "listName": "Kaz eti, but, derisiz, tuz ilaveli",
+      "turkompId": "61"
+    },
+    {
+      "href": "food-kaz-eti-gogus-derisiz-tuz-ilaveli-60",
+      "listName": "Kaz eti, göğüs, derisiz, tuz ilaveli",
+      "turkompId": "60"
+    },
+    {
+      "href": "food-kazandibi-ankara-636",
+      "listName": "Kazandibi, Ankara",
+      "turkompId": "636"
+    },
+    {
+      "href": "food-kazandibi-istanbul-635",
+      "listName": "Kazandibi, İstanbul",
+      "turkompId": "635"
+    },
+    {
+      "href": "food-kazandibi-izmir-637",
+      "listName": "Kazandibi, izmir",
+      "turkompId": "637"
+    },
+    {
+      "href": "food-kebere-728",
+      "listName": "Kebere",
+      "turkompId": "728"
+    },
+    {
+      "href": "food-keci-ayagi-712",
+      "listName": "Keçi ayağı",
+      "turkompId": "712"
+    },
+    {
+      "href": "food-keci-eti-bel-542",
+      "listName": "Keçi eti, bel",
+      "turkompId": "542"
+    },
+    {
+      "href": "food-keci-eti-but-55",
+      "listName": "Keçi eti, but",
+      "turkompId": "55"
+    },
+    {
+      "href": "food-keci-eti-kol-54",
+      "listName": "Keçi eti, kol",
+      "turkompId": "54"
+    },
+    {
+      "href": "food-keci-eti-sirt-56",
+      "listName": "Keçi eti, sırt",
+      "turkompId": "56"
+    },
+    {
+      "href": "food-keciboynuzu-kuru-376",
+      "listName": "Keçiboynuzu, kuru",
+      "turkompId": "376"
+    },
+    {
+      "href": "food-kefal-pasifik-rus-kefali-93",
+      "listName": "Kefal, pasifik (Rus kefali)",
+      "turkompId": "93"
+    },
+    {
+      "href": "food-kefal-sari-kulak-92",
+      "listName": "Kefal, sarı kulak",
+      "turkompId": "92"
+    },
+    {
+      "href": "food-kefir-ankara-464",
+      "listName": "Kefir, Ankara",
+      "turkompId": "464"
+    },
+    {
+      "href": "food-kefir-kars-621",
+      "listName": "Kefir, Kars",
+      "turkompId": "621"
+    },
+    {
+      "href": "food-kek-kakaolu-754",
+      "listName": "Kek, kakaolu",
+      "turkompId": "754"
+    },
+    {
+      "href": "food-kekik-kuru-435",
+      "listName": "Kekik, kuru",
+      "turkompId": "435"
+    },
+    {
+      "href": "food-kenger-727",
+      "listName": "Kenger",
+      "turkompId": "727"
+    },
+    {
+      "href": "food-kereviz-kok-265",
+      "listName": "Kereviz, kök",
+      "turkompId": "265"
+    },
+    {
+      "href": "food-kereviz-sap-266",
+      "listName": "Kereviz, sap",
+      "turkompId": "266"
+    },
+    {
+      "href": "food-keskul-ankara-634",
+      "listName": "Keşkül, Ankara",
+      "turkompId": "634"
+    },
+    {
+      "href": "food-keskul-istanbul-632",
+      "listName": "Keşkül, İstanbul",
+      "turkompId": "632"
+    },
+    {
+      "href": "food-keskul-izmir-633",
+      "listName": "Keşkül, İzmir",
+      "turkompId": "633"
+    },
+    {
+      "href": "food-kestane-406",
+      "listName": "Kestane",
+      "turkompId": "406"
+    },
+    {
+      "href": "food-kestane-sekeri-bursa-600",
+      "listName": "Kestane şekeri, Bursa",
+      "turkompId": "600"
+    },
+    {
+      "href": "food-ketcap-katkisiz-671",
+      "listName": "Ketçap, katkısız",
+      "turkompId": "671"
+    },
+    {
+      "href": "food-keten-tohumu-kuru-165",
+      "listName": "Keten tohumu, kuru",
+      "turkompId": "165"
+    },
+    {
+      "href": "food-kiraz-beyaz-starks-gold-cesidi-339",
+      "listName": "Kiraz, beyaz, Starks Gold çeşidi",
+      "turkompId": "339"
+    },
+    {
+      "href": "food-kiraz-kirmizi-ziraat-0900-napolyon-cesidi-338",
+      "listName": "Kiraz, kırmızı, Ziraat 0900 Napolyon çeşidi",
+      "turkompId": "338"
+    },
+    {
+      "href": "food-kivi-321",
+      "listName": "Kivi",
+      "turkompId": "321"
+    },
+    {
+      "href": "food-kiyi-pancari-704",
+      "listName": "Kıyı pancarı",
+      "turkompId": "704"
+    },
+    {
+      "href": "food-kizilcik-392",
+      "listName": "Kızılcık",
+      "turkompId": "392"
+    },
+    {
+      "href": "food-koca-dari-sorgum-154",
+      "listName": "Koca darı, sorgum",
+      "turkompId": "154"
+    },
+    {
+      "href": "food-kola-415",
+      "listName": "Kola",
+      "turkompId": "415"
+    },
+    {
+      "href": "food-kola-enerjisi-azaltilmis-666",
+      "listName": "Kola, enerjisi azaltılmış",
+      "turkompId": "666"
+    },
+    {
+      "href": "food-kolza-tohumu-kuru-164",
+      "listName": "Kolza tohumu, kuru",
+      "turkompId": "164"
+    },
+    {
+      "href": "food-koyun-eti-bel-48",
+      "listName": "Koyun eti, bel",
+      "turkompId": "48"
+    },
+    {
+      "href": "food-koyun-eti-but-47",
+      "listName": "Koyun eti, but",
+      "turkompId": "47"
+    },
+    {
+      "href": "food-koyun-eti-kol-46",
+      "listName": "Koyun eti, kol",
+      "turkompId": "46"
+    },
+    {
+      "href": "food-koyun-eti-sirt-49",
+      "listName": "Koyun eti, sırt",
+      "turkompId": "49"
+    },
+    {
+      "href": "food-koyun-kuyruk-yagi-80",
+      "listName": "Koyun, kuyruk yağı",
+      "turkompId": "80"
+    },
+    {
+      "href": "food-kraker-tuzlu-117",
+      "listName": "Kraker, tuzlu",
+      "turkompId": "117"
+    },
+    {
+      "href": "food-krem-santi-toz-437",
+      "listName": "Krem şanti, toz",
+      "turkompId": "437"
+    },
+    {
+      "href": "food-kuru-corba-karisimi-ezogelin-747",
+      "listName": "Kuru Çorba Karışımı, ezogelin",
+      "turkompId": "747"
+    },
+    {
+      "href": "food-kuru-corba-karisimi-mercimek-748",
+      "listName": "Kuru Çorba Karışımı, Mercimek",
+      "turkompId": "748"
+    },
+    {
+      "href": "food-kus-uzumu-kurutulmus-757",
+      "listName": "Kuş üzümü, kurutulmuş",
+      "turkompId": "757"
+    },
+    {
+      "href": "food-kuskonmaz-236",
+      "listName": "Kuşkonmaz",
+      "turkompId": "236"
+    },
+    {
+      "href": "food-kuskonmaz-konserve-237",
+      "listName": "Kuşkonmaz, konserve",
+      "turkompId": "237"
+    },
+    {
+      "href": "food-kuzu-eti-bel-52",
+      "listName": "Kuzu eti, bel",
+      "turkompId": "52"
+    },
+    {
+      "href": "food-kuzu-eti-but-51",
+      "listName": "Kuzu eti, but",
+      "turkompId": "51"
+    },
+    {
+      "href": "food-kuzu-eti-kol-50",
+      "listName": "Kuzu eti, kol",
+      "turkompId": "50"
+    },
+    {
+      "href": "food-kuzu-eti-sirt-53",
+      "listName": "Kuzu eti, sırt",
+      "turkompId": "53"
+    },
+    {
+      "href": "food-kuzukemirdi-726",
+      "listName": "Kuzukemirdi",
+      "turkompId": "726"
+    },
+    {
+      "href": "food-labada-724",
+      "listName": "Labada",
+      "turkompId": "724"
+    },
+    {
+      "href": "food-lahana-beyaz-bas-244",
+      "listName": "Lahana, beyaz, baş",
+      "turkompId": "244"
+    },
+    {
+      "href": "food-lahana-bruksel-250",
+      "listName": "Lahana, Brüksel",
+      "turkompId": "250"
+    },
+    {
+      "href": "food-lahana-kara-246",
+      "listName": "Lahana, kara",
+      "turkompId": "246"
+    },
+    {
+      "href": "food-lahana-kirmizi-bas-245",
+      "listName": "Lahana, kırmızı, baş",
+      "turkompId": "245"
+    },
+    {
+      "href": "food-lavas-678",
+      "listName": "Lavaş",
+      "turkompId": "678"
+    },
+    {
+      "href": "food-levrek-yetistirme-85",
+      "listName": "Levrek, yetiştirme",
+      "turkompId": "85"
+    },
+    {
+      "href": "food-likor-meyve-423",
+      "listName": "Likör, meyve",
+      "turkompId": "423"
+    },
+    {
+      "href": "food-limon-interdonato-309",
+      "listName": "Limon, Interdonato",
+      "turkompId": "309"
+    },
+    {
+      "href": "food-limon-kutdiken-310",
+      "listName": "Limon, Kütdiken",
+      "turkompId": "310"
+    },
+    {
+      "href": "food-limon-meyer-311",
+      "listName": "Limon, Meyer",
+      "turkompId": "311"
+    },
+    {
+      "href": "food-limon-sosu-dogal-438",
+      "listName": "Limon sosu, doğal",
+      "turkompId": "438"
+    },
+    {
+      "href": "food-limonata-417",
+      "listName": "Limonata",
+      "turkompId": "417"
+    },
+    {
+      "href": "food-lokum-kaymakli-afyon-519",
+      "listName": "Lokum, kaymaklı, Afyon",
+      "turkompId": "519"
+    },
+    {
+      "href": "food-lokum-sade-istanbul-644",
+      "listName": "Lokum, sade, İstanbul",
+      "turkompId": "644"
+    },
+    {
+      "href": "food-lokum-safranli-antep-fistikli-safranbolu-471",
+      "listName": "Lokum, safranlı, antep fıstıklı, Safranbolu",
+      "turkompId": "471"
+    },
+    {
+      "href": "food-lufer-88",
+      "listName": "Lüfer",
+      "turkompId": "88"
+    },
+    {
+      "href": "food-madimak-725",
+      "listName": "Madımak",
+      "turkompId": "725"
+    },
+    {
+      "href": "food-makarna-dusuk-proteinli-glutensiz-pku-663",
+      "listName": "Makarna, düşük proteinli, glutensiz, PKU",
+      "turkompId": "663"
+    },
+    {
+      "href": "food-makarna-glutensiz-648",
+      "listName": "Makarna, glutensiz",
+      "turkompId": "648"
+    },
+    {
+      "href": "food-makarna-sade-yumurtasiz-kuru-132",
+      "listName": "Makarna, sade, yumurtasız, kuru",
+      "turkompId": "132"
+    },
+    {
+      "href": "food-mandarin-klemantin-307",
+      "listName": "Mandarin, Klemantin",
+      "turkompId": "307"
+    },
+    {
+      "href": "food-mandarin-nova-308",
+      "listName": "Mandarin, Nova",
+      "turkompId": "308"
+    },
+    {
+      "href": "food-mandarin-okitsu-wase-306",
+      "listName": "Mandarin, Okitsu Wase",
+      "turkompId": "306"
+    },
+    {
+      "href": "food-mandarin-ovari-satsuma-305",
+      "listName": "Mandarin, Ovari Satsuma",
+      "turkompId": "305"
+    },
+    {
+      "href": "food-mantar-beyaz-sapkali-276",
+      "listName": "Mantar, beyaz şapkalı",
+      "turkompId": "276"
+    },
+    {
+      "href": "food-mantar-beyaz-sapkali-konserve-277",
+      "listName": "Mantar, beyaz şapkalı, konserve",
+      "turkompId": "277"
+    },
+    {
+      "href": "food-manti-cig-kayseri-472",
+      "listName": "Mantı, çiğ, Kayseri",
+      "turkompId": "472"
+    },
+    {
+      "href": "food-manti-cig-safranbolu-622",
+      "listName": "Mantı, çiğ, Safranbolu",
+      "turkompId": "622"
+    },
+    {
+      "href": "food-maras-dondurmasi-587",
+      "listName": "Maraş dondurması",
+      "turkompId": "587"
+    },
+    {
+      "href": "food-maras-tarhanasi-516",
+      "listName": "Maraş tarhanası",
+      "turkompId": "516"
+    },
+    {
+      "href": "food-margarin-az-yagli--39-41-yag-109",
+      "listName": "Margarin, az yağlı (% 39-41 yağ)",
+      "turkompId": "109"
+    },
+    {
+      "href": "food-margarin-surulebilir-kahvaltilik-605",
+      "listName": "Margarin, sürülebilir, kahvaltılık",
+      "turkompId": "605"
+    },
+    {
+      "href": "food-margarin-yemeklik-110",
+      "listName": "Margarin, yemeklik",
+      "turkompId": "110"
+    },
+    {
+      "href": "food-marmelat-kizilcik-393",
+      "listName": "Marmelat, kızılcık",
+      "turkompId": "393"
+    },
+    {
+      "href": "food-marmelat-kusburnu-399",
+      "listName": "Marmelat, kuşburnu",
+      "turkompId": "399"
+    },
+    {
+      "href": "food-marul-bas-salata-iceberg-240",
+      "listName": "Marul, baş salata, Iceberg",
+      "turkompId": "240"
+    },
+    {
+      "href": "food-marul-kivircik-salata-239",
+      "listName": "Marul, kıvırcık, salata",
+      "turkompId": "239"
+    },
+    {
+      "href": "food-marul-uzun-yaprakli-238",
+      "listName": "Marul, uzun yapraklı",
+      "turkompId": "238"
+    },
+    {
+      "href": "food-maya-hamur-kuru-427",
+      "listName": "Maya, hamur, kuru",
+      "turkompId": "427"
+    },
+    {
+      "href": "food-maya-hamur-yas-428",
+      "listName": "Maya, hamur, yaş",
+      "turkompId": "428"
+    },
+    {
+      "href": "food-maydanoz-263",
+      "listName": "Maydanoz",
+      "turkompId": "263"
+    },
+    {
+      "href": "food-maydanoz-kuru-264",
+      "listName": "Maydanoz, kuru",
+      "turkompId": "264"
+    },
+    {
+      "href": "food-mayonez-katkisiz-670",
+      "listName": "Mayonez, katkısız",
+      "turkompId": "670"
+    },
+    {
+      "href": "food-mercimek-kirmizi-kuru-156",
+      "listName": "Mercimek, kırmızı, kuru",
+      "turkompId": "156"
+    },
+    {
+      "href": "food-mercimek-yesil-kuru-157",
+      "listName": "Mercimek, yeşil, kuru",
+      "turkompId": "157"
+    },
+    {
+      "href": "food-mersin-cezeryesi-cevizli-578",
+      "listName": "Mersin cezeryesi, cevizli",
+      "turkompId": "578"
+    },
+    {
+      "href": "food-mezgit-90",
+      "listName": "Mezgit",
+      "turkompId": "90"
+    },
+    {
+      "href": "food-midye-akdeniz-kara-midye-95",
+      "listName": "Midye, Akdeniz, kara midye",
+      "turkompId": "95"
+    },
+    {
+      "href": "food-milfoy-hamuru-dondurulmus-751",
+      "listName": "Milföy hamuru, dondurulmuş",
+      "turkompId": "751"
+    },
+    {
+      "href": "food-misir-at-disi-kuru-135",
+      "listName": "Mısır, at dişi, kuru",
+      "turkompId": "135"
+    },
+    {
+      "href": "food-misir-cerezi-133",
+      "listName": "Mısır çerezi",
+      "turkompId": "133"
+    },
+    {
+      "href": "food-misir-cin-kuru-137",
+      "listName": "Mısır, cin, kuru",
+      "turkompId": "137"
+    },
+    {
+      "href": "food-misir-gevregi-143",
+      "listName": "Mısır gevreği",
+      "turkompId": "143"
+    },
+    {
+      "href": "food-misir-nisastasi-141",
+      "listName": "Mısır nişastası",
+      "turkompId": "141"
+    },
+    {
+      "href": "food-misir-seker-kuru-138",
+      "listName": "Mısır, şeker, kuru",
+      "turkompId": "138"
+    },
+    {
+      "href": "food-misir-sert-kuru-136",
+      "listName": "Mısır, sert, kuru",
+      "turkompId": "136"
+    },
+    {
+      "href": "food-misir-tatli-225",
+      "listName": "Mısır, tatlı",
+      "turkompId": "225"
+    },
+    {
+      "href": "food-misir-tatli-dondurulmus-227",
+      "listName": "Mısır, tatlı, dondurulmuş",
+      "turkompId": "227"
+    },
+    {
+      "href": "food-misir-tatli-konserve-140",
+      "listName": "Mısır, tatlı, konserve",
+      "turkompId": "140"
+    },
+    {
+      "href": "food-misir-unu-142",
+      "listName": "Mısır unu",
+      "turkompId": "142"
+    },
+    {
+      "href": "food-misir-yagi-108",
+      "listName": "Mısır yağı",
+      "turkompId": "108"
+    },
+    {
+      "href": "food-muhallebi-ankara-631",
+      "listName": "Muhallebi, Ankara",
+      "turkompId": "631"
+    },
+    {
+      "href": "food-muhallebi-istanbul-629",
+      "listName": "Muhallebi, İstanbul",
+      "turkompId": "629"
+    },
+    {
+      "href": "food-musli-meyveli-652",
+      "listName": "Müsli, meyveli",
+      "turkompId": "652"
+    },
+    {
+      "href": "food-muz-anamur-cesidi-395",
+      "listName": "Muz, Anamur çeşidi",
+      "turkompId": "395"
+    },
+    {
+      "href": "food-muz-ithal-cesit-396",
+      "listName": "Muz, İthal çeşit",
+      "turkompId": "396"
+    },
+    {
+      "href": "food-nane-274",
+      "listName": "Nane",
+      "turkompId": "274"
+    },
+    {
+      "href": "food-nane-kuru-275",
+      "listName": "Nane, kuru",
+      "turkompId": "275"
+    },
+    {
+      "href": "food-nar-eksisi-gaziantep-534",
+      "listName": "Nar ekşisi, Gaziantep",
+      "turkompId": "534"
+    },
+    {
+      "href": "food-nar-eksisi-hatay-532",
+      "listName": "Nar ekşisi, Hatay",
+      "turkompId": "532"
+    },
+    {
+      "href": "food-nar-eksisi-mersin-473",
+      "listName": "Nar ekşisi, Mersin",
+      "turkompId": "473"
+    },
+    {
+      "href": "food-nar-hicaz-cesidi-369",
+      "listName": "Nar, Hicaz çeşidi",
+      "turkompId": "369"
+    },
+    {
+      "href": "food-nar-suyu-370",
+      "listName": "Nar suyu",
+      "turkompId": "370"
+    },
+    {
+      "href": "food-nektarin-big-top-cesidi-356",
+      "listName": "Nektarin, Big Top çeşidi",
+      "turkompId": "356"
+    },
+    {
+      "href": "food-nohut-haslanmis-konserve-756",
+      "listName": "Nohut, haşlanmış, konserve",
+      "turkompId": "756"
+    },
+    {
+      "href": "food-nohut-kocbasi-kuru-158",
+      "listName": "Nohut, Koçbaşı, kuru",
+      "turkompId": "158"
+    },
+    {
+      "href": "food-oltu-cag-kebabi-doner-et-pismis-612",
+      "listName": "Oltu cağ kebabı (döner, et, pişmiş)",
+      "turkompId": "612"
+    },
+    {
+      "href": "food-palamut-84",
+      "listName": "Palamut",
+      "turkompId": "84"
+    },
+    {
+      "href": "food-pancar-kirmizi-272",
+      "listName": "Pancar, kırmızı",
+      "turkompId": "272"
+    },
+    {
+      "href": "food-pancar-kirmizi-yemeklik-leyla-537",
+      "listName": "Pancar, kırmızı, yemeklik, Leyla",
+      "turkompId": "537"
+    },
+    {
+      "href": "food-pancar-seker-280",
+      "listName": "Pancar, şeker",
+      "turkompId": "280"
+    },
+    {
+      "href": "food-pastirma-cemeni-kayseri-579",
+      "listName": "Pastırma çemeni, Kayseri",
+      "turkompId": "579"
+    },
+    {
+      "href": "food-pastirma-kastamonu-603",
+      "listName": "Pastırma, Kastamonu",
+      "turkompId": "603"
+    },
+    {
+      "href": "food-patates-kizartmalik-dondurulmus-285",
+      "listName": "Patates, kızartmalık, dondurulmuş",
+      "turkompId": "285"
+    },
+    {
+      "href": "food-patates-nisastalik-beyaz-etli-lady-rosetta-hermes-281",
+      "listName": "Patates, nişastalık, beyaz etli, Lady Rosetta, Hermes",
+      "turkompId": "281"
+    },
+    {
+      "href": "food-patates-nisastasi-283",
+      "listName": "Patates nişastası",
+      "turkompId": "283"
+    },
+    {
+      "href": "food-patates-sofralik-sari-marfona-granola-marabel-282",
+      "listName": "Patates, sofralık, sarı, Marfona, Granola, Marabel",
+      "turkompId": "282"
+    },
+    {
+      "href": "food-patlican-kozlenmis-konserve-188",
+      "listName": "Patlıcan, közlenmiş, konserve",
+      "turkompId": "188"
+    },
+    {
+      "href": "food-patlican-kuru-189",
+      "listName": "Patlıcan, kuru",
+      "turkompId": "189"
+    },
+    {
+      "href": "food-patlican-uzun-186",
+      "listName": "Patlıcan, uzun",
+      "turkompId": "186"
+    },
+    {
+      "href": "food-patlican-yuvarlak-topan-187",
+      "listName": "Patlıcan, yuvarlak, Topan",
+      "turkompId": "187"
+    },
+    {
+      "href": "food-pazi-271",
+      "listName": "Pazı",
+      "turkompId": "271"
+    },
+    {
+      "href": "food-pekmez-andiz-antalya-495",
+      "listName": "Pekmez, Andız, Antalya",
+      "turkompId": "495"
+    },
+    {
+      "href": "food-pekmez-dut-gumushane-567",
+      "listName": "Pekmez, dut, Gümüşhane",
+      "turkompId": "567"
+    },
+    {
+      "href": "food-pekmez-dut-kemaliye-erzincan-560",
+      "listName": "Pekmez, dut, Kemaliye, Erzincan",
+      "turkompId": "560"
+    },
+    {
+      "href": "food-pekmez-harnup-keciboynuzu-antalya-469",
+      "listName": "Pekmez, harnup (keçiboynuzu), Antalya",
+      "turkompId": "469"
+    },
+    {
+      "href": "food-pekmez-incir-manisa-451",
+      "listName": "Pekmez, incir, Manisa",
+      "turkompId": "451"
+    },
+    {
+      "href": "food-pekmez-uzum-cal-denizli-528",
+      "listName": "Pekmez, üzüm, Çal, Denizli",
+      "turkompId": "528"
+    },
+    {
+      "href": "food-pekmez-uzum-guneydogu-anadolu-bolgesi-540",
+      "listName": "Pekmez, üzüm, Güneydoğu Anadolu Bölgesi",
+      "turkompId": "540"
+    },
+    {
+      "href": "food-pekmez-uzum-kirsehir-527",
+      "listName": "Pekmez, üzüm, Kırşehir",
+      "turkompId": "527"
+    },
+    {
+      "href": "food-pekmez-uzum-urgup-525",
+      "listName": "Pekmez, üzüm, Ürgüp",
+      "turkompId": "525"
+    },
+    {
+      "href": "food-pestil-dut-erzurum-564",
+      "listName": "Pestil, dut, Erzurum",
+      "turkompId": "564"
+    },
+    {
+      "href": "food-pestil-dut-kemaliye-erzincan-561",
+      "listName": "Pestil, dut, Kemaliye, Erzincan",
+      "turkompId": "561"
+    },
+    {
+      "href": "food-pestil-uzum-gaziantep-536",
+      "listName": "Pestil, üzüm, Gaziantep",
+      "turkompId": "536"
+    },
+    {
+      "href": "food-pestil-uzum-urgup-nevsehir-526",
+      "listName": "Pestil, üzüm, Ürgüp, Nevşehir",
+      "turkompId": "526"
+    },
+    {
+      "href": "food-peynir-beyaz-az-yagli-yagsiz-yag-kuru-maddede---20-7",
+      "listName": "Peynir, beyaz, az yağlı-yağsız (yağ, kuru maddede < % 20)",
+      "turkompId": "7"
+    },
+    {
+      "href": "food-peynir-beyaz-tam-yagli-yag-kuru-maddede---45-8",
+      "listName": "Peynir, beyaz, tam yağlı (yağ, kuru maddede > % 45)",
+      "turkompId": "8"
+    },
+    {
+      "href": "food-peynir-beyaz-yarim-yagli-yag-kuru-maddede---20-9",
+      "listName": "Peynir, beyaz, yarım yağlı (yağ, kuru maddede > % 20)",
+      "turkompId": "9"
+    },
+    {
+      "href": "food-peynir-kasar-olgunlastirilmamis-taze-11",
+      "listName": "Peynir, kaşar, olgunlaştırılmamış (taze)",
+      "turkompId": "11"
+    },
+    {
+      "href": "food-peynir-kasar-olgunlastirilmis-eski-12",
+      "listName": "Peynir, kaşar, olgunlaştırılmış (eski)",
+      "turkompId": "12"
+    },
+    {
+      "href": "food-peynir-keci-13",
+      "listName": "Peynir, keçi",
+      "turkompId": "13"
+    },
+    {
+      "href": "food-peynir-koyun-14",
+      "listName": "Peynir, koyun",
+      "turkompId": "14"
+    },
+    {
+      "href": "food-peynir-otlu-van-454",
+      "listName": "Peynir, otlu, Van",
+      "turkompId": "454"
+    },
+    {
+      "href": "food-peynir-tulum-izmir-566",
+      "listName": "Peynir, tulum, İzmir",
+      "turkompId": "566"
+    },
+    {
+      "href": "food-peynir-tulum-mersin-554",
+      "listName": "Peynir, tulum, Mersin",
+      "turkompId": "554"
+    },
+    {
+      "href": "food-pilic-eti-but-65",
+      "listName": "Piliç eti, but",
+      "turkompId": "65"
+    },
+    {
+      "href": "food-pilic-eti-gogus-derisiz-64",
+      "listName": "Piliç eti, göğüs, derisiz",
+      "turkompId": "64"
+    },
+    {
+      "href": "food-pilic-eti-kanat-66",
+      "listName": "Piliç eti, kanat",
+      "turkompId": "66"
+    },
+    {
+      "href": "food-pirasa-235",
+      "listName": "Pırasa",
+      "turkompId": "235"
+    },
+    {
+      "href": "food-pirinc-osmancik-144",
+      "listName": "Pirinç, Osmancık",
+      "turkompId": "144"
+    },
+    {
+      "href": "food-pirinc-unu-146",
+      "listName": "Pirinç unu",
+      "turkompId": "146"
+    },
+    {
+      "href": "food-portakal-navelina-gobekli-cesidi-500",
+      "listName": "Portakal, Navelina Göbekli çeşidi",
+      "turkompId": "500"
+    },
+    {
+      "href": "food-portakal-suyu-303",
+      "listName": "Portakal suyu",
+      "turkompId": "303"
+    },
+    {
+      "href": "food-portakal-suyu-konsantre-302",
+      "listName": "Portakal suyu, konsantre",
+      "turkompId": "302"
+    },
+    {
+      "href": "food-portakal-valensiya-cesidi-301",
+      "listName": "Portakal, Valensiya çeşidi",
+      "turkompId": "301"
+    },
+    {
+      "href": "food-portakal-washington-navel-gobekli-portakali-300",
+      "listName": "Portakal, Washington Navel göbekli portakalı",
+      "turkompId": "300"
+    },
+    {
+      "href": "food-puding-kakaolu-toz-298",
+      "listName": "Puding, kakaolu, toz",
+      "turkompId": "298"
+    },
+    {
+      "href": "food-raki-alk---40-hacmen-424",
+      "listName": "Rakı (alk. ≥ % 40 hacmen)",
+      "turkompId": "424"
+    },
+    {
+      "href": "food-ramazan-pidesi-581",
+      "listName": "Ramazan pidesi",
+      "turkompId": "581"
+    },
+    {
+      "href": "food-recel-ahududu-382",
+      "listName": "Reçel, ahududu",
+      "turkompId": "382"
+    },
+    {
+      "href": "food-recel-ayva-337",
+      "listName": "Reçel, ayva",
+      "turkompId": "337"
+    },
+    {
+      "href": "food-recel-bogurtlen-385",
+      "listName": "Reçel, böğürtlen",
+      "turkompId": "385"
+    },
+    {
+      "href": "food-recel-cilek-379",
+      "listName": "Reçel, çilek",
+      "turkompId": "379"
+    },
+    {
+      "href": "food-recel-gul-isparta-459",
+      "listName": "Reçel, gül, Isparta",
+      "turkompId": "459"
+    },
+    {
+      "href": "food-recel-gul-safranbolu-588",
+      "listName": "Reçel, gül, Safranbolu",
+      "turkompId": "588"
+    },
+    {
+      "href": "food-recel-incir-368",
+      "listName": "Reçel, incir",
+      "turkompId": "368"
+    },
+    {
+      "href": "food-recel-kayisi-346",
+      "listName": "Reçel, kayısı",
+      "turkompId": "346"
+    },
+    {
+      "href": "food-recel-portakal-304",
+      "listName": "Reçel, portakal",
+      "turkompId": "304"
+    },
+    {
+      "href": "food-recel-seftali-354",
+      "listName": "Reçel, şeftali",
+      "turkompId": "354"
+    },
+    {
+      "href": "food-recel-visne-362",
+      "listName": "Reçel, vişne",
+      "turkompId": "362"
+    },
+    {
+      "href": "food-recel-visne-tatlandiricili-diyabetik-647",
+      "listName": "Reçel, vişne, tatlandırıcılı, diyabetik",
+      "turkompId": "647"
+    },
+    {
+      "href": "food-rezene-kok-sap-267",
+      "listName": "Rezene, kök, sap",
+      "turkompId": "267"
+    },
+    {
+      "href": "food-roka-256",
+      "listName": "Roka",
+      "turkompId": "256"
+    },
+    {
+      "href": "food-salatalik-203",
+      "listName": "Salatalık",
+      "turkompId": "203"
+    },
+    {
+      "href": "food-salep-toz-maras-477",
+      "listName": "Salep, toz, Maraş",
+      "turkompId": "477"
+    },
+    {
+      "href": "food-salgam-254",
+      "listName": "Şalgam",
+      "turkompId": "254"
+    },
+    {
+      "href": "food-sarap-beyaz--alk--11-12-5-hacmen-426",
+      "listName": "Şarap, beyaz ( alk.% 11-12.5 hacmen)",
+      "turkompId": "426"
+    },
+    {
+      "href": "food-sarap-kirmizi--alk--11-13-5-hacmen-425",
+      "listName": "Şarap, kırmızı ( alk.% 11-13.5 hacmen)",
+      "turkompId": "425"
+    },
+    {
+      "href": "food-sardalya-konserve-aycicek-yaginda-100",
+      "listName": "Sardalya, konserve, ayçiçek yağında",
+      "turkompId": "100"
+    },
+    {
+      "href": "food-sarimsak-kok-sap-232",
+      "listName": "Sarımsak, kök, sap",
+      "turkompId": "232"
+    },
+    {
+      "href": "food-sarimsak-kuru-233",
+      "listName": "Sarımsak, kuru",
+      "turkompId": "233"
+    },
+    {
+      "href": "food-sarimsak-kuru-toz-234",
+      "listName": "Sarımsak, kuru, toz",
+      "turkompId": "234"
+    },
+    {
+      "href": "food-seftali-erkenci-352",
+      "listName": "Şeftali, erkenci",
+      "turkompId": "352"
+    },
+    {
+      "href": "food-seftali-j-hale-cesidi-505",
+      "listName": "Şeftali, J. Hale çeşidi",
+      "turkompId": "505"
+    },
+    {
+      "href": "food-seftali-konserve-355",
+      "listName": "Şeftali, konserve",
+      "turkompId": "355"
+    },
+    {
+      "href": "food-seftali-suyu-353",
+      "listName": "Şeftali suyu",
+      "turkompId": "353"
+    },
+    {
+      "href": "food-seker-beyaz-kup-289",
+      "listName": "Şeker, beyaz, küp",
+      "turkompId": "289"
+    },
+    {
+      "href": "food-seker-esmer-kup-290",
+      "listName": "Şeker, esmer, küp",
+      "turkompId": "290"
+    },
+    {
+      "href": "food-seker-pudra-299",
+      "listName": "Şeker, pudra",
+      "turkompId": "299"
+    },
+    {
+      "href": "food-semizotu-228",
+      "listName": "Semizotu",
+      "turkompId": "228"
+    },
+    {
+      "href": "food-sevketi-bostan-695",
+      "listName": "Şevketi bostan",
+      "turkompId": "695"
+    },
+    {
+      "href": "food-sigir-eti-bonfile-36",
+      "listName": "Sığır eti, bonfile",
+      "turkompId": "36"
+    },
+    {
+      "href": "food-sigir-eti-but-40",
+      "listName": "Sığır eti, but",
+      "turkompId": "40"
+    },
+    {
+      "href": "food-sigir-eti-kol-39",
+      "listName": "Sığır eti, kol",
+      "turkompId": "39"
+    },
+    {
+      "href": "food-sigir-eti-kontrfile-37",
+      "listName": "Sığır eti, kontrfile",
+      "turkompId": "37"
+    },
+    {
+      "href": "food-sigir-eti-pirzola-38",
+      "listName": "Sığır eti, pirzola",
+      "turkompId": "38"
+    },
+    {
+      "href": "food-simit-izmir-623",
+      "listName": "Simit, İzmir",
+      "turkompId": "623"
+    },
+    {
+      "href": "food-sirke-elma-739",
+      "listName": "Sirke, elma",
+      "turkompId": "739"
+    },
+    {
+      "href": "food-sirke-uzum-439",
+      "listName": "Sirke, üzüm",
+      "turkompId": "439"
+    },
+    {
+      "href": "food-sogan-mor-kuru-231",
+      "listName": "Soğan, mor, kuru",
+      "turkompId": "231"
+    },
+    {
+      "href": "food-sogan-sari-kuru-230",
+      "listName": "Soğan, sarı, kuru",
+      "turkompId": "230"
+    },
+    {
+      "href": "food-sogan-taze-kok-sap-229",
+      "listName": "Soğan, taze, kök, sap",
+      "turkompId": "229"
+    },
+    {
+      "href": "food-soya-kiyma-teksture-edilmis-soya-proteini-442",
+      "listName": "Soya kıyma (tekstüre edilmiş soya proteini)",
+      "turkompId": "442"
+    },
+    {
+      "href": "food-su-dogal-mineralli-418",
+      "listName": "Su, doğal mineralli",
+      "turkompId": "418"
+    },
+    {
+      "href": "food-su-icme-419",
+      "listName": "Su, içme",
+      "turkompId": "419"
+    },
+    {
+      "href": "food-su-icme-kullanma-414",
+      "listName": "Su, içme-kullanma",
+      "turkompId": "414"
+    },
+    {
+      "href": "food-su-teresi-715",
+      "listName": "Su teresi",
+      "turkompId": "715"
+    },
+    {
+      "href": "food-sucuk-erzurum-479",
+      "listName": "Sucuk, Erzurum",
+      "turkompId": "479"
+    },
+    {
+      "href": "food-sunbala-717",
+      "listName": "Sunbala",
+      "turkompId": "717"
+    },
+    {
+      "href": "food-susam-tohumu-kuru-163",
+      "listName": "Susam tohumu, kuru",
+      "turkompId": "163"
+    },
+    {
+      "href": "food-sut-inek-17",
+      "listName": "Süt, inek",
+      "turkompId": "17"
+    },
+    {
+      "href": "food-sut-inek-uht-tam-yagli-100-ml-de-3-g-sut-yagi-18",
+      "listName": "Süt, inek, UHT, tam yağlı (100 ml' de 3 g süt yağı)",
+      "turkompId": "18"
+    },
+    {
+      "href": "food-sut-inek-uht-yagsiz-100-ml-de-1-5-g-dan-az-sut-yagi-20",
+      "listName": "Süt, inek, UHT, yağsız (100 ml' de 1.5 g' dan az süt yağı)",
+      "turkompId": "20"
+    },
+    {
+      "href": "food-sut-inek-uht-yarim-yagli-100-ml-de-1-5-g-sut-yagi-19",
+      "listName": "Süt, inek, UHT, yarım yağlı (100 ml' de 1.5 g süt yağı)",
+      "turkompId": "19"
+    },
+    {
+      "href": "food-sut-insan-eriskin-693",
+      "listName": "Süt, insan, erişkin",
+      "turkompId": "693"
+    },
+    {
+      "href": "food-sut-keci-21",
+      "listName": "Süt, keçi",
+      "turkompId": "21"
+    },
+    {
+      "href": "food-sut-koyun-22",
+      "listName": "Süt, koyun",
+      "turkompId": "22"
+    },
+    {
+      "href": "food-sut-laktozsuz-654",
+      "listName": "Süt, laktozsuz",
+      "turkompId": "654"
+    },
+    {
+      "href": "food-sut-manda-23",
+      "listName": "Süt, manda",
+      "turkompId": "23"
+    },
+    {
+      "href": "food-sut-pastorize-tam-yagli-100-ml-de-3-g-sut-yagi-16",
+      "listName": "Süt, pastörize, tam yağlı (100 ml' de 3 g süt yağı)",
+      "turkompId": "16"
+    },
+    {
+      "href": "food-sut-tozu-yagsiz-100-g-kuru-maddede-en-cok-1-5-g-sut-yagi-24",
+      "listName": "Süt tozu, yağsız (100 g kuru maddede en çok 1.5 g süt yağı)",
+      "turkompId": "24"
+    },
+    {
+      "href": "food-sutlac-ankara-627",
+      "listName": "Sütlaç, Ankara",
+      "turkompId": "627"
+    },
+    {
+      "href": "food-sutlac-hamsikoy-trabzon-569",
+      "listName": "Sütlaç, Hamsiköy, Trabzon",
+      "turkompId": "569"
+    },
+    {
+      "href": "food-sutlac-istanbul-628",
+      "listName": "Sütlaç, İstanbul",
+      "turkompId": "628"
+    },
+    {
+      "href": "food-sutlu-buz-vanilya-aromali-1",
+      "listName": "Sütlü buz, vanilya aromalı",
+      "turkompId": "1"
+    },
+    {
+      "href": "food-sutlu-cikolata-antepfistikli-761",
+      "listName": "Sütlü Çikolata, antepfıstıklı",
+      "turkompId": "761"
+    },
+    {
+      "href": "food-tahin-helvasi-istanbul-598",
+      "listName": "Tahin helvası, İstanbul",
+      "turkompId": "598"
+    },
+    {
+      "href": "food-tahin-helvasi-izmir-640",
+      "listName": "Tahin helvası, İzmir",
+      "turkompId": "640"
+    },
+    {
+      "href": "food-tahin-helvasi-safranbolu-597",
+      "listName": "Tahin helvası, Safranbolu",
+      "turkompId": "597"
+    },
+    {
+      "href": "food-tahin-istanbul-440",
+      "listName": "Tahin, İstanbul",
+      "turkompId": "440"
+    },
+    {
+      "href": "food-tahin-konya-638",
+      "listName": "Tahin, Konya",
+      "turkompId": "638"
+    },
+    {
+      "href": "food-tam-tahilli-gevrek-meyveli-681",
+      "listName": "Tam tahıllı gevrek, meyveli",
+      "turkompId": "681"
+    },
+    {
+      "href": "food-tarhana-kuru-beypazari-ankara-484",
+      "listName": "Tarhana, kuru, Beypazarı, Ankara",
+      "turkompId": "484"
+    },
+    {
+      "href": "food-tarhana-kuru-gediz-kutahya-515",
+      "listName": "Tarhana, kuru, Gediz, Kütahya",
+      "turkompId": "515"
+    },
+    {
+      "href": "food-tarhana-kuru-usak-514",
+      "listName": "Tarhana, kuru, Uşak",
+      "turkompId": "514"
+    },
+    {
+      "href": "food-tarsus-salgami-mersin-481",
+      "listName": "Tarsus şalgamı, Mersin",
+      "turkompId": "481"
+    },
+    {
+      "href": "food-tatlandirici-sodyum-siklamat-sodyum-sakarin-bazli-tablet-658",
+      "listName": "Tatlandırıcı, sodyum siklamat, sodyum sakarin bazlı, tablet",
+      "turkompId": "658"
+    },
+    {
+      "href": "food-tatlandirici-sorbitol-ve-sakarin-bazli-toz-657",
+      "listName": "Tatlandırıcı, sorbitol ve sakarin bazlı, toz",
+      "turkompId": "657"
+    },
+    {
+      "href": "food-tavsan-eti-derisiz-57",
+      "listName": "Tavşan eti, derisiz",
+      "turkompId": "57"
+    },
+    {
+      "href": "food-tavsanli-leblebisi-kutahya-584",
+      "listName": "Tavşanlı leblebisi, Kütahya",
+      "turkompId": "584"
+    },
+    {
+      "href": "food-tavuk-suyu-tablet-bulyon-434",
+      "listName": "Tavuk suyu, tablet (bulyon)",
+      "turkompId": "434"
+    },
+    {
+      "href": "food-tekesakali-721",
+      "listName": "Tekesakalı",
+      "turkompId": "721"
+    },
+    {
+      "href": "food-tel-kadayif-cig-bingol-546",
+      "listName": "Tel kadayıf, çiğ, Bingöl",
+      "turkompId": "546"
+    },
+    {
+      "href": "food-tel-kadayif-cig-diyarbakir-548",
+      "listName": "Tel kadayıf, çiğ, Diyarbakır",
+      "turkompId": "548"
+    },
+    {
+      "href": "food-tel-kadayif-cig-hammadde-antakya-kunefesi-641",
+      "listName": "Tel kadayıf, çiğ (hammadde, Antakya künefesi)",
+      "turkompId": "641"
+    },
+    {
+      "href": "food-tel-kadayif-cig-hammadde-erzurum-kadayif-dolmasi-545",
+      "listName": "Tel kadayıf, çiğ (hammadde, Erzurum kadayıf dolması)",
+      "turkompId": "545"
+    },
+    {
+      "href": "food-tere-257",
+      "listName": "Tere",
+      "turkompId": "257"
+    },
+    {
+      "href": "food-tereyagi-kahvaltilik-pastorize-sut-yagi---82-25",
+      "listName": "Tereyağı, kahvaltılık, pastörize (süt yağı ≥ % 82)",
+      "turkompId": "25"
+    },
+    {
+      "href": "food-tirsi-98",
+      "listName": "Tirsi",
+      "turkompId": "98"
+    },
+    {
+      "href": "food-ton-baligi-konserve-aycicek-yaginda-99",
+      "listName": "Ton balığı, konserve, ayçiçek yağında",
+      "turkompId": "99"
+    },
+    {
+      "href": "food-tonik-420",
+      "listName": "Tonik",
+      "turkompId": "420"
+    },
+    {
+      "href": "food-toz-mesrubat-limonlu-421",
+      "listName": "Toz meşrubat, limonlu",
+      "turkompId": "421"
+    },
+    {
+      "href": "food-trabzon-hurmasi-meyve-et-rengi-kahverengi-kararsiz-318",
+      "listName": "Trabzon hurması, meyve et rengi kahverengi, kararsız",
+      "turkompId": "318"
+    },
+    {
+      "href": "food-trabzon-hurmasi-meyve-et-rengi-sari-kararli-319",
+      "listName": "Trabzon hurması, meyve et rengi sarı, kararlı",
+      "turkompId": "319"
+    },
+    {
+      "href": "food-tritikale-155",
+      "listName": "Tritikale",
+      "turkompId": "155"
+    },
+    {
+      "href": "food-turk-kahvesi-istanbul-487",
+      "listName": "Türk kahvesi, İstanbul",
+      "turkompId": "487"
+    },
+    {
+      "href": "food-turp-findik-252",
+      "listName": "Turp, Fındık",
+      "turkompId": "252"
+    },
+    {
+      "href": "food-turp-kirmizi-iri-251",
+      "listName": "Turp, kırmızı iri",
+      "turkompId": "251"
+    },
+    {
+      "href": "food-turp-siyah-253",
+      "listName": "Turp, siyah",
+      "turkompId": "253"
+    },
+    {
+      "href": "food-tursu-acur-205",
+      "listName": "Turşu, acur",
+      "turkompId": "205"
+    },
+    {
+      "href": "food-tursu-biber-180",
+      "listName": "Turşu, biber",
+      "turkompId": "180"
+    },
+    {
+      "href": "food-tursu-fasulye-209",
+      "listName": "Turşu, fasulye",
+      "turkompId": "209"
+    },
+    {
+      "href": "food-tursu-havuc-262",
+      "listName": "Turşu, havuç",
+      "turkompId": "262"
+    },
+    {
+      "href": "food-tursu-kelek-197",
+      "listName": "Turşu, kelek",
+      "turkompId": "197"
+    },
+    {
+      "href": "food-tursu-lahana-247",
+      "listName": "Turşu, lahana",
+      "turkompId": "247"
+    },
+    {
+      "href": "food-tursu-pancar-kirmizi-273",
+      "listName": "Turşu, pancar, kırmızı",
+      "turkompId": "273"
+    },
+    {
+      "href": "food-tursu-salatalik-gedelek-bursa-599",
+      "listName": "Turşu, salatalık, Gedelek, Bursa",
+      "turkompId": "599"
+    },
+    {
+      "href": "food-tuz-iri-salamura-443",
+      "listName": "Tuz, iri salamura",
+      "turkompId": "443"
+    },
+    {
+      "href": "food-tuz-sofra-iyotlu-430",
+      "listName": "Tuz, sofra, iyotlu",
+      "turkompId": "430"
+    },
+    {
+      "href": "food-tuz-sofra-iyotsuz-667",
+      "listName": "Tuz, sofra, iyotsuz",
+      "turkompId": "667"
+    },
+    {
+      "href": "food-un-dusuk-proteinli-glutensiz-pku-662",
+      "listName": "Un, düşük proteinli, glutensiz, PKU",
+      "turkompId": "662"
+    },
+    {
+      "href": "food-un-glutensiz-650",
+      "listName": "Un, glutensiz",
+      "turkompId": "650"
+    },
+    {
+      "href": "food-uzum-beyaz-erkenci-yalova-incisi-322",
+      "listName": "Üzüm, beyaz, erkenci, Yalova İncisi",
+      "turkompId": "322"
+    },
+    {
+      "href": "food-uzum-beyaz-gec-mevsim-muskule-cesidi-328",
+      "listName": "Üzüm, beyaz, geç mevsim, Müşküle çeşidi",
+      "turkompId": "328"
+    },
+    {
+      "href": "food-uzum-beyaz-orta-mevsim-razaki-cesidi-324",
+      "listName": "Üzüm, beyaz, orta mevsim, Razaki çeşidi",
+      "turkompId": "324"
+    },
+    {
+      "href": "food-uzum-beyaz-saraplik-narince-cesidi-503",
+      "listName": "Üzüm, beyaz şaraplık, Narince çeşidi",
+      "turkompId": "503"
+    },
+    {
+      "href": "food-uzum-kirmizi-saraplik-kalecik-karasi-cesidi-504",
+      "listName": "Üzüm, kırmızı şaraplık, Kalecik Karası çeşidi",
+      "turkompId": "504"
+    },
+    {
+      "href": "food-uzum-renkli-erkenci-kardinal-cesidi-323",
+      "listName": "Üzüm, renkli, erkenci, Kardinal çeşidi",
+      "turkompId": "323"
+    },
+    {
+      "href": "food-uzum-renkli-gec-mevsim-honusu-cesidi-329",
+      "listName": "Üzüm, renkli, geç mevsim, Hönüsü çeşidi",
+      "turkompId": "329"
+    },
+    {
+      "href": "food-uzum-renkli-orta-mevsim-alphonse-lavalle-cesidi-325",
+      "listName": "Üzüm, renkli, orta mevsim, Alphonse Lavalle çeşidi",
+      "turkompId": "325"
+    },
+    {
+      "href": "food-uzum-siyah-cekirdekli-kuru-327",
+      "listName": "Üzüm, siyah, çekirdekli, kuru",
+      "turkompId": "327"
+    },
+    {
+      "href": "food-uzum-suyu-kirmizi-330",
+      "listName": "Üzüm suyu, kırmızı",
+      "turkompId": "330"
+    },
+    {
+      "href": "food-uzum-yuvarlak-cekirdeksiz-sultaniye-kuru-326",
+      "listName": "Üzüm, yuvarlak, çekirdeksiz, Sultaniye, kuru",
+      "turkompId": "326"
+    },
+    {
+      "href": "food-vanilin-sekerli-432",
+      "listName": "Vanilin, şekerli",
+      "turkompId": "432"
+    },
+    {
+      "href": "food-visne-dondurulmus-364",
+      "listName": "Vişne, dondurulmuş",
+      "turkompId": "364"
+    },
+    {
+      "href": "food-visne-konserve-363",
+      "listName": "Vişne, konserve",
+      "turkompId": "363"
+    },
+    {
+      "href": "food-visne-kutahya-360",
+      "listName": "Vişne, Kütahya",
+      "turkompId": "360"
+    },
+    {
+      "href": "food-visne-suyu-361",
+      "listName": "Vişne suyu",
+      "turkompId": "361"
+    },
+    {
+      "href": "food-yaban-mersini-mavi-yemis-394",
+      "listName": "Yaban mersini (mavi yemiş)",
+      "turkompId": "394"
+    },
+    {
+      "href": "food-yaprak-sarma-etli-safranbolu-684",
+      "listName": "Yaprak sarma, etli, Safranbolu",
+      "turkompId": "684"
+    },
+    {
+      "href": "food-yaprak-sarma-zeytinyagli-bursa-575",
+      "listName": "Yaprak sarma, zeytinyağlı, Bursa",
+      "turkompId": "575"
+    },
+    {
+      "href": "food-yaprak-sarma-zeytinyagli-izmir-571",
+      "listName": "Yaprak sarma, zeytinyağlı, İzmir",
+      "turkompId": "571"
+    },
+    {
+      "href": "food-yaprak-sarma-zeytinyagli-tokat-572",
+      "listName": "Yaprak sarma, zeytinyağlı, Tokat",
+      "turkompId": "572"
+    },
+    {
+      "href": "food-yaz-helvasi-cevizli-istanbul-619",
+      "listName": "Yaz helvası, cevizli, İstanbul",
+      "turkompId": "619"
+    },
+    {
+      "href": "food-yaz-helvasi-cevizli-izmir-620",
+      "listName": "Yaz helvası, cevizli, İzmir",
+      "turkompId": "620"
+    },
+    {
+      "href": "food-yaz-helvasi-cevizli-safranbolu-590",
+      "listName": "Yaz helvası, cevizli, Safranbolu",
+      "turkompId": "590"
+    },
+    {
+      "href": "food-yenidunya-401",
+      "listName": "Yenidünya",
+      "turkompId": "401"
+    },
+    {
+      "href": "food-yenilebilir-sakatat-dana-akciger-76",
+      "listName": "Yenilebilir sakatat, dana akciğer",
+      "turkompId": "76"
+    },
+    {
+      "href": "food-yenilebilir-sakatat-dana-beyin-69",
+      "listName": "Yenilebilir sakatat, dana beyin",
+      "turkompId": "69"
+    },
+    {
+      "href": "food-yenilebilir-sakatat-dana-bobrek-74",
+      "listName": "Yenilebilir sakatat, dana böbrek",
+      "turkompId": "74"
+    },
+    {
+      "href": "food-yenilebilir-sakatat-dana-dalak-73",
+      "listName": "Yenilebilir sakatat, dana dalak",
+      "turkompId": "73"
+    },
+    {
+      "href": "food-yenilebilir-sakatat-dana-dil-70",
+      "listName": "Yenilebilir sakatat, dana dil",
+      "turkompId": "70"
+    },
+    {
+      "href": "food-yenilebilir-sakatat-dana-iskembe-72",
+      "listName": "Yenilebilir sakatat, dana işkembe",
+      "turkompId": "72"
+    },
+    {
+      "href": "food-yenilebilir-sakatat-dana-kalp-75",
+      "listName": "Yenilebilir sakatat, dana kalp",
+      "turkompId": "75"
+    },
+    {
+      "href": "food-yenilebilir-sakatat-dana-karaciger-71",
+      "listName": "Yenilebilir sakatat, dana karaciğer",
+      "turkompId": "71"
+    },
+    {
+      "href": "food-yenilebilir-sakatat-koyun-bagirsak-543",
+      "listName": "Yenilebilir sakatat, koyun bağırsak",
+      "turkompId": "543"
+    },
+    {
+      "href": "food-yer-fistigi-kuru-161",
+      "listName": "Yer fıstığı, kuru",
+      "turkompId": "161"
+    },
+    {
+      "href": "food-yogurt-cilekli-tam-yagli-749",
+      "listName": "Yoğurt, çilekli, tam yağlı",
+      "turkompId": "749"
+    },
+    {
+      "href": "food-yogurt-homojenize-tam-yagli-sut-yagi---3-8-4",
+      "listName": "Yoğurt, homojenize, tam yağlı (süt yağı ≥ % 3.8)",
+      "turkompId": "4"
+    },
+    {
+      "href": "food-yogurt-homojenize-yarim-yagli--2--sut-yagi---1-5-3",
+      "listName": "Yoğurt, homojenize, yarım yağlı (% 2 > süt yağı ≥ % 1.5)",
+      "turkompId": "3"
+    },
+    {
+      "href": "food-yogurt-kaymakli-2",
+      "listName": "Yoğurt, kaymaklı",
+      "turkompId": "2"
+    },
+    {
+      "href": "food-yogurt-manda-sutu-6",
+      "listName": "Yoğurt, manda sütü",
+      "turkompId": "6"
+    },
+    {
+      "href": "food-yogurt-probiyotik-sade-659",
+      "listName": "Yoğurt, probiyotik, sade",
+      "turkompId": "659"
+    },
+    {
+      "href": "food-yogurt-silifke-mersin-489",
+      "listName": "Yoğurt, Silifke, Mersin",
+      "turkompId": "489"
+    },
+    {
+      "href": "food-yogurt-silivri-istanbul-592",
+      "listName": "Yoğurt, Silivri, İstanbul",
+      "turkompId": "592"
+    },
+    {
+      "href": "food-yogurt-suzme-burdur-559",
+      "listName": "Yoğurt, süzme, Burdur",
+      "turkompId": "559"
+    },
+    {
+      "href": "food-yogurt-suzme-konya-642",
+      "listName": "Yoğurt, süzme, Konya",
+      "turkompId": "642"
+    },
+    {
+      "href": "food-yogurt-van-558",
+      "listName": "Yoğurt, Van",
+      "turkompId": "558"
+    },
+    {
+      "href": "food-yufka-boreklik-cig-690",
+      "listName": "Yufka, böreklik, çiğ",
+      "turkompId": "690"
+    },
+    {
+      "href": "food-yufka-pismis-680",
+      "listName": "Yufka, pişmiş",
+      "turkompId": "680"
+    },
+    {
+      "href": "food-yulaf-beyaz-148",
+      "listName": "Yulaf, beyaz",
+      "turkompId": "148"
+    },
+    {
+      "href": "food-yulaf-kepegi-151",
+      "listName": "Yulaf kepeği",
+      "turkompId": "151"
+    },
+    {
+      "href": "food-yulaf-kirmizi-149",
+      "listName": "Yulaf, kırmızı",
+      "turkompId": "149"
+    },
+    {
+      "href": "food-yulaf-unu-152",
+      "listName": "Yulaf unu",
+      "turkompId": "152"
+    },
+    {
+      "href": "food-yumurta-beyaz-pastorize-33",
+      "listName": "Yumurta, beyaz, pastörize",
+      "turkompId": "33"
+    },
+    {
+      "href": "food-yumurta-bildircin-tam-29",
+      "listName": "Yumurta, bıldırcın, tam",
+      "turkompId": "29"
+    },
+    {
+      "href": "food-yumurta-devekusu-tam-30",
+      "listName": "Yumurta, devekuşu, tam",
+      "turkompId": "30"
+    },
+    {
+      "href": "food-yumurta-sari-pastorize-34",
+      "listName": "Yumurta, sarı, pastörize",
+      "turkompId": "34"
+    },
+    {
+      "href": "food-yumurta-tavuk-beyaz-ak-28",
+      "listName": "Yumurta, tavuk, beyaz (ak)",
+      "turkompId": "28"
+    },
+    {
+      "href": "food-yumurta-tavuk-sari-27",
+      "listName": "Yumurta, tavuk, sarı",
+      "turkompId": "27"
+    },
+    {
+      "href": "food-yumurta-tavuk-tam-26",
+      "listName": "Yumurta, tavuk, tam",
+      "turkompId": "26"
+    },
+    {
+      "href": "food-zargana-97",
+      "listName": "Zargana",
+      "turkompId": "97"
+    },
+    {
+      "href": "food-zeytin-ezmesi-siyah-758",
+      "listName": "Zeytin ezmesi, siyah",
+      "turkompId": "758"
+    },
+    {
+      "href": "food-zeytin-siyah-salamura-388",
+      "listName": "Zeytin, siyah, salamura",
+      "turkompId": "388"
+    },
+    {
+      "href": "food-zeytin-siyah-sele-389",
+      "listName": "Zeytin, siyah, sele",
+      "turkompId": "389"
+    },
+    {
+      "href": "food-zeytin-yesil-kokteyl-biberli-390",
+      "listName": "Zeytin, yeşil, kokteyl, biberli",
+      "turkompId": "390"
+    },
+    {
+      "href": "food-zeytin-yesil-salamura-391",
+      "listName": "Zeytin, yeşil, salamura",
+      "turkompId": "391"
+    },
+    {
+      "href": "food-zeytinyagi-rafine-105",
+      "listName": "Zeytinyağı, rafine",
+      "turkompId": "105"
+    },
+    {
+      "href": "food-zeytinyagi-riviera-104",
+      "listName": "Zeytinyağı, riviera",
+      "turkompId": "104"
+    },
+    {
+      "href": "food-zeytinyagi-sizma-103",
+      "listName": "Zeytinyağı, sızma",
+      "turkompId": "103"
+    },
+    {
+      "href": "food-zile-pekmezi-beyaz-sert-uzum-pekmezi-488",
+      "listName": "Zile pekmezi (beyaz, sert, üzüm pekmezi)",
+      "turkompId": "488"
+    },
+    {
+      "href": "food-zingit-732",
+      "listName": "Zingit",
+      "turkompId": "732"
+    }
+  ]
+}

@@ -182,6 +182,16 @@ void main() {
         expect(composition.proteinPer100g, isNotNull);
         expect(composition.carbsPer100g, isNotNull);
         expect(composition.fatPer100g, isNotNull);
+        // The name the parser reads out of <title> must match the name
+        // recorded in the index. TürKomp titles are
+        // "Veri Bankası - NAME - Türkomp | ...", so both the section prefix
+        // and the site suffix have to be stripped; without that the fetcher
+        // would write the whole title into every new artifact entry.
+        expect(
+          composition.recordName,
+          raw['recordName'] as String,
+          reason: raw['id'] as String,
+        );
       }
     });
   });

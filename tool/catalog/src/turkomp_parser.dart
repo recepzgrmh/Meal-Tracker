@@ -62,11 +62,7 @@ TurkompComposition parseTurkompFoodPage(String html, {String? sourceRecordId}) {
   }
 
   final title = _titlePattern.firstMatch(html);
-  final recordName = title == null
-      ? ''
-      : _plainText(
-          title.group(1)!,
-        ).replaceFirst(RegExp(r'^Türkomp\s*[-|]\s*'), '');
+  final recordName = title == null ? '' : _recordNameFromTitle(title.group(1)!);
   final code = sourceRecordId ?? _codePattern.firstMatch(html)?.group(1);
   if (code == null || code.isEmpty) {
     throw const FormatException('TürKomp food code (source_record_id) missing');
@@ -93,3 +89,14 @@ double? _firstNumber(Iterable<String> cells) {
   }
   return null;
 }
+
+/// Extracts the food name from a TürKomp page title.
+///
+/// Titles are `Veri Bankası - NAME - Türkomp | Ulusal Gıda Kompozisyon Veri
+/// Tabanı`, so both the site-section prefix and the site-name suffix have to
+/// come off. Producing the bare `NAME` matches the convention already used
+/// by the hand-written `recordName` entries in snapshot_index.json.
+String _recordNameFromTitle(String rawTitle) => _plainText(rawTitle)
+    .replaceFirst(RegExp(r'^(Veri Bankası|Türkomp)\s*[-|]\s*'), '')
+    .replaceFirst(RegExp(r'\s*[-|]\s*Türkomp\s*\|.*$'), '')
+    .trim();
