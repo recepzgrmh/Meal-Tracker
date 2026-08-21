@@ -26,9 +26,70 @@ void main() {
   for (final row in portions) {
     bySlug.putIfAbsent(row['food_slug'] as String, () => []).add(row);
   }
+  final counts = manifest['counts'] as Map<String, dynamic>;
+  final expectedFoods = counts['foods'] as int;
+
+  test('reports coverage as three separate numbers that sum to foods', () {
+    final published = counts['publishedPortionFoods'] as int;
+    final derived = counts['derivedEnergyEquivalentFoods'] as int;
+    final blocked = counts['blockedFoods'] as int;
+
+    // Every food lands in exactly one bucket, so no coverage figure can be
+    // inflated by counting a food twice.
+    expect(published + derived + blocked, expectedFoods);
+
+    // blockedFoods is food-level; the legacy `blocked` is portion-level.
+    expect(counts['blocked'], blocked * 3);
+  });
+
+  test('a derived reference is never presented as the portion', () {
+    // An energy-equivalent weight answers "how much of this food supplies the
+    // group's standard energy", not "how much do people eat". It may sit in
+    // the catalog as a reference, but it must never occupy the regular slot,
+    // because that is what the UI offers as the default amount.
+    final derived = portions.where(
+      (row) => row['portion_basis'] == 'derived_energy_equivalent',
+    );
+    for (final row in derived) {
+      expect(row['size_class'], 'custom', reason: '${row['food_slug']}');
+      expect(
+        (row['transformation_notes'] as List).join(' '),
+        contains('APP-DERIVED'),
+        reason: '${row['food_slug']} ${row['size_class']}',
+      );
+    }
+    // And the published count must exclude them entirely.
+    final publishedRows = portions.where(
+      (row) => (row['portion_basis'] as String? ?? '').startsWith('published_'),
+    );
+    expect(
+      publishedRows.map((row) => row['portion_basis']),
+      isNot(contains('derived_energy_equivalent')),
+    );
+  });
+
+  test('every resolved row records how its portion was sourced', () {
+    for (final row in resolved) {
+      expect(
+        row['portion_basis'],
+        anyOf(
+          'published_food_row',
+          'published_measure_row',
+          'published_group_member',
+          'derived_energy_equivalent',
+        ),
+        reason: '${row['food_slug']} ${row['size_class']}',
+      );
+    }
+    for (final row in portions.where(
+      (r) => r['verification_status'] == 'blocked',
+    )) {
+      expect(row['portion_basis'], isNull);
+    }
+  });
 
   test('covers the pilot batch with three portions per food', () {
-    expect(bySlug, hasLength(10));
+    expect(bySlug, hasLength(expectedFoods));
     for (final entry in bySlug.entries) {
       expect(
         entry.value.map((row) => row['size_class']).toList(),
@@ -37,7 +98,7 @@ void main() {
             '${entry.key} must publish exactly small/regular/large, in that order',
       );
     }
-    expect(portions, hasLength(30));
+    expect(portions, hasLength(expectedFoods * 3));
   });
 
   test('grams increase strictly from small to large', () {
@@ -261,7 +322,7 @@ void main() {
         reason: '$slug is blocked but missing from openGaps',
       );
     }
-    expect(manifest['counts'], containsPair('portions', 30));
+    expect(counts, containsPair('portions', expectedFoods * 3));
   });
 
   test('csv export mirrors the json manifest row for row', () {

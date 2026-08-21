@@ -9,6 +9,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import '../src/catalog_error.dart';
 import '../src/hashing.dart';
 import '../src/image_prompt.dart';
 import '../src/portion_policy.dart';
@@ -24,14 +25,53 @@ void main(List<String> args) {
     File('$_root/data/portion_policy.json').readAsStringSync(),
   );
   final mapping =
-      jsonDecode(File('$_root/data/pilot_food_mapping.json').readAsStringSync())
+      jsonDecode(
+            File(
+              _stringArg(args, '--mapping') ??
+                  '$_root/data/pilot_food_mapping.json',
+            ).readAsStringSync(),
+          )
           as Map<String, dynamic>;
 
   final rows = <Map<String, dynamic>>[];
   final gaps = <Map<String, dynamic>>[];
 
-  for (final raw in mapping['foods'] as List<dynamic>) {
-    final food = raw as Map<String, dynamic>;
+  final foods = (mapping['foods'] as List<dynamic>)
+      .cast<Map<String, dynamic>>();
+
+  // A mapping is not shippable while any entry is still a machine draft.
+  final drafts = foods
+      .where((food) => food['status'] == 'draft')
+      .map((food) => food['foodSlug'] as String)
+      .toList();
+  if (drafts.isNotEmpty) {
+    stderr.writeln(
+      '${drafts.length} food(s) are still "status": "draft" and have not been '
+      'reviewed by a human. Set status to "mapped" and fill '
+      'curatedBy/curatedAt, or "blocked" with a reason.\n'
+      '  ${drafts.take(10).join(', ')}${drafts.length > 10 ? ', ...' : ''}',
+    );
+    exit(1);
+  }
+
+  // A duplicate slug would silently overwrite a food: foods.source_food_id IS
+  // the slug, and the seed upserts on (source, source_food_id).
+  final seenSlugs = <String, String>{};
+  for (final food in foods) {
+    final slug = food['foodSlug'] as String;
+    final previous = seenSlugs[slug];
+    if (previous != null) {
+      stderr.writeln(
+        'Duplicate foodSlug "$slug" used by both "$previous" and '
+        '"${food['pilotName']}". One would silently overwrite the other.',
+      );
+      exit(1);
+    }
+    seenSlugs[slug] = food['pilotName'] as String;
+  }
+
+  var failures = 0;
+  for (final food in foods) {
     if (food['status'] == 'blocked') {
       rows.addAll(_blockedRows(food));
       gaps.add({
@@ -43,7 +83,37 @@ void main(List<String> args) {
       });
       continue;
     }
-    rows.addAll(_mappedRows(food, policy, snapshots, gaps));
+    try {
+      rows.addAll(_mappedRows(food, policy, snapshots, gaps));
+    } on Object catch (error) {
+      // Isolate the failure to this food. Producing no output for 200 foods
+      // because one TÜBER row is ambiguous is worse than producing 199 and
+      // naming the one that failed.
+      failures++;
+      final reason = error is CatalogBuildException
+          ? error.message
+          : 'Build failed for this food: $error';
+      final searched = error is CatalogBuildException
+          ? error.searchedSources
+          : const <String>['TÜBER 2022 Ek 2.1', 'TÜBER 2022 Ek 2.3.1'];
+      final resolution = error is CatalogBuildException
+          ? error.resolutionPath
+          : 'Fix the mapping entry, or mark the food blocked with a reason.';
+      rows.addAll(
+        _blockedRows(<String, dynamic>{...food, 'blockedReason': reason}),
+      );
+      gaps.add({
+        'foodSlug': food['foodSlug'],
+        'pilotName': food['pilotName'],
+        'reason': reason,
+        'searchedSources': searched,
+        'resolutionPath': resolution,
+      });
+      stderr.writeln('BLOCKED ${food['foodSlug']}: $reason');
+    }
+  }
+  if (failures > 0) {
+    stderr.writeln('$failures food(s) blocked by a build failure.');
   }
 
   final manifest = {
@@ -58,6 +128,23 @@ void main(List<String> args) {
     'counts': {
       'foods': (mapping['foods'] as List<dynamic>).length,
       'portions': rows.length,
+      // Reported as three separate numbers on purpose. A published portion and
+      // a derived energy-equivalent reference are not the same quality of
+      // claim, so they are never summed into a single coverage figure.
+      'publishedPortionFoods': _countFoods(
+        rows,
+        (r) =>
+            r['portion_basis'] != null &&
+            (r['portion_basis'] as String).startsWith('published_'),
+      ),
+      'derivedEnergyEquivalentFoods': _countFoods(
+        rows,
+        (r) => r['portion_basis'] == 'derived_energy_equivalent',
+      ),
+      'blockedFoods': _countFoods(
+        rows,
+        (r) => r['verification_status'] == 'blocked',
+      ),
       'blocked': rows
           .where((r) => r['verification_status'] == 'blocked')
           .length,
@@ -72,18 +159,34 @@ void main(List<String> args) {
     'portions': rows,
   };
 
-  Directory('$_root/out').createSync(recursive: true);
-  File('$_root/out/pilot_portion_manifest.json').writeAsStringSync(
+  final outBase =
+      _stringArg(args, '--out') ?? '$_root/out/pilot_portion_manifest';
+  Directory(File(outBase).parent.path).createSync(recursive: true);
+  File('$outBase.json').writeAsStringSync(
     '${const JsonEncoder.withIndent('  ').convert(manifest)}\n',
   );
-  File('$_root/out/pilot_portion_manifest.csv').writeAsStringSync(_csv(rows));
+  File('$outBase.csv').writeAsStringSync(_csv(rows));
   _writePrompts(rows);
 
-  stdout.writeln(
-    'portions=${rows.length} '
-    'blocked=${manifest['counts']} '
-    'gaps=${gaps.length}',
-  );
+  final counts = manifest['counts'] as Map<String, dynamic>;
+  final foodCount = counts['foods'] as int;
+  String pct(Object? n) =>
+      '${((n as int) / foodCount * 100).toStringAsFixed(1)}%';
+  stdout
+    ..writeln('foods=$foodCount portions=${rows.length} gaps=${gaps.length}')
+    ..writeln(
+      '  published portion          '
+      '${counts['publishedPortionFoods']}  ${pct(counts['publishedPortionFoods'])}',
+    )
+    ..writeln(
+      '  derived energy equivalent  '
+      '${counts['derivedEnergyEquivalentFoods']}  '
+      '${pct(counts['derivedEnergyEquivalentFoods'])}',
+    )
+    ..writeln(
+      '  blocked                    '
+      '${counts['blockedFoods']}  ${pct(counts['blockedFoods'])}',
+    );
   if (args.contains('--check')) {
     final expected = (mapping['foods'] as List<dynamic>).length * 3;
     if (rows.length != expected) {
@@ -211,6 +314,10 @@ List<Map<String, dynamic>> _mappedRows(
         'portion_id': null,
         'size_class': entry.key,
         'grams': entry.value,
+        // How this food's `regular` weight was sourced. Kept on every row so
+        // the coverage split can be counted from the manifest alone, and so a
+        // derived reference can never be mistaken for a published portion.
+        'portion_basis': _portionBasis(portion),
         'household_measure': entry.key == 'regular'
             ? measureRow?.measure
             : null,
@@ -317,6 +424,7 @@ List<Map<String, dynamic>> _blockedRows(Map<String, dynamic> food) {
         'portion_id': null,
         'size_class': size,
         'grams': null,
+        'portion_basis': null,
         'household_measure': null,
         'image_path': null,
         'image_prompt': null,
@@ -505,3 +613,29 @@ class _Snapshots {
   }
 }
 
+/// Counts distinct foods whose rows satisfy [test].
+int _countFoods(
+  List<Map<String, dynamic>> rows,
+  bool Function(Map<String, dynamic>) test,
+) => rows.where(test).map((r) => r['food_slug'] as String).toSet().length;
+
+String? _stringArg(List<String> args, String name) {
+  final i = args.indexOf(name);
+  if (i == -1 || i + 1 >= args.length) return null;
+  return args[i + 1];
+}
+
+/// Maps a mapping entry's portion mode onto the manifest's `portion_basis`.
+///
+/// The `published_` prefix is load-bearing: the coverage count treats exactly
+/// those rows as published, so a new mode cannot quietly inflate the figure.
+String _portionBasis(Map<String, dynamic> portion) =>
+    switch (portion['mode'] as String? ?? 'tuberFoodRow') {
+      'tuberFoodRow' => 'published_food_row',
+      'tuberMeasureGrams' => 'published_measure_row',
+      'tuberGroupMemberGrams' => 'published_group_member',
+      'energyEquivalentReference' => 'derived_energy_equivalent',
+      final unknown => throw CatalogBuildException(
+        'Unknown portion mode "$unknown"',
+      ),
+    };
