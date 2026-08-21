@@ -147,11 +147,7 @@ void main() {
     );
     await repository.saveOptimistically(
       userId: 'user-b',
-      meal: _domainMeal(
-        name: 'Kalacak Öğün',
-        id: 'meal-2',
-        itemId: 'item-2',
-      ),
+      meal: _domainMeal(name: 'Kalacak Öğün', id: 'meal-2', itemId: 'item-2'),
       eatenAt: now,
     );
 
@@ -163,7 +159,9 @@ void main() {
     expect(operations.every((row) => row.userId == 'user-b'), isTrue);
 
     // Signing out must not disturb another account cached on the same device.
-    final retained = await repository.watchDay(userId: 'user-b', day: now).first;
+    final retained = await repository
+        .watchDay(userId: 'user-b', day: now)
+        .first;
     expect(retained.single.name, 'Kalacak Öğün');
   });
 }

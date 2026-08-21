@@ -30,9 +30,7 @@ class NutritionGoals {
   }
 
   factory NutritionGoals.fromDraft(OnboardingDraft draft) =>
-      NutritionGoals.forCalories(
-        draft.dailyCalorieTarget ?? fallbackCalories,
-      );
+      NutritionGoals.forCalories(draft.dailyCalorieTarget ?? fallbackCalories);
 
   final double calories;
   final double protein;

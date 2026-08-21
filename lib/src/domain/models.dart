@@ -171,8 +171,9 @@ class MealDraft {
 
   MealDraft addItem(MealItem item) => _withItems([...items, item]);
 
-  MealDraft removeItem(String itemId) =>
-      _withItems(items.where((item) => item.id != itemId).toList(growable: false));
+  MealDraft removeItem(String itemId) => _withItems(
+    items.where((item) => item.id != itemId).toList(growable: false),
+  );
 
   /// Explicit setter rather than a `copyWith`, because clearing [eatenAt] back
   /// to "now" has to be expressible and a nullable named parameter cannot tell
