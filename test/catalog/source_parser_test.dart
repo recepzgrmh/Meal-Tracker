@@ -231,6 +231,38 @@ void main() {
       expect(() => loosened.derive('x', 'large', 100), throwsStateError);
     });
 
+    test('derives discrete foods as unit multiples, not factors', () {
+      // 0.65 of an egg or of a slice of bread is not a portion anyone eats.
+      expect(policy.usesUnitMultiple('egg_unit', 'small'), isTrue);
+      expect(policy.usesUnitMultiple('egg_unit', 'large'), isTrue);
+      expect(policy.usesUnitMultiple('dairy_cheese', 'small'), isFalse);
+
+      // TÜBER publishes 100 g = 2 medium eggs, so the unit is 50 g.
+      expect(policy.deriveFromUnit('egg_unit', 'small', 50), 25);
+      expect(policy.deriveFromUnit('egg_unit', 'large', 50), 75);
+      expect(policy.deriveFromUnit('fruit_whole', 'large', 120), 240);
+    });
+
+    test('refuses to mix the two derivation models', () {
+      expect(
+        () => policy.derive('egg_unit', 'small', 100),
+        throwsA(isA<StateError>()),
+      );
+      expect(
+        () => policy.deriveFromUnit('dairy_cheese', 'small', 60),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('declares an absolute plausibility band for dense categories', () {
+      // Guards weights that are arithmetically valid but not servings.
+      final oil = policy.plausibleGramsBand('fat_oil')!;
+      expect(oil.min, 5);
+      expect(oil.max, 40);
+      final nuts = policy.plausibleGramsBand('nuts_seeds')!;
+      expect(nuts.max, lessThan(policy.plausibleGramsBand('bread')!.max));
+    });
+
     test('rounds to kitchen steps rather than implying scale precision', () {
       expect(roundGrams(84.5, 5), 85);
       expect(roundGrams(152.5, 10), 150);

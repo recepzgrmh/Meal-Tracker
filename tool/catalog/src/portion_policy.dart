@@ -41,11 +41,54 @@ class PortionPolicy {
   double roundToGrams(String categoryName) =>
       (category(categoryName)['roundToGrams'] as num).toDouble();
 
+  /// Whether [sizeClass] is derived as a multiple of the published unit rather
+  /// than by a factor.
+  ///
+  /// Discrete foods break the factor model: 0.65 of an egg or of a slice of
+  /// bread is not a portion anyone eats, it is an artefact of the arithmetic.
+  bool usesUnitMultiple(String categoryName, String sizeClass) =>
+      category(categoryName)['${sizeClass}Source'] == 'unit_multiple';
+
+  /// The whole- or half-unit multiple configured for [sizeClass].
+  double unitMultiple(String categoryName, String sizeClass) {
+    final key = '${sizeClass}UnitMultiple';
+    final raw = category(categoryName)[key];
+    if (raw == null) {
+      throw StateError('Category $categoryName publishes no $key');
+    }
+    final multiple = (raw as num).toDouble();
+    if (multiple <= 0) {
+      throw StateError('Category $categoryName $key=$multiple must be > 0');
+    }
+    return multiple;
+  }
+
+  /// Absolute sanity band for any weight in this category, when declared.
+  ///
+  /// Guards against a derived or anchored weight that is arithmetically valid
+  /// but obviously not a serving — 833 g of cucumber, 17 g of olive oil.
+  ({double min, double max})? plausibleGramsBand(String categoryName) {
+    final raw = category(categoryName)['plausibleGramsBand'];
+    if (raw == null) return null;
+    final band = (raw as List).cast<num>();
+    return (min: band.first.toDouble(), max: band.last.toDouble());
+  }
+
+  /// Container the category is served in, for the reference-image prompt.
+  String? container(String categoryName) =>
+      category(categoryName)['container'] as String?;
+
   /// Applies the category factor for [sizeClass] to [regularGrams].
   ///
   /// Throws when the configured factor falls outside the policy band, so a
   /// silent edit to the policy file cannot quietly widen portion spread.
   double derive(String categoryName, String sizeClass, double regularGrams) {
+    if (usesUnitMultiple(categoryName, sizeClass)) {
+      throw StateError(
+        'Category $categoryName derives $sizeClass as a unit multiple; call '
+        'deriveFromUnit instead of applying a factor',
+      );
+    }
     final key = '${sizeClass}Factor';
     final raw = category(categoryName)[key];
     if (raw == null) {
@@ -67,3 +110,23 @@ class PortionPolicy {
 /// Rounds to a kitchen-plausible step so a derived weight never implies
 /// scale-level precision.
 double roundGrams(double grams, double step) => (grams / step).round() * step;
+
+extension UnitMultipleDerivation on PortionPolicy {
+  /// Derives [sizeClass] as a multiple of the published [unitGrams].
+  double deriveFromUnit(
+    String categoryName,
+    String sizeClass,
+    double unitGrams,
+  ) {
+    if (!usesUnitMultiple(categoryName, sizeClass)) {
+      throw StateError(
+        'Category $categoryName does not derive $sizeClass from a unit '
+        'multiple; call derive instead',
+      );
+    }
+    return roundGrams(
+      unitGrams * unitMultiple(categoryName, sizeClass),
+      roundToGrams(categoryName),
+    );
+  }
+}

@@ -11,9 +11,9 @@
   "tierATarget": 200,
   "counts": {
     "tierAFoods": 200,
-    "anchorStateMatches": 85,
-    "anchorStateMismatch": 42,
-    "noAnchor": 73
+    "anchorStateMatches": 95,
+    "anchorStateMismatch": 43,
+    "noAnchor": 62
   },
   "overridesApplied": [],
   "foods": [
@@ -72,6 +72,26 @@
       "portionAnchor": {
         "mode": "tuberFoodRow",
         "rowName": "Ayran",
+        "statedGrams": null,
+        "stateMatches": true,
+        "stateNote": null
+      }
+    },
+    {
+      "href": "food-ekmek-beyaz-126",
+      "foodSlug": "ekmek-beyaz",
+      "listName": "Ekmek, beyaz",
+      "sourceRecordId": "06.02.0009",
+      "recordName": "Ekmek, beyaz",
+      "groupPrefix": "06",
+      "score": 60,
+      "reasons": [
+        "tuber_food_row (+50): \"Beyaz ekmek\"",
+        "single_ingredient (+10)"
+      ],
+      "portionAnchor": {
+        "mode": "tuberFoodRow",
+        "rowName": "Beyaz ekmek",
         "statedGrams": null,
         "stateMatches": true,
         "stateNote": null
@@ -740,6 +760,25 @@
       }
     },
     {
+      "href": "food-peynir-beyaz-tam-yagli-yag-kuru-maddede---45-8",
+      "foodSlug": "peynir-beyaz-tam-yagli-yag-kuru-maddede-45",
+      "listName": "Peynir, beyaz, tam yağlı (yağ, kuru maddede > % 45)",
+      "sourceRecordId": "01.02.0004",
+      "recordName": "Peynir, beyaz, tam yağlı (yağ, kuru maddede > % 45)",
+      "groupPrefix": "01",
+      "score": 50,
+      "reasons": [
+        "tuber_food_row (+50): \"Beyaz peynir, tam yağlı\""
+      ],
+      "portionAnchor": {
+        "mode": "tuberFoodRow",
+        "rowName": "Beyaz peynir, tam yağlı",
+        "statedGrams": null,
+        "stateMatches": true,
+        "stateNote": null
+      }
+    },
+    {
       "href": "food-yogurt-homojenize-tam-yagli-sut-yagi---3-8-4",
       "foodSlug": "yogurt-homojenize-tam-yagli-sut-yagi-3-8",
       "listName": "Yoğurt, homojenize, tam yağlı (süt yağı ≥ % 3.8)",
@@ -952,6 +991,25 @@
       }
     },
     {
+      "href": "food-biber-kirmizi-california-wonder-tipi-177",
+      "foodSlug": "biber-kirmizi-california-wonder-tipi",
+      "listName": "Biber, kırmızı, California Wonder tipi",
+      "sourceRecordId": "08.01.0007",
+      "recordName": "Biber, kırmızı, California Wonder tipi",
+      "groupPrefix": "08",
+      "score": 50,
+      "reasons": [
+        "tuber_food_row (+50): \"Kırmızı biber\""
+      ],
+      "portionAnchor": {
+        "mode": "tuberFoodRow",
+        "rowName": "Kırmızı biber",
+        "statedGrams": null,
+        "stateMatches": true,
+        "stateNote": null
+      }
+    },
+    {
       "href": "food-domates-sofralik-kiraz-169",
       "foodSlug": "domates-sofralik-kiraz",
       "listName": "Domates, sofralık, kiraz",
@@ -1009,6 +1067,25 @@
       }
     },
     {
+      "href": "food-lahana-beyaz-bas-244",
+      "foodSlug": "lahana-beyaz-bas",
+      "listName": "Lahana, beyaz, baş",
+      "sourceRecordId": "08.01.0037",
+      "recordName": "Lahana, beyaz, baş",
+      "groupPrefix": "08",
+      "score": 50,
+      "reasons": [
+        "tuber_food_row (+50): \"Beyaz lahana\""
+      ],
+      "portionAnchor": {
+        "mode": "tuberFoodRow",
+        "rowName": "Beyaz lahana",
+        "statedGrams": null,
+        "stateMatches": true,
+        "stateNote": null
+      }
+    },
+    {
       "href": "food-marul-bas-salata-iceberg-240",
       "foodSlug": "marul-bas-salata-iceberg",
       "listName": "Marul, baş salata, Iceberg",
@@ -1041,6 +1118,25 @@
       "portionAnchor": {
         "mode": "tuberFoodRow",
         "rowName": "Marul",
+        "statedGrams": null,
+        "stateMatches": true,
+        "stateNote": null
+      }
+    },
+    {
+      "href": "food-biber-kirmizi-acili-pul-184",
+      "foodSlug": "biber-kirmizi-acili-pul",
+      "listName": "Biber, kırmızı, acılı, pul",
+      "sourceRecordId": "08.02.0042",
+      "recordName": "Biber, kırmızı, acılı, pul",
+      "groupPrefix": "08",
+      "score": 50,
+      "reasons": [
+        "tuber_food_row (+50): \"Kırmızı biber\""
+      ],
+      "portionAnchor": {
+        "mode": "tuberFoodRow",
+        "rowName": "Kırmızı biber",
         "statedGrams": null,
         "stateMatches": true,
         "stateNote": null
@@ -1656,6 +1752,25 @@
       }
     },
     {
+      "href": "food-ekmek-beyaz-tuzsuz-660",
+      "foodSlug": "ekmek-beyaz-tuzsuz",
+      "listName": "Ekmek, beyaz, tuzsuz",
+      "sourceRecordId": "13.02.0021",
+      "recordName": "Ekmek, beyaz, tuzsuz",
+      "groupPrefix": "13",
+      "score": 50,
+      "reasons": [
+        "tuber_food_row (+50): \"Beyaz ekmek\""
+      ],
+      "portionAnchor": {
+        "mode": "tuberFoodRow",
+        "rowName": "Beyaz ekmek",
+        "statedGrams": null,
+        "stateMatches": true,
+        "stateNote": null
+      }
+    },
+    {
       "href": "food-misir-gevregi-143",
       "foodSlug": "misir-gevregi",
       "listName": "Mısır gevreği",
@@ -1671,6 +1786,44 @@
         "mode": "tuberMeasureGrams",
         "rowName": "Mısır gevreği",
         "statedGrams": 30.0,
+        "stateMatches": true,
+        "stateNote": null
+      }
+    },
+    {
+      "href": "food-peynir-beyaz-az-yagli-yagsiz-yag-kuru-maddede---20-7",
+      "foodSlug": "peynir-beyaz-az-yagli-yagsiz-yag-kuru-maddede-20",
+      "listName": "Peynir, beyaz, az yağlı-yağsız (yağ, kuru maddede < % 20)",
+      "sourceRecordId": "01.02.0003",
+      "recordName": "Peynir, beyaz, az yağlı-yağsız (yağ, kuru maddede < % 20)",
+      "groupPrefix": "01",
+      "score": 35,
+      "reasons": [
+        "tuber_measure_row (+35): \"Beyaz peynir\""
+      ],
+      "portionAnchor": {
+        "mode": "tuberMeasureGrams",
+        "rowName": "Beyaz peynir",
+        "statedGrams": 60.0,
+        "stateMatches": true,
+        "stateNote": null
+      }
+    },
+    {
+      "href": "food-peynir-beyaz-yarim-yagli-yag-kuru-maddede---20-9",
+      "foodSlug": "peynir-beyaz-yarim-yagli-yag-kuru-maddede-20",
+      "listName": "Peynir, beyaz, yarım yağlı (yağ, kuru maddede > % 20)",
+      "sourceRecordId": "01.02.0020",
+      "recordName": "Peynir, beyaz, yarım yağlı (yağ, kuru maddede > % 20)",
+      "groupPrefix": "01",
+      "score": 35,
+      "reasons": [
+        "tuber_measure_row (+35): \"Beyaz peynir\""
+      ],
+      "portionAnchor": {
+        "mode": "tuberMeasureGrams",
+        "rowName": "Beyaz peynir",
+        "statedGrams": 60.0,
         "stateMatches": true,
         "stateNote": null
       }
@@ -1694,6 +1847,25 @@
         "statedGrams": null,
         "stateMatches": false,
         "stateNote": "TürKomp record is fresh; TÜBER row \"Hamsi, pişmiş\" is cooked."
+      }
+    },
+    {
+      "href": "food-ton-baligi-konserve-aycicek-yaginda-99",
+      "foodSlug": "ton-baligi-konserve-aycicek-yaginda",
+      "listName": "Ton balığı, konserve, ayçiçek yağında",
+      "sourceRecordId": "04.02.0002",
+      "recordName": "Ton balığı, konserve, ayçiçek yağında",
+      "groupPrefix": "04",
+      "score": 35,
+      "reasons": [
+        "tuber_measure_row (+35): \"Ton balığı konserve\""
+      ],
+      "portionAnchor": {
+        "mode": "tuberMeasureGrams",
+        "rowName": "Ton balığı konserve",
+        "statedGrams": 100.0,
+        "stateMatches": true,
+        "stateNote": null
       }
     },
     {
@@ -2354,6 +2526,26 @@
       }
     },
     {
+      "href": "food-biber-kirmizi-dolmalik-kuru-185",
+      "foodSlug": "biber-kirmizi-dolmalik-kuru",
+      "listName": "Biber, kırmızı, dolmalık, kuru",
+      "sourceRecordId": "08.02.0040",
+      "recordName": "Biber, kırmızı, dolmalık, kuru",
+      "groupPrefix": "08",
+      "score": 25,
+      "reasons": [
+        "tuber_food_row (+50): \"Kırmızı biber\"",
+        "state_mismatch (-25): TürKomp record is dried; TÜBER row \"Kırmızı biber\" is fresh."
+      ],
+      "portionAnchor": {
+        "mode": "tuberFoodRow",
+        "rowName": "Kırmızı biber",
+        "statedGrams": null,
+        "stateMatches": false,
+        "stateNote": "TürKomp record is dried; TÜBER row \"Kırmızı biber\" is fresh."
+      }
+    },
+    {
       "href": "food-kayisi-erkenci-sofralik-tyrinthe-344",
       "foodSlug": "kayisi-erkenci-sofralik-tyrinthe",
       "listName": "Kayısı, erkenci, sofralık , Tyrinthe",
@@ -2486,6 +2678,26 @@
         "prepared_state (+20)"
       ],
       "portionAnchor": null
+    },
+    {
+      "href": "food-biber-kirmizi-toz-183",
+      "foodSlug": "biber-kirmizi-toz",
+      "listName": "Biber, kırmızı, toz",
+      "sourceRecordId": "08.02.0038",
+      "recordName": "Biber, kırmızı, toz",
+      "groupPrefix": "08",
+      "score": 20,
+      "reasons": [
+        "tuber_food_row (+50): \"Kırmızı biber\"",
+        "industrial (-30)"
+      ],
+      "portionAnchor": {
+        "mode": "tuberFoodRow",
+        "rowName": "Kırmızı biber",
+        "statedGrams": null,
+        "stateMatches": true,
+        "stateNote": null
+      }
     },
     {
       "href": "food-biber-kozlenmis-konserve-182",
@@ -3334,149 +3546,6 @@
       "sourceRecordId": "05.02.0004",
       "recordName": "Fındık yağı",
       "groupPrefix": "05",
-      "score": 10,
-      "reasons": [
-        "single_ingredient (+10)"
-      ],
-      "portionAnchor": null
-    },
-    {
-      "href": "food-kanola-yagi-107",
-      "foodSlug": "kanola-yagi",
-      "listName": "Kanola yağı",
-      "sourceRecordId": "05.02.0005",
-      "recordName": "Kanola yağı",
-      "groupPrefix": "05",
-      "score": 10,
-      "reasons": [
-        "single_ingredient (+10)"
-      ],
-      "portionAnchor": null
-    },
-    {
-      "href": "food-misir-yagi-108",
-      "foodSlug": "misir-yagi",
-      "listName": "Mısır yağı",
-      "sourceRecordId": "05.02.0006",
-      "recordName": "Mısır yağı",
-      "groupPrefix": "05",
-      "score": 10,
-      "reasons": [
-        "single_ingredient (+10)"
-      ],
-      "portionAnchor": null
-    },
-    {
-      "href": "food-zeytinyagi-rafine-105",
-      "foodSlug": "zeytinyagi-rafine",
-      "listName": "Zeytinyağı, rafine",
-      "sourceRecordId": "05.02.0008",
-      "recordName": "Zeytinyağı, rafine",
-      "groupPrefix": "05",
-      "score": 10,
-      "reasons": [
-        "single_ingredient (+10)"
-      ],
-      "portionAnchor": null
-    },
-    {
-      "href": "food-zeytinyagi-riviera-104",
-      "foodSlug": "zeytinyagi-riviera",
-      "listName": "Zeytinyağı, riviera",
-      "sourceRecordId": "05.02.0009",
-      "recordName": "Zeytinyağı, riviera",
-      "groupPrefix": "05",
-      "score": 10,
-      "reasons": [
-        "single_ingredient (+10)"
-      ],
-      "portionAnchor": null
-    },
-    {
-      "href": "food-zeytinyagi-sizma-103",
-      "foodSlug": "zeytinyagi-sizma",
-      "listName": "Zeytinyağı, sızma",
-      "sourceRecordId": "05.02.0010",
-      "recordName": "Zeytinyağı, sızma",
-      "groupPrefix": "05",
-      "score": 10,
-      "reasons": [
-        "single_ingredient (+10)"
-      ],
-      "portionAnchor": null
-    },
-    {
-      "href": "food-arpa-alti-sirali-112",
-      "foodSlug": "arpa-alti-sirali",
-      "listName": "Arpa, altı sıralı",
-      "sourceRecordId": "06.01.0001",
-      "recordName": "Arpa, altı sıralı",
-      "groupPrefix": "06",
-      "score": 10,
-      "reasons": [
-        "single_ingredient (+10)"
-      ],
-      "portionAnchor": null
-    },
-    {
-      "href": "food-yulaf-beyaz-148",
-      "foodSlug": "yulaf-beyaz",
-      "listName": "Yulaf, beyaz",
-      "sourceRecordId": "06.01.0003",
-      "recordName": "Yulaf, beyaz",
-      "groupPrefix": "06",
-      "score": 10,
-      "reasons": [
-        "single_ingredient (+10)"
-      ],
-      "portionAnchor": null
-    },
-    {
-      "href": "food-cavdar-123",
-      "foodSlug": "cavdar",
-      "listName": "Çavdar",
-      "sourceRecordId": "06.01.0005",
-      "recordName": "Çavdar",
-      "groupPrefix": "06",
-      "score": 10,
-      "reasons": [
-        "single_ingredient (+10)"
-      ],
-      "portionAnchor": null
-    },
-    {
-      "href": "food-arpa-iki-sirali-111",
-      "foodSlug": "arpa-iki-sirali",
-      "listName": "Arpa, iki sıralı",
-      "sourceRecordId": "06.01.0006",
-      "recordName": "Arpa, iki sıralı",
-      "groupPrefix": "06",
-      "score": 10,
-      "reasons": [
-        "single_ingredient (+10)"
-      ],
-      "portionAnchor": null
-    },
-    {
-      "href": "food-yulaf-kirmizi-149",
-      "foodSlug": "yulaf-kirmizi",
-      "listName": "Yulaf, kırmızı",
-      "sourceRecordId": "06.01.0008",
-      "recordName": "Yulaf, kırmızı",
-      "groupPrefix": "06",
-      "score": 10,
-      "reasons": [
-        "single_ingredient (+10)"
-      ],
-      "portionAnchor": null
-    },
-    {
-      "href": "food-koca-dari-sorgum-154",
-      "foodSlug": "koca-dari-sorgum",
-      "listName": "Koca darı, sorgum",
-      "sourceRecordId": "06.01.0009",
-      "recordName": "Koca darı, sorgum",
-      "groupPrefix": "06",
       "score": 10,
       "reasons": [
         "single_ingredient (+10)"

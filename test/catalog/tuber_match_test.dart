@@ -47,6 +47,16 @@ void main() {
       expect(preparationState('Barbunya (barbun)'), PreparationState.fresh);
     });
 
+    test('does not read a dry-matter fat spec as a dried food', () {
+      // "yağ, kuru maddede > % 45" is a cheese fat-content specification.
+      // preparationState reads parentheticals (it must, for "(haşlanmış)"),
+      // so this exclusion is what keeps cheese out of the dried bucket.
+      expect(
+        preparationState('Peynir, beyaz, tam yağlı (yağ, kuru maddede > % 45)'),
+        PreparationState.fresh,
+      );
+    });
+
     test('distinguishes dried, cooked, canned and frozen forms', () {
       expect(preparationState('Elma'), PreparationState.fresh);
       expect(preparationState('Elma, kuru'), PreparationState.dried);
@@ -77,6 +87,32 @@ void main() {
       expect(baseFoodName('Domates suyu'), 'domates suyu');
       // Head-noun matching must not collapse juice into the whole vegetable.
       expect(baseFoodName('Domates suyu'), isNot(baseFoodName('Domates')));
+    });
+  });
+
+  group('tokensCompatible (inverted TürKomp names)', () {
+    test('matches a record whose word order TÜBER writes the other way', () {
+      // TürKomp writes the genus first; TÜBER writes natural word order.
+      // Head-noun comparison fails on every such name -- this is why no
+      // cheese matched at all before the rule existed.
+      expect(
+        tokensCompatible(
+          'Peynir, beyaz, tam yağlı (yağ, kuru maddede > % 45)',
+          'Beyaz peynir, tam yağlı',
+        ),
+        isTrue,
+      );
+    });
+
+    test('lets a general row serve the cultivars beneath it', () {
+      expect(tokensCompatible('Elma, yazlık, Gala çeşidi', 'Elma'), isTrue);
+    });
+
+    test('does not let a whole vegetable swallow its juice', () {
+      // The record's head clause is "domates suyu"; "suyu" is not a TÜBER
+      // token, so the juice must not inherit the vegetable's portion.
+      expect(tokensCompatible('Domates suyu', 'Domates'), isFalse);
+      expect(tokensCompatible('Domates suyu', 'Domates suyu'), isTrue);
     });
   });
 

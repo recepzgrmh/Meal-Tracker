@@ -3,7 +3,7 @@
   "batchId": "pilot-portion-references-2026-08",
   "locale": "tr-TR",
   "productionStandard": "portion-reference-standard-v1",
-  "portionPolicyVersion": "portion-policy-v1",
+  "portionPolicyVersion": "portion-policy-v2",
   "generatedFrom": "tool/catalog/bin/build_pilot_manifest.dart",
   "sourceSnapshotIndex": "tool/catalog/snapshots/snapshot_index.json",
   "sourcePriority": [
@@ -93,8 +93,8 @@
       "reviewed_at": null,
       "verification_status": "needs_review",
       "transformation_notes": [
-        "small = APP-DERIVED from regular using portion policy portion-policy-v1 (category dairy_cheese), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category dairy_cheese), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "small = APP-DERIVED from regular using portion policy portion-policy-v2 (category dairy_cheese), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category dairy_cheese), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is the published TürKomp per-100 g record 01.02.0004; no scaling applied."
       ],
       "source_conflicts": [
@@ -142,8 +142,8 @@
       "reviewed_at": null,
       "verification_status": "needs_review",
       "transformation_notes": [
-        "small = APP-DERIVED from regular using portion policy portion-policy-v1 (category dairy_cheese), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category dairy_cheese), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "small = APP-DERIVED from regular using portion policy portion-policy-v2 (category dairy_cheese), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category dairy_cheese), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is the published TürKomp per-100 g record 01.02.0004; no scaling applied."
       ],
       "source_conflicts": [
@@ -191,8 +191,8 @@
       "reviewed_at": null,
       "verification_status": "needs_review",
       "transformation_notes": [
-        "small = APP-DERIVED from regular using portion policy portion-policy-v1 (category dairy_cheese), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category dairy_cheese), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "small = APP-DERIVED from regular using portion policy portion-policy-v2 (category dairy_cheese), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category dairy_cheese), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is the published TürKomp per-100 g record 01.02.0004; no scaling applied."
       ],
       "source_conflicts": [
@@ -242,7 +242,7 @@
       "transformation_notes": [
         "regular = published TÜBER standard portion (90 g) x 2.0. The multiplier is published by TÜBER Ek 2.1.5 footnote 4, which states that a home second-course serving of rice/bulgur/pasta equals 2 standard portions.",
         "small = the published 1-standard-portion garnish weight (90 g), not a derived value.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category grain_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category grain_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is TÜBER Ek 2.3.1 per-portion values for \"Beyaz pirinç, pişmiş\" (90 g) divided by the portion weight to reach per 100 g. TÜBER prints carbohydrate and fat as whole grams, so the per-100 g values inherit that precision limit."
       ],
       "source_conflicts": [
@@ -292,7 +292,7 @@
       "transformation_notes": [
         "regular = published TÜBER standard portion (90 g) x 2.0. The multiplier is published by TÜBER Ek 2.1.5 footnote 4, which states that a home second-course serving of rice/bulgur/pasta equals 2 standard portions.",
         "small = the published 1-standard-portion garnish weight (90 g), not a derived value.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category grain_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category grain_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is TÜBER Ek 2.3.1 per-portion values for \"Beyaz pirinç, pişmiş\" (90 g) divided by the portion weight to reach per 100 g. TÜBER prints carbohydrate and fat as whole grams, so the per-100 g values inherit that precision limit."
       ],
       "source_conflicts": [
@@ -342,7 +342,7 @@
       "transformation_notes": [
         "regular = published TÜBER standard portion (90 g) x 2.0. The multiplier is published by TÜBER Ek 2.1.5 footnote 4, which states that a home second-course serving of rice/bulgur/pasta equals 2 standard portions.",
         "small = the published 1-standard-portion garnish weight (90 g), not a derived value.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category grain_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category grain_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is TÜBER Ek 2.3.1 per-portion values for \"Beyaz pirinç, pişmiş\" (90 g) divided by the portion weight to reach per 100 g. TÜBER prints carbohydrate and fat as whole grams, so the per-100 g values inherit that precision limit."
       ],
       "source_conflicts": [
@@ -392,7 +392,7 @@
       "transformation_notes": [
         "regular = published TÜBER standard portion (90 g) x 2.0. The multiplier is published by TÜBER Ek 2.1.5 footnote 4, which states that a home second-course serving of rice/bulgur/pasta equals 2 standard portions.",
         "small = the published 1-standard-portion garnish weight (90 g), not a derived value.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category grain_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category grain_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is TÜBER Ek 2.3.1 per-portion values for \"Bulgur, pişmiş\" (90 g) divided by the portion weight to reach per 100 g. TÜBER prints carbohydrate and fat as whole grams, so the per-100 g values inherit that precision limit."
       ],
       "source_conflicts": [
@@ -443,7 +443,7 @@
       "transformation_notes": [
         "regular = published TÜBER standard portion (90 g) x 2.0. The multiplier is published by TÜBER Ek 2.1.5 footnote 4, which states that a home second-course serving of rice/bulgur/pasta equals 2 standard portions.",
         "small = the published 1-standard-portion garnish weight (90 g), not a derived value.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category grain_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category grain_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is TÜBER Ek 2.3.1 per-portion values for \"Bulgur, pişmiş\" (90 g) divided by the portion weight to reach per 100 g. TÜBER prints carbohydrate and fat as whole grams, so the per-100 g values inherit that precision limit."
       ],
       "source_conflicts": [
@@ -494,7 +494,7 @@
       "transformation_notes": [
         "regular = published TÜBER standard portion (90 g) x 2.0. The multiplier is published by TÜBER Ek 2.1.5 footnote 4, which states that a home second-course serving of rice/bulgur/pasta equals 2 standard portions.",
         "small = the published 1-standard-portion garnish weight (90 g), not a derived value.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category grain_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category grain_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is TÜBER Ek 2.3.1 per-portion values for \"Bulgur, pişmiş\" (90 g) divided by the portion weight to reach per 100 g. TÜBER prints carbohydrate and fat as whole grams, so the per-100 g values inherit that precision limit."
       ],
       "source_conflicts": [
@@ -545,7 +545,7 @@
       "transformation_notes": [
         "regular = published TÜBER standard portion (75 g) x 2.0. The multiplier is published by TÜBER Ek 2.1.5 footnote 4, which states that a home second-course serving of rice/bulgur/pasta equals 2 standard portions.",
         "small = the published 1-standard-portion garnish weight (75 g), not a derived value.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category grain_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category grain_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is TÜBER Ek 2.3.1 per-portion values for \"Makarna / hazır erişte pişmiş\" (75 g) divided by the portion weight to reach per 100 g. TÜBER prints carbohydrate and fat as whole grams, so the per-100 g values inherit that precision limit."
       ],
       "source_conflicts": [
@@ -595,7 +595,7 @@
       "transformation_notes": [
         "regular = published TÜBER standard portion (75 g) x 2.0. The multiplier is published by TÜBER Ek 2.1.5 footnote 4, which states that a home second-course serving of rice/bulgur/pasta equals 2 standard portions.",
         "small = the published 1-standard-portion garnish weight (75 g), not a derived value.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category grain_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category grain_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is TÜBER Ek 2.3.1 per-portion values for \"Makarna / hazır erişte pişmiş\" (75 g) divided by the portion weight to reach per 100 g. TÜBER prints carbohydrate and fat as whole grams, so the per-100 g values inherit that precision limit."
       ],
       "source_conflicts": [
@@ -645,7 +645,7 @@
       "transformation_notes": [
         "regular = published TÜBER standard portion (75 g) x 2.0. The multiplier is published by TÜBER Ek 2.1.5 footnote 4, which states that a home second-course serving of rice/bulgur/pasta equals 2 standard portions.",
         "small = the published 1-standard-portion garnish weight (75 g), not a derived value.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category grain_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category grain_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is TÜBER Ek 2.3.1 per-portion values for \"Makarna / hazır erişte pişmiş\" (75 g) divided by the portion weight to reach per 100 g. TÜBER prints carbohydrate and fat as whole grams, so the per-100 g values inherit that precision limit."
       ],
       "source_conflicts": [
@@ -693,8 +693,8 @@
       "reviewed_at": null,
       "verification_status": "needs_review",
       "transformation_notes": [
-        "small = APP-DERIVED from regular using portion policy portion-policy-v1 (category dairy_yogurt), rounded to 10 g steps. This is a product reference size, NOT a value published by TÜBER.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category dairy_yogurt), rounded to 10 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "small = APP-DERIVED from regular using portion policy portion-policy-v2 (category dairy_yogurt), rounded to 10 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category dairy_yogurt), rounded to 10 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is the published TürKomp per-100 g record 01.02.0015; no scaling applied."
       ],
       "source_conflicts": [
@@ -741,8 +741,8 @@
       "reviewed_at": null,
       "verification_status": "needs_review",
       "transformation_notes": [
-        "small = APP-DERIVED from regular using portion policy portion-policy-v1 (category dairy_yogurt), rounded to 10 g steps. This is a product reference size, NOT a value published by TÜBER.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category dairy_yogurt), rounded to 10 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "small = APP-DERIVED from regular using portion policy portion-policy-v2 (category dairy_yogurt), rounded to 10 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category dairy_yogurt), rounded to 10 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is the published TürKomp per-100 g record 01.02.0015; no scaling applied."
       ],
       "source_conflicts": [
@@ -789,8 +789,8 @@
       "reviewed_at": null,
       "verification_status": "needs_review",
       "transformation_notes": [
-        "small = APP-DERIVED from regular using portion policy portion-policy-v1 (category dairy_yogurt), rounded to 10 g steps. This is a product reference size, NOT a value published by TÜBER.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category dairy_yogurt), rounded to 10 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "small = APP-DERIVED from regular using portion policy portion-policy-v2 (category dairy_yogurt), rounded to 10 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category dairy_yogurt), rounded to 10 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is the published TürKomp per-100 g record 01.02.0015; no scaling applied."
       ],
       "source_conflicts": [
@@ -960,8 +960,8 @@
       "reviewed_at": null,
       "verification_status": "needs_review",
       "transformation_notes": [
-        "small = APP-DERIVED from regular using portion policy portion-policy-v1 (category meat_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category meat_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "small = APP-DERIVED from regular using portion policy portion-policy-v2 (category meat_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category meat_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is TÜBER Ek 2.3.1 per-portion values for \"Tavuk göğüs eti, pişmiş\" (80 g) divided by the portion weight to reach per 100 g. TÜBER prints carbohydrate and fat as whole grams, so the per-100 g values inherit that precision limit."
       ],
       "source_conflicts": [
@@ -1008,8 +1008,8 @@
       "reviewed_at": null,
       "verification_status": "needs_review",
       "transformation_notes": [
-        "small = APP-DERIVED from regular using portion policy portion-policy-v1 (category meat_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category meat_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "small = APP-DERIVED from regular using portion policy portion-policy-v2 (category meat_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category meat_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is TÜBER Ek 2.3.1 per-portion values for \"Tavuk göğüs eti, pişmiş\" (80 g) divided by the portion weight to reach per 100 g. TÜBER prints carbohydrate and fat as whole grams, so the per-100 g values inherit that precision limit."
       ],
       "source_conflicts": [
@@ -1056,8 +1056,8 @@
       "reviewed_at": null,
       "verification_status": "needs_review",
       "transformation_notes": [
-        "small = APP-DERIVED from regular using portion policy portion-policy-v1 (category meat_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category meat_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "small = APP-DERIVED from regular using portion policy portion-policy-v2 (category meat_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category meat_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is TÜBER Ek 2.3.1 per-portion values for \"Tavuk göğüs eti, pişmiş\" (80 g) divided by the portion weight to reach per 100 g. TÜBER prints carbohydrate and fat as whole grams, so the per-100 g values inherit that precision limit."
       ],
       "source_conflicts": [
@@ -1104,8 +1104,8 @@
       "reviewed_at": null,
       "verification_status": "needs_review",
       "transformation_notes": [
-        "small = APP-DERIVED from regular using portion policy portion-policy-v1 (category legume_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category legume_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "small = APP-DERIVED from regular using portion policy portion-policy-v2 (category legume_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category legume_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is TÜBER Ek 2.3.1 per-portion values for \"Kuru fasulye. pişmiş\" (130 g) divided by the portion weight to reach per 100 g. TÜBER prints carbohydrate and fat as whole grams, so the per-100 g values inherit that precision limit."
       ],
       "source_conflicts": [
@@ -1153,8 +1153,8 @@
       "reviewed_at": null,
       "verification_status": "needs_review",
       "transformation_notes": [
-        "small = APP-DERIVED from regular using portion policy portion-policy-v1 (category legume_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category legume_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "small = APP-DERIVED from regular using portion policy portion-policy-v2 (category legume_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category legume_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is TÜBER Ek 2.3.1 per-portion values for \"Kuru fasulye. pişmiş\" (130 g) divided by the portion weight to reach per 100 g. TÜBER prints carbohydrate and fat as whole grams, so the per-100 g values inherit that precision limit."
       ],
       "source_conflicts": [
@@ -1202,8 +1202,8 @@
       "reviewed_at": null,
       "verification_status": "needs_review",
       "transformation_notes": [
-        "small = APP-DERIVED from regular using portion policy portion-policy-v1 (category legume_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
-        "large = APP-DERIVED from regular using portion policy portion-policy-v1 (category legume_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "small = APP-DERIVED from regular using portion policy portion-policy-v2 (category legume_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
+        "large = APP-DERIVED from regular using portion policy portion-policy-v2 (category legume_cooked), rounded to 5 g steps. This is a product reference size, NOT a value published by TÜBER.",
         "Composition is TÜBER Ek 2.3.1 per-portion values for \"Kuru fasulye. pişmiş\" (130 g) divided by the portion weight to reach per 100 g. TÜBER prints carbohydrate and fat as whole grams, so the per-100 g values inherit that precision limit."
       ],
       "source_conflicts": [

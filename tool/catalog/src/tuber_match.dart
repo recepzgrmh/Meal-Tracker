@@ -86,9 +86,12 @@ const List<(PreparationState, String)> _statePatterns =
       ),
       (PreparationState.canned, r'konserve|salamura|\bturs'),
       (PreparationState.frozen, r'dondurulmus'),
+      // "kuru madde" is dry MATTER -- the fat-content spec in cheese names like
+      // "yag, kuru maddede > % 45" -- not a dried food. The exclusion matters
+      // because preparationState reads parentheticals, where that spec lives.
       (
         PreparationState.dried,
-        r'\bkuru\b|\bkurusu\b|kurutulmus|gunkurusu|\bkuru,',
+        r'\bkuru(?!\s+madde)\b|\bkurusu\b|kurutulmus|gunkurusu',
       ),
       (PreparationState.raw, r'\bcig\b'),
     ];
@@ -210,13 +213,19 @@ TuberAnchor? findTuberAnchor(
   }
 
   // 1. Ek 2.3.1, preferring a row whose state already agrees.
-  final nutrientHits = nutrientRows
+  var nutrientHits = nutrientRows
       .where(
         (row) =>
             normalizeFoodName(row.foodName) == normalized ||
             baseFoodName(row.foodName) == base,
       )
       .toList();
+  if (nutrientHits.isEmpty) {
+    // Fall back to token matching, which handles TürKomp's inverted names.
+    nutrientHits = nutrientRows
+        .where((row) => tokensCompatible(turkompName, row.foodName))
+        .toList();
+  }
   if (nutrientHits.isNotEmpty) {
     final agreeing = nutrientHits.firstWhere(
       (row) => preparationState(row.foodName) == state,
@@ -229,7 +238,8 @@ TuberAnchor? findTuberAnchor(
   final gramRows = measureRows.where((row) => row.statedGrams != null).toList();
   for (final row in gramRows) {
     if (normalizeFoodName(row.foodName) == normalized ||
-        normalizeFoodName(row.foodName) == base) {
+        normalizeFoodName(row.foodName) == base ||
+        tokensCompatible(turkompName, row.foodName)) {
       final anchor = anchorFor(
         row.foodName,
         TuberMatchMode.tuberMeasureGrams,
@@ -327,3 +337,31 @@ bool groupsCompatible(FoodGroup record, FoodGroup row) =>
     row == FoodGroup.other ||
     record == FoodGroup.other ||
     record == FoodGroup.prepared;
+
+/// True when a TÜBER row names the same food as a TürKomp record whose word
+/// order is inverted.
+///
+/// TürKomp writes the genus first with qualifiers appended
+/// ("Peynir, beyaz, tam yağlı"); TÜBER writes natural Turkish word order
+/// ("Beyaz peynir, tam yağlı"). Head-noun comparison fails on every such name,
+/// which is why no cheese matched before this rule existed.
+///
+/// Two conditions, and the second is what stops it over-matching:
+///   1. every TÜBER token appears in the record's tokens, and
+///   2. the record's own head clause is fully contained in the TÜBER tokens.
+///
+/// Condition 2 is what keeps TÜBER "Domates" off "Domates suyu": the record's
+/// head clause is "domates suyu", and "suyu" is not a TÜBER token, so the
+/// juice does not inherit the whole vegetable's portion.
+bool tokensCompatible(String turkompName, String rowName) {
+  Set<String> tokens(String value) =>
+      normalizeFoodName(value).split(' ').where((t) => t.length > 1).toSet();
+
+  final recordTokens = tokens(turkompName);
+  final rowTokens = tokens(rowName);
+  if (rowTokens.isEmpty || recordTokens.isEmpty) return false;
+  if (!rowTokens.every(recordTokens.contains)) return false;
+
+  final headClause = tokens(turkompName.split(',').first);
+  return headClause.every(rowTokens.contains);
+}
