@@ -1,15 +1,19 @@
 import { useState, type ReactNode } from 'react'
 import { AlertTriangle, DatabaseZap, Gauge, LogOut, ShieldAlert } from 'lucide-react'
-import { signInWithPassword, signOut } from '../lib/queries'
+import { sendEmailCode, signInWithPassword, signOut, verifyEmailCode } from '../lib/queries'
 import { useSession } from '../lib/session'
-import { Alert, Button, Field, Input, Skeleton } from '../ui'
+import { useI18n } from '../i18n'
+import { Alert, Button, Field, Input, Segmented, Skeleton } from '../ui'
 
 /**
  * Everything behind this gate reads live data under the operator's own JWT.
  * There is no demo mode: if the console cannot reach real data it says so
  * rather than showing numbers that are not true.
+ *
+ * Rendered *instead of* the shell, not inside it — navigation you cannot use
+ * has no business being on screen before you are signed in.
  */
-export function Gate({ t, children }: { t: (value: string) => string; children: ReactNode }) {
+export function Gate({ t, children }: { t: (value: string) => string; children?: ReactNode }) {
   const { status, refresh } = useSession()
 
   if (status === 'ready') return <>{children}</>
@@ -54,34 +58,103 @@ export function Gate({ t, children }: { t: (value: string) => string; children: 
 
 function SignIn({ t }: { t: (value: string) => string }) {
   const { refresh } = useSession()
+  const [method, setMethod] = useState<'code' | 'password'>('code')
+  const [stage, setStage] = useState<'identify' | 'confirm'>('identify')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
 
-  const submit = (event: React.FormEvent) => {
-    event.preventDefault()
+  const run = (work: Promise<void>, onDone?: () => void) => {
     setBusy(true)
     setError('')
-    signInWithPassword(email, password).then(
-      () => { setBusy(false); refresh() },
+    work.then(
+      () => { setBusy(false); onDone?.() },
       (cause) => { setBusy(false); setError((cause as Error).message) },
     )
   }
 
+  const submit = (event: React.FormEvent) => {
+    event.preventDefault()
+    if (method === 'password') return run(signInWithPassword(email, password), refresh)
+    if (stage === 'identify') {
+      return run(sendEmailCode(email), () => {
+        setStage('confirm')
+        setNotice(t('We sent a one-time code to that address.'))
+      })
+    }
+    return run(verifyEmailCode(email, code.trim()), refresh)
+  }
+
+  const switchMethod = (next: string) => {
+    setMethod(next as 'code' | 'password')
+    setStage('identify')
+    setCode('')
+    setError('')
+    setNotice('')
+  }
+
   return (
     <Centered icon={<Gauge size={20} />} title={t('Sign in to the console')}>
+      <Segmented
+        label={t('Sign-in method')}
+        value={method}
+        onChange={switchMethod}
+        items={[{ id: 'code', label: t('Email code') }, { id: 'password', label: t('Password') }]}
+      />
+
       <form className="ds-stack ds-stack--sm" onSubmit={submit}>
         <Field label={t('Email')} htmlFor="console-email">
-          <Input id="console-email" type="email" autoComplete="username" required value={email} onChange={(event) => setEmail(event.target.value)} />
+          <Input
+            id="console-email"
+            type="email"
+            autoComplete="username"
+            required
+            readOnly={stage === 'confirm'}
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
         </Field>
-        <Field label={t('Password')} htmlFor="console-password">
-          <Input id="console-password" type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} />
-        </Field>
-        {error && (
-          <p className="ds-error"><AlertTriangle size={12} aria-hidden="true" />{error}</p>
+
+        {method === 'password' && (
+          <Field label={t('Password')} htmlFor="console-password">
+            <Input id="console-password" type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} />
+          </Field>
         )}
-        <Button type="submit" variant="primary" block loading={busy} disabled={!email || !password}>{t('Sign in')}</Button>
+
+        {method === 'code' && stage === 'confirm' && (
+          <Field label={t('One-time code')} htmlFor="console-code" help={t('Six digits, valid for a few minutes.')}>
+            <Input
+              id="console-code"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={8}
+              required
+              value={code}
+              onChange={(event) => setCode(event.target.value)}
+            />
+          </Field>
+        )}
+
+        {notice && !error && <p className="ds-help">{notice}</p>}
+        {error && <p className="ds-error"><AlertTriangle size={12} aria-hidden="true" />{error}</p>}
+
+        <Button
+          type="submit"
+          variant="primary"
+          block
+          loading={busy}
+          disabled={method === 'password' ? !email || !password : stage === 'identify' ? !email : !code}
+        >
+          {method === 'password' ? t('Sign in') : stage === 'identify' ? t('Send code') : t('Sign in')}
+        </Button>
+
+        {method === 'code' && stage === 'confirm' && (
+          <Button block onClick={() => { setStage('identify'); setCode(''); setNotice('') }}>{t('Use a different address')}</Button>
+        )}
+
         <p className="ds-help">{t('Console access is limited to operators listed in public.console_admins.')}</p>
       </form>
     </Centered>
@@ -89,15 +162,32 @@ function SignIn({ t }: { t: (value: string) => string }) {
 }
 
 function Centered({ icon, title, children }: { icon?: ReactNode; title?: string; children: ReactNode }) {
+  const { language, setLanguage } = useI18n()
   return (
     <div style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center', padding: 'var(--sp-4)', background: 'var(--bg)' }}>
-      <div className="ds-card" style={{ width: 'min(24rem, 100%)', padding: 'var(--sp-6)' }}>
-        <div className="ds-stack ds-stack--sm">
-          {icon && (
-            <span className="ds-empty__icon" aria-hidden="true" style={{ marginBottom: 0 }}>{icon}</span>
-          )}
-          {title && <h1 style={{ fontSize: 'var(--fs-lg)', fontWeight: 650, letterSpacing: '-.015em' }}>{title}</h1>}
-          {children}
+      <div className="ds-stack" style={{ width: 'min(24rem, 100%)' }}>
+        <div className="ds-row" style={{ justifyContent: 'space-between' }}>
+          <span className="ds-row" style={{ gap: 'var(--sp-2)' }}>
+            <span className="rail__mark" aria-hidden="true"><Gauge size={15} /></span>
+            <span className="rail__name">Meal Clarity</span>
+          </span>
+          {/* The product is bilingual, so the door is too. */}
+          <Segmented
+            label="Interface language"
+            value={language}
+            onChange={(next) => setLanguage(next as 'tr' | 'en')}
+            items={[{ id: 'tr', label: 'TR' }, { id: 'en', label: 'EN' }]}
+          />
+        </div>
+
+        <div className="ds-card" style={{ padding: 'var(--sp-6)' }}>
+          <div className="ds-stack ds-stack--sm">
+            {icon && (
+              <span className="ds-empty__icon" aria-hidden="true" style={{ marginBottom: 0 }}>{icon}</span>
+            )}
+            {title && <h1 style={{ fontSize: 'var(--fs-lg)', fontWeight: 650, letterSpacing: '-.015em' }}>{title}</h1>}
+            {children}
+          </div>
         </div>
       </div>
     </div>

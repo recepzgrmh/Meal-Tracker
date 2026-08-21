@@ -49,6 +49,8 @@ vi.mock('./lib/supabase', async (importOriginal) => {
 vi.mock('./lib/queries', () => ({
   assertConsoleAdmin: async () => { if (!scenario.admin) throw new Error('not an admin') },
   signInWithPassword: async () => undefined,
+  sendEmailCode: async () => undefined,
+  verifyEmailCode: async () => undefined,
   signOut: async () => undefined,
   getSession: async () => scenario.session,
   sinceIso: () => new Date().toISOString(),
@@ -147,7 +149,7 @@ describe('console shell', () => {
   it('lists the review queue that Supabase returned', async () => {
     scenario.queue = [queueRow({}), queueRow({ item_id: 'item-2', canonical_name: 'White rice', confidence_pct: 71, review_status: 'unreviewed' })]
     renderApp()
-    await userEvent.click(screen.getByRole('button', { name: 'Meal Reviews' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Meal Reviews' }))
     expect(await screen.findByText('Yogurt sauce')).toBeInTheDocument()
     expect(screen.getByText('White rice')).toBeInTheDocument()
   })
@@ -155,7 +157,7 @@ describe('console shell', () => {
   it('opens a queue item by id and keeps the id in the URL', async () => {
     scenario.queue = [queueRow({})]
     renderApp()
-    await userEvent.click(screen.getByRole('button', { name: 'Meal Reviews' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Meal Reviews' }))
     await userEvent.click(await screen.findByText('Yogurt sauce'))
     await waitFor(() => expect(location.search).toContain('item=item-1'))
     expect(await screen.findByRole('heading', { name: 'Yogurt sauce' })).toBeInTheDocument()
@@ -164,12 +166,15 @@ describe('console shell', () => {
 
   it('says plainly that the audit log has no source', async () => {
     renderApp()
-    await userEvent.click(screen.getByRole('button', { name: 'Audit Log' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Audit Log' }))
     expect(await screen.findByText('No audit source is connected')).toBeInTheDocument()
   })
 
   it('switches the whole shell to Turkish', async () => {
     renderApp()
+    // Wait for the shell so the click lands on the top bar's toggle rather than
+    // the transient one on the sign-in screen.
+    await screen.findByRole('button', { name: 'Meal Reviews' })
     await userEvent.click(screen.getByRole('button', { name: 'TR' }))
     expect(await screen.findByRole('heading', { name: 'Genel Bakış' })).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Mobil Uygulama' }))

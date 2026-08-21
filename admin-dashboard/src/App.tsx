@@ -81,7 +81,7 @@ export default function App() {
 function Shell() {
   const { t, language, setLanguage } = useI18n()
   const { preference, cycle } = useTheme()
-  const { email, refresh } = useSession()
+  const { email, refresh, status } = useSession()
   const [route, setRoute] = useState<Route>(readRoute)
   const [collapsed, setCollapsed] = useState(() => globalThis.localStorage?.getItem('console-rail') === 'collapsed')
   const [drawer, setDrawer] = useState(false)
@@ -146,6 +146,10 @@ function Shell() {
 
   const ThemeIcon = preference === 'dark' ? Moon : preference === 'light' ? Sun : Monitor
   const themeLabel = t(preference === 'dark' ? 'Theme: dark' : preference === 'light' ? 'Theme: light' : 'Theme: system')
+
+  // Navigation you cannot use has no business being on screen. Until the
+  // session is ready the gate replaces the shell entirely.
+  if (status !== 'ready') return <Gate t={t} />
 
   const pageProps = { route, navigate, range, t }
   const content = route.traceId
@@ -258,7 +262,7 @@ function Shell() {
           <IconButton label={t('Notifications')}><Bell size={16} /></IconButton>
         </header>
 
-        <main><Gate t={t}>{content}</Gate></main>
+        <main>{content}</main>
       </div>
 
       <CommandMenu

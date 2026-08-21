@@ -25,6 +25,24 @@ export async function signInWithPassword(email: string, password: string) {
   if (error) throw error
 }
 
+/**
+ * The project's send-email hook delivers a one-time code, not a link, for every
+ * auth action — so code sign-in is the flow that actually matches the backend.
+ * `shouldCreateUser: false` keeps this from minting accounts for typos.
+ */
+export async function sendEmailCode(email: string) {
+  const { error } = await requireClient().auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: false },
+  })
+  if (error) throw error
+}
+
+export async function verifyEmailCode(email: string, token: string) {
+  const { error } = await requireClient().auth.verifyOtp({ email, token, type: 'email' })
+  if (error) throw error
+}
+
 export async function signOut() {
   await requireClient().auth.signOut()
 }
