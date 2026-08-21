@@ -73,7 +73,7 @@ void main(List<String> args) {
   var failures = 0;
   for (final food in foods) {
     if (food['status'] == 'blocked') {
-      rows.addAll(_blockedRows(food));
+      rows.addAll(_blockedRows(food, snapshots: snapshots));
       gaps.add({
         'foodSlug': food['foodSlug'],
         'pilotName': food['pilotName'],
@@ -100,7 +100,10 @@ void main(List<String> args) {
           ? error.resolutionPath
           : 'Fix the mapping entry, or mark the food blocked with a reason.';
       rows.addAll(
-        _blockedRows(<String, dynamic>{...food, 'blockedReason': reason}),
+        _blockedRows(<String, dynamic>{
+          ...food,
+          'blockedReason': reason,
+        }, snapshots: snapshots),
       );
       gaps.add({
         'foodSlug': food['foodSlug'],
@@ -561,14 +564,21 @@ Map<String, dynamic> _nutritionPer100g(
   };
 }
 
-List<Map<String, dynamic>> _blockedRows(Map<String, dynamic> food) {
+List<Map<String, dynamic>> _blockedRows(
+  Map<String, dynamic> food, {
+  _Snapshots? snapshots,
+}) {
   final slug = food['foodSlug'] as String;
+  // A food whose PORTION could not be resolved still has published
+  // composition, and still belongs in the catalog. Carry its identity and
+  // macros so the seed can write a foods row; only food_portions is missing.
+  final composition = _compositionOrNull(food, snapshots);
   return [
     for (final size in const ['small', 'regular', 'large'])
       {
         'food_id': null,
-        'canonical_name_tr': null,
-        'canonical_name_en': null,
+        'canonical_name_tr': food['canonicalNameTr'],
+        'canonical_name_en': food['canonicalNameEn'],
         'food_slug': slug,
         'portion_id': null,
         'size_class': size,
@@ -578,9 +588,10 @@ List<Map<String, dynamic>> _blockedRows(Map<String, dynamic> food) {
         'image_path': null,
         'image_prompt': null,
         'consistency_note': null,
-        'nutrition_source': null,
-        'nutrition_source_id': null,
-        'nutrition_per_100g': null,
+        'nutrition_source': composition == null ? null : 'TürKomp',
+        'nutrition_source_id':
+            (food['nutrition'] as Map<String, dynamic>?)?['sourceRecordId'],
+        'nutrition_per_100g': composition,
         'image_source': null,
         'image_license': null,
         'attribution': null,
@@ -800,3 +811,35 @@ String _derivationNote(PortionPolicy policy, String category, String size) =>
           '${policy.version} (category $category), rounded to '
           '${_g(policy.roundToGrams(category))} g steps. This is a product '
           'reference size, NOT a value published by TÜBER.';
+
+/// Published per-100 g composition for a food, or null when it has none.
+///
+/// Used for foods whose portion could not be resolved: the composition is
+/// still published and verified, so it must not be discarded with the portion.
+/// Returns null rather than throwing -- this path is already handling a
+/// failure, and an incomplete record simply has no macros to carry.
+Map<String, dynamic>? _compositionOrNull(
+  Map<String, dynamic> food,
+  _Snapshots? snapshots,
+) {
+  if (snapshots == null) return null;
+  final nutrition = food['nutrition'] as Map<String, dynamic>?;
+  if (nutrition == null || nutrition['basis'] != 'per_100g_published') {
+    return null;
+  }
+  final composition = snapshots.turkomp[nutrition['artifactId']];
+  if (composition == null) return null;
+  if (composition.caloriesPer100g == null ||
+      composition.proteinPer100g == null ||
+      composition.carbsPer100g == null ||
+      composition.fatPer100g == null) {
+    return null;
+  }
+  return <String, dynamic>{
+    'calories': composition.caloriesPer100g,
+    'protein': composition.proteinPer100g,
+    'carbs': composition.carbsPer100g,
+    'fat': composition.fatPer100g,
+    'basis': 'per_100g_published',
+  };
+}
