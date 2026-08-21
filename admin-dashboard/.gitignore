@@ -3,3 +3,8 @@ dist/
 *.tsbuildinfo
 vite.config.js
 vite.config.d.ts
+
+# Local environment; never commit real keys.
+.env
+.env.*
+!.env.example
