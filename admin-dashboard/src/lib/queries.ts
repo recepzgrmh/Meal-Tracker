@@ -203,21 +203,29 @@ export async function fetchTrace(traceId: string): Promise<TraceRow | null> {
   return (data as unknown as TraceRow) ?? null
 }
 
+/** Mirrors public.analysis_candidates exactly — see the initial schema migration. */
 export type CandidateRow = {
-  id: string
+  id: number
   analysis_run_id: string
+  item_key: string
   food_id: string | null
-  candidate_name: string | null
+  rank: number
   retrieval_score: number | null
   rerank_score: number | null
-  chosen: boolean | null
-  position: number | null
+  selected: boolean
+  rationale: { method?: string; needsClarification?: boolean; clarificationReason?: string | null } | null
+  foods: { canonical_name: string } | null
 }
 
 export async function fetchTraceCandidates(analysisRunId: string): Promise<CandidateRow[]> {
-  return unwrap<CandidateRow[]>(
-    await requireClient().from('analysis_candidates').select('*').eq('analysis_run_id', analysisRunId).order('position', { ascending: true }),
-  )
+  const { data, error } = await requireClient()
+    .from('analysis_candidates')
+    .select('*, foods(canonical_name)')
+    .eq('analysis_run_id', analysisRunId)
+    .order('item_key', { ascending: true })
+    .order('rank', { ascending: true })
+  if (error) throw error
+  return (data ?? []) as unknown as CandidateRow[]
 }
 
 /* ── Accounts ────────────────────────────────────────────────────────────── */

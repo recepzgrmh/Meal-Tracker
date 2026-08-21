@@ -187,17 +187,27 @@ function TraceDetail({ row, format, setFormat, t }: {
             emptyDescription={t('This run did not store retrieval candidates.')}
           >
             {(rows) => (
-              <div style={{ padding: 'var(--sp-4)' }}>
-                {rows.map((candidate, index) => (
-                  <div className={`candidate${candidate.chosen ? ' is-selected' : ''}`} key={candidate.id}>
-                    <span className="candidate__rank">{candidate.position ?? index + 1}</span>
-                    <span className="candidate__name">{candidate.candidate_name ?? candidate.food_id ?? '—'}</span>
-                    <span className="candidate__score">
-                      {candidate.rerank_score != null ? Number(candidate.rerank_score).toFixed(3) : candidate.retrieval_score != null ? Number(candidate.retrieval_score).toFixed(3) : '—'}
+              <div style={{ padding: 'var(--sp-4)' }} className="ds-stack ds-stack--sm">
+                {rows.map((candidate) => (
+                  <div className={`candidate${candidate.selected ? ' is-selected' : ''}`} key={candidate.id}>
+                    <span className="candidate__rank">{candidate.rank}</span>
+                    <span className="candidate__name">
+                      {candidate.foods?.canonical_name ?? candidate.food_id ?? '—'}
+                      <span className="ds-faint"> · {candidate.item_key}</span>
                     </span>
-                    {candidate.chosen ? <Badge tone="accent" dot>{t('Chosen')}</Badge> : <span />}
+                    <span className="candidate__score">
+                      {candidate.rerank_score != null
+                        ? Number(candidate.rerank_score).toFixed(3)
+                        : candidate.retrieval_score != null ? Number(candidate.retrieval_score).toFixed(3) : '—'}
+                    </span>
+                    {candidate.selected ? <Badge tone="accent" dot>{t('Selected')}</Badge> : <span />}
                   </div>
                 ))}
+                {rows.every((candidate) => candidate.rank === 1) && (
+                  <Alert tone="warn" title={t('Only the chosen candidate is stored')}>
+                    {t('analyze-meal persists one row per item at rank 1, so the runners-up the retriever produced are discarded. Ranking and margin metrics need that changed.')}
+                  </Alert>
+                )}
               </div>
             )}
           </Boundary>
