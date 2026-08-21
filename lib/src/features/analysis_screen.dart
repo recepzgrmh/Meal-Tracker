@@ -1,16 +1,29 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../l10n/l10n.dart';
 import '../domain/models.dart';
+import '../domain/nutrition_goals.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_surfaces.dart';
 import '../widgets/liquid_glass_bottom_bar.dart';
+import '../widgets/meal_list_tile.dart';
+
+/// Fully rounded ends for a progress track. `AppRadius` stops at 28 because its
+/// steps describe cards; a pill only needs "at least half the track height".
+const _pillRadius = 99.0;
+
+/// A line through one or two days is noise, not a trend, so the chart only
+/// appears once the period holds this many days with entries.
+const _trendMinimumActiveDays = 3;
 
 class AnalysisScreen extends StatefulWidget {
   const AnalysisScreen({
     required this.meals,
+    required this.goals,
+    required this.onAddMeal,
     required this.onMealTap,
     required this.onNavigationSelected,
     this.selectedDays,
@@ -20,6 +33,8 @@ class AnalysisScreen extends StatefulWidget {
   });
 
   final List<LoggedMeal> meals;
+  final NutritionGoals goals;
+  final VoidCallback onAddMeal;
   final ValueChanged<LoggedMeal> onMealTap;
   final ValueChanged<int> onNavigationSelected;
   final int? selectedDays;
@@ -42,8 +57,12 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   }
 
   void _selectDays(int days) {
-    setState(() => _localSelectedDays = days);
-    widget.onSelectedDaysChanged?.call(days);
+    if (days == _selectedDays) return;
+    final onChanged = widget.onSelectedDaysChanged;
+    if (widget.selectedDays == null || onChanged == null) {
+      setState(() => _localSelectedDays = days);
+    }
+    onChanged?.call(days);
   }
 
   DateTime get _today {
@@ -115,22 +134,27 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         child: CustomScrollView(
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(18, 20, 18, 104),
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.page,
+                AppSpacing.lg,
+                AppSpacing.page,
+                AppSpacing.pageBottom(context),
+              ),
               sliver: SliverList.list(
                 children: [
                   Text(
                     context.ota('analysisTitle', tr: 'Analiz', en: 'Analysis'),
                     style: Theme.of(context).textTheme.displaySmall,
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: AppSpacing.lg),
                   _PeriodSelector(
                     selectedDays: _selectedDays,
                     onChanged: _selectDays,
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: AppSpacing.lg),
                   if (meals.isEmpty)
-                    const _EmptyAnalysis()
-                  else if (activeDays < 3)
+                    _EmptyAnalysis(onAddMeal: widget.onAddMeal)
+                  else if (activeDays < _trendMinimumActiveDays)
                     _InsufficientAnalysis(
                       activeDays: activeDays,
                       mealCount: meals.length,
@@ -141,15 +165,16 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                       days: _selectedDays,
                       values: _dailyCalories,
                       averageCalories: average,
+                      goalCalories: widget.goals.calories,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.sm),
                     _InsightStrip(
                       currentCalories: average,
                       previousCalories: previousAverage,
                       hasPreviousData: previousMeals.isNotEmpty,
                     ),
                     if (activeDays < 7) ...[
-                      const SizedBox(height: 10),
+                      const SizedBox(height: AppSpacing.sm),
                       Text(
                         context.ota(
                           'analysisEarlyTrend',
@@ -159,7 +184,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.xl),
                     _Overview(
                       mealCount: meals.length,
                       activeDays: activeDays,
@@ -167,7 +192,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                       averageProtein: averageProtein,
                       highestMeal: highestMeal!,
                     ),
-                    const SizedBox(height: 26),
+                    const SizedBox(height: AppSpacing.xl),
                     Row(
                       children: [
                         Expanded(
@@ -191,11 +216,12 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 11),
+                    const SizedBox(height: AppSpacing.sm),
                     for (final meal in meals)
-                      _AnalysisMealRow(
+                      MealListTile(
                         meal: meal,
                         onTap: () => widget.onMealTap(meal),
+                        showThumbnail: false,
                       ),
                   ],
                 ],
@@ -222,32 +248,61 @@ class _PeriodSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Container(
       key: const Key('analysis-period-selector'),
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(AppSpacing.xxs),
       decoration: BoxDecoration(
         color: AppColors.surfaceMuted,
         borderRadius: BorderRadius.circular(AppRadius.input),
       ),
-      child: Row(
+      child: Stack(
         children: [
-          _PeriodSegment(
-            key: const Key('analysis-period-7'),
-            label: context.ota('period7Days', tr: '7 Gün', en: '7 Days'),
-            selected: selectedDays == 7,
-            onTap: () => onChanged(7),
+          Positioned.fill(
+            child: AnimatedAlign(
+              key: const Key('analysis-period-indicator'),
+              alignment: switch (selectedDays) {
+                30 => Alignment.center,
+                90 => Alignment.centerRight,
+                _ => Alignment.centerLeft,
+              },
+              duration: reduceMotion ? Duration.zero : AppMotion.fast,
+              curve: Curves.easeOutCubic,
+              child: FractionallySizedBox(
+                widthFactor: 1 / 3,
+                heightFactor: 1,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
+                    border: Border.all(color: AppColors.separator),
+                    boxShadow: AppShadows.card,
+                  ),
+                ),
+              ),
+            ),
           ),
-          _PeriodSegment(
-            key: const Key('analysis-period-30'),
-            label: context.ota('period30Days', tr: '30 Gün', en: '30 Days'),
-            selected: selectedDays == 30,
-            onTap: () => onChanged(30),
-          ),
-          _PeriodSegment(
-            key: const Key('analysis-period-90'),
-            label: context.ota('period3Months', tr: '3 Ay', en: '3 Months'),
-            selected: selectedDays == 90,
-            onTap: () => onChanged(90),
+          Row(
+            children: [
+              _PeriodSegment(
+                key: const Key('analysis-period-7'),
+                label: context.ota('period7Days', tr: '7 Gün', en: '7 Days'),
+                selected: selectedDays == 7,
+                onTap: () => onChanged(7),
+              ),
+              _PeriodSegment(
+                key: const Key('analysis-period-30'),
+                label: context.ota('period30Days', tr: '30 Gün', en: '30 Days'),
+                selected: selectedDays == 30,
+                onTap: () => onChanged(30),
+              ),
+              _PeriodSegment(
+                key: const Key('analysis-period-90'),
+                label: context.ota('period3Months', tr: '3 Ay', en: '3 Months'),
+                selected: selectedDays == 90,
+                onTap: () => onChanged(90),
+              ),
+            ],
           ),
         ],
       ),
@@ -257,10 +312,10 @@ class _PeriodSelector extends StatelessWidget {
 
 class _PeriodSegment extends StatelessWidget {
   const _PeriodSegment({
-    super.key,
     required this.label,
     required this.selected,
     required this.onTap,
+    super.key,
   });
 
   final String label;
@@ -275,22 +330,22 @@ class _PeriodSegment extends StatelessWidget {
         button: true,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: AnimatedContainer(
-            duration: AppMotion.fast,
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: BoxDecoration(
-              color: selected ? AppColors.surface : Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
-              border: selected ? Border.all(color: AppColors.separator) : null,
-              boxShadow: selected ? AppShadows.card : null,
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: AppTouchTarget.minimum,
             ),
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: selected ? AppColors.ink : AppColors.muted,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            child: Center(
+              child: AnimatedDefaultTextStyle(
+                duration: MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : AppMotion.fast,
+                curve: Curves.easeOutCubic,
+                style: Theme.of(context).textTheme.labelLarge!.copyWith(
+                  color: selected ? AppColors.ink : AppColors.muted,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
+                child: Text(label, textAlign: TextAlign.center),
               ),
             ),
           ),
@@ -314,6 +369,30 @@ class _InsufficientAnalysis extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final largeText = MediaQuery.textScalerOf(context).scale(14) >= 20;
+    final metrics = [
+      _CurrentMetric(
+        value: context.ota(
+          'calorieAmount',
+          tr: '{amount} kcal',
+          en: '{amount} kcal',
+          replacements: {'amount': nutrition.calories.round()},
+        ),
+        label: context.ota('metricCalories', tr: 'Kalori', en: 'Calories'),
+      ),
+      _CurrentMetric(
+        value: context.ota(
+          'gramAmount',
+          tr: '{amount} g',
+          en: '{amount} g',
+          replacements: {'amount': nutrition.protein.round()},
+        ),
+        label: context.l10n.macroProtein,
+      ),
+      _CurrentMetric(
+        value: '$mealCount',
+        label: context.ota('metricMeals', tr: 'Öğün', en: 'Meals'),
+      ),
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -329,7 +408,7 @@ class _InsufficientAnalysis extends StatelessWidget {
                 ),
                 style: Theme.of(context).textTheme.titleMedium,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 context.ota(
                   'analysisInsufficientTitle',
@@ -338,7 +417,7 @@ class _InsufficientAnalysis extends StatelessWidget {
                 ),
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 context.ota(
                   'analysisInsufficientBody',
@@ -347,67 +426,14 @@ class _InsufficientAnalysis extends StatelessWidget {
                 ),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              const SizedBox(height: 22),
-              if (largeText)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _CurrentMetric(
-                      value: '${nutrition.calories.round()} kcal',
-                      label: context.ota(
-                        'metricCalories',
-                        tr: 'Kalori',
-                        en: 'Calories',
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    _CurrentMetric(
-                      value: '${nutrition.protein.round()} g',
-                      label: context.l10n.macroProtein,
-                    ),
-                    const SizedBox(height: 14),
-                    _CurrentMetric(
-                      value: '$mealCount',
-                      label: context.ota(
-                        'metricMeals',
-                        tr: 'Öğün',
-                        en: 'Meals',
-                      ),
-                    ),
-                  ],
-                )
-              else
-                Row(
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(99),
-                        child: LinearProgressIndicator(
-                          minHeight: 7,
-                          value: activeDays / 3,
-                          backgroundColor: AppColors.line,
-                          valueColor: const AlwaysStoppedAnimation(
-                            AppColors.limeDark,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      context.ota(
-                        'activeDaysProgress',
-                        tr: '{count} / 3 aktif gün',
-                        en: '{count} / 3 active days',
-                        replacements: {'count': activeDays},
-                      ),
-                      style: Theme.of(context).textTheme.labelLarge,
-                    ),
-                  ],
-                ),
+              const SizedBox(height: AppSpacing.xl),
+              // The large-text branch used to drop the progress entirely and
+              // show unrelated metrics; it now stacks the same information.
+              _ActiveDaysProgress(activeDays: activeDays, stacked: largeText),
             ],
           ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: AppSpacing.lg),
         StandardCardSurface(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -426,40 +452,74 @@ class _InsufficientAnalysis extends StatelessWidget {
                       ),
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _CurrentMetric(
-                      value: '${nutrition.calories.round()} kcal',
-                      label: context.ota(
-                        'metricCalories',
-                        tr: 'Kalori',
-                        en: 'Calories',
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: _CurrentMetric(
-                      value: '${nutrition.protein.round()} g',
-                      label: context.l10n.macroProtein,
-                    ),
-                  ),
-                  Expanded(
-                    child: _CurrentMetric(
-                      value: '$mealCount',
-                      label: context.ota(
-                        'metricMeals',
-                        tr: 'Öğün',
-                        en: 'Meals',
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              const SizedBox(height: AppSpacing.md),
+              if (largeText)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var index = 0; index < metrics.length; index++) ...[
+                      if (index > 0) const SizedBox(height: AppSpacing.md),
+                      metrics[index],
+                    ],
+                  ],
+                )
+              else
+                Row(
+                  children: [
+                    for (final metric in metrics) Expanded(child: metric),
+                  ],
+                ),
             ],
           ),
         ),
+      ],
+    );
+  }
+}
+
+class _ActiveDaysProgress extends StatelessWidget {
+  const _ActiveDaysProgress({required this.activeDays, required this.stacked});
+
+  final int activeDays;
+
+  /// Large text cannot fit a bar and its label side by side.
+  final bool stacked;
+
+  @override
+  Widget build(BuildContext context) {
+    final bar = ClipRRect(
+      borderRadius: BorderRadius.circular(_pillRadius),
+      child: LinearProgressIndicator(
+        minHeight: AppSpacing.xs,
+        value: activeDays / _trendMinimumActiveDays,
+        backgroundColor: AppColors.line,
+        valueColor: const AlwaysStoppedAnimation(AppColors.limeDark),
+      ),
+    );
+    final label = Text(
+      context.ota(
+        'activeDaysProgress',
+        tr: '{count} / 3 aktif gün',
+        en: '{count} / 3 active days',
+        replacements: {'count': activeDays},
+      ),
+      style: Theme.of(context).textTheme.labelLarge,
+    );
+    if (stacked) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: double.infinity, child: bar),
+          const SizedBox(height: AppSpacing.sm),
+          label,
+        ],
+      );
+    }
+    return Row(
+      children: [
+        Expanded(child: bar),
+        const SizedBox(width: AppSpacing.sm),
+        label,
       ],
     );
   }
@@ -477,7 +537,7 @@ class _CurrentMetric extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(value, style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 3),
+        const SizedBox(height: AppSpacing.xxs),
         Text(label, style: Theme.of(context).textTheme.bodySmall),
       ],
     );
@@ -489,16 +549,95 @@ class _TrendPanel extends StatelessWidget {
     required this.days,
     required this.values,
     required this.averageCalories,
+    required this.goalCalories,
   });
 
   final int days;
   final List<double> values;
   final double averageCalories;
+  final double goalCalories;
+
+  /// Longest range read out day by day. Beyond this the label summarises
+  /// rather than reciting ninety numbers.
+  static const _perDayReadoutLimit = 7;
+
+  /// Relative change below which the period counts as flat.
+  static const _flatThreshold = 0.05;
+
+  double _mean(Iterable<double> input) {
+    final logged = input.where((value) => value > 0).toList(growable: false);
+    if (logged.isEmpty) return 0;
+    return logged.reduce((left, right) => left + right) / logged.length;
+  }
+
+  /// The chart is a [CustomPaint], so assistive tech previously got the range
+  /// name and nothing else. This puts the actual numbers into the label.
+  String _describe(BuildContext context) {
+    final headline = context.ota(
+      'calorieTrendSemantics',
+      tr: '{days} günlük kalori trendi',
+      en: '{days}-day calorie trend',
+      replacements: {'days': days},
+    );
+    final logged = values.where((value) => value > 0).toList(growable: false);
+    if (logged.isEmpty) return headline;
+    if (values.length <= _perDayReadoutLimit) {
+      final readout = values
+          .map(
+            (value) => context.ota(
+              'calorieAmount',
+              tr: '{amount} kcal',
+              en: '{amount} kcal',
+              replacements: {'amount': value.round()},
+            ),
+          )
+          .join(', ');
+      return '$headline: $readout';
+    }
+    final half = values.length ~/ 2;
+    final opening = _mean(values.take(half));
+    final closing = _mean(values.skip(half));
+    final change = opening == 0 ? 0.0 : (closing - opening) / opening;
+    final direction = change.abs() < _flatThreshold
+        ? context.ota(
+            'trendDirectionSteady',
+            tr: 'dönem boyunca sabit',
+            en: 'steady across the period',
+          )
+        : change > 0
+        ? context.ota(
+            'trendDirectionRising',
+            tr: 'dönem boyunca yükseliyor',
+            en: 'rising across the period',
+          )
+        : context.ota(
+            'trendDirectionFalling',
+            tr: 'dönem boyunca düşüyor',
+            en: 'falling across the period',
+          );
+    return context.ota(
+      'calorieTrendSummarySemantics',
+      tr: '{headline}: ortalama {average} kcal, en düşük {lowest} kcal, en yüksek {highest} kcal, {direction}',
+      en: '{headline}: {average} kcal average, {lowest} kcal lowest, {highest} kcal highest, {direction}',
+      replacements: {
+        'headline': headline,
+        'average': averageCalories.round(),
+        'lowest': logged.reduce(math.min).round(),
+        'highest': logged.reduce(math.max).round(),
+        'direction': direction,
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return HeroCardSurface(
-      padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.xl,
+        AppSpacing.xl,
+        AppSpacing.xl,
+        AppSpacing.lg,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -510,7 +649,7 @@ class _TrendPanel extends StatelessWidget {
             ),
             style: Theme.of(context).textTheme.titleMedium,
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: AppSpacing.tiny),
           Text.rich(
             TextSpan(
               text: '${averageCalories.round()}',
@@ -537,22 +676,23 @@ class _TrendPanel extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: AppSpacing.lg),
           Semantics(
-            label: context.ota(
-              'calorieTrendSemantics',
-              tr: '{days} günlük kalori trendi',
-              en: '{days}-day calorie trend',
-              replacements: {'days': days},
-            ),
+            container: true,
+            label: _describe(context),
             child: SizedBox(
               key: const Key('calorie-trend-chart'),
               height: 132,
               width: double.infinity,
-              child: CustomPaint(painter: _TrendPainter(values)),
+              child: CustomPaint(
+                painter: _TrendPainter(
+                  values: values,
+                  goalCalories: goalCalories,
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.xs),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -578,9 +718,13 @@ class _TrendPanel extends StatelessWidget {
 }
 
 class _TrendPainter extends CustomPainter {
-  const _TrendPainter(this.values);
+  const _TrendPainter({required this.values, required this.goalCalories});
 
   final List<double> values;
+
+  /// The chart's ceiling, so a day at target lands at the top gridline. This
+  /// used to be a hard-coded 2100 regardless of what the user asked for.
+  final double goalCalories;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -591,7 +735,8 @@ class _TrendPainter extends CustomPainter {
       final y = size.height * row / 2;
       canvas.drawLine(Offset(0, y), Offset(size.width, y), grid);
     }
-    final maxValue = math.max(2100.0, values.fold(0.0, math.max));
+    final maxValue = math.max(goalCalories, values.fold(0.0, math.max));
+    if (maxValue <= 0) return;
     final points = <Offset>[];
     for (var index = 0; index < values.length; index++) {
       final x = values.length == 1
@@ -621,9 +766,12 @@ class _TrendPainter extends CustomPainter {
     }
   }
 
+  // `!=` on a List is identity comparison, so an in-place update of the same
+  // length never repainted.
   @override
   bool shouldRepaint(covariant _TrendPainter oldDelegate) =>
-      oldDelegate.values != values;
+      oldDelegate.goalCalories != goalCalories ||
+      !listEquals(oldDelegate.values, values);
 }
 
 class _InsightStrip extends StatelessWidget {
@@ -669,7 +817,7 @@ class _InsightStrip extends StatelessWidget {
             replacements: {'percent': difference.abs()},
           );
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
       child: Row(
         children: [
           const Icon(
@@ -677,7 +825,7 @@ class _InsightStrip extends StatelessWidget {
             size: 18,
             color: AppColors.muted,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: Text(
               message,
@@ -710,6 +858,12 @@ class _Overview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final largeText = MediaQuery.textScalerOf(context).scale(14) >= 20;
+    final averageLabel = context.ota(
+      'calorieAmount',
+      tr: '{amount} kcal',
+      en: '{amount} kcal',
+      replacements: {'amount': averageCalories.round()},
+    );
     return StandardCardSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -722,7 +876,7 @@ class _Overview extends StatelessWidget {
             ),
             style: Theme.of(context).textTheme.titleLarge,
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.md),
           if (largeText)
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -747,16 +901,16 @@ class _Overview extends StatelessWidget {
                     replacements: {'count': mealCount},
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.md),
                 const Divider(height: 1),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.md),
                 _OverviewGroup(
                   title: context.ota(
                     'dailyAverageTitle',
                     tr: 'Günlük ortalama',
                     en: 'Daily average',
                   ),
-                  primary: '${averageCalories.round()} kcal',
+                  primary: averageLabel,
                   secondary: context.ota(
                     'proteinAmount',
                     tr: '{amount} g protein',
@@ -799,7 +953,7 @@ class _Overview extends StatelessWidget {
                       tr: 'Günlük ortalama',
                       en: 'Daily average',
                     ),
-                    primary: '${averageCalories.round()} kcal',
+                    primary: averageLabel,
                     secondary: context.ota(
                       'proteinAmount',
                       tr: '{amount} g protein',
@@ -810,7 +964,7 @@ class _Overview extends StatelessWidget {
                 ),
               ],
             ),
-          const SizedBox(height: 18),
+          const SizedBox(height: AppSpacing.lg),
           Text(
             context.ota(
               'highestCalorieMeal',
@@ -819,7 +973,7 @@ class _Overview extends StatelessWidget {
             ),
             style: Theme.of(context).textTheme.bodyMedium,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xxs),
           Text(
             context.ota(
               'highestMealSummary',
@@ -845,7 +999,7 @@ class _VerticalDivider extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     width: 1,
     height: 46,
-    margin: const EdgeInsets.symmetric(horizontal: 18),
+    margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
     color: AppColors.line,
   );
 }
@@ -868,82 +1022,24 @@ class _OverviewGroup extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(title, style: Theme.of(context).textTheme.bodySmall),
-        const SizedBox(height: 5),
+        const SizedBox(height: AppSpacing.tiny),
         Text(primary, style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 2),
+        const SizedBox(height: AppSpacing.micro),
         Text(secondary, style: Theme.of(context).textTheme.bodyMedium),
       ],
     );
   }
 }
 
-class _AnalysisMealRow extends StatelessWidget {
-  const _AnalysisMealRow({required this.meal, required this.onTap});
-
-  final LoggedMeal meal;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 9),
-      child: Material(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        meal.name,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        meal.timeLabel,
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
-                  ),
-                ),
-                Text(
-                  context.ota(
-                    'calorieAmount',
-                    tr: '{amount} kcal',
-                    en: '{amount} kcal',
-                    replacements: {'amount': meal.nutrition.calories.round()},
-                  ),
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-                const SizedBox(width: 3),
-                const Icon(
-                  Icons.chevron_right_rounded,
-                  size: 20,
-                  color: AppColors.muted,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _EmptyAnalysis extends StatelessWidget {
-  const _EmptyAnalysis();
+  const _EmptyAnalysis({required this.onAddMeal});
+
+  final VoidCallback onAddMeal;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(26),
+      padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppRadius.feature),
@@ -951,7 +1047,7 @@ class _EmptyAnalysis extends StatelessWidget {
       child: Column(
         children: [
           const Icon(Icons.show_chart_rounded, size: 38),
-          const SizedBox(height: 13),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             context.ota(
               'analysisEmptyTitle',
@@ -960,7 +1056,7 @@ class _EmptyAnalysis extends StatelessWidget {
             ),
             style: Theme.of(context).textTheme.titleLarge,
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.tiny),
           Text(
             context.ota(
               'analysisEmptyBody',
@@ -969,6 +1065,17 @@ class _EmptyAnalysis extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          TextButton(
+            onPressed: onAddMeal,
+            child: Text(
+              context.ota(
+                'analysisEmptyAction',
+                tr: 'Öğün ekle',
+                en: 'Add a meal',
+              ),
+            ),
           ),
         ],
       ),

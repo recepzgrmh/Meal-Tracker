@@ -66,7 +66,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Yemeğini nasıl taratırsın?'), findsOneWidget);
-    expect(find.text('Aydınlık bir ortam kullan'), findsOneWidget);
+    expect(
+      find.text(
+        'Tabağın tamamı görünsün; telefonu mümkün olduğunca yukarıdan ve sabit tut.',
+      ),
+      findsOneWidget,
+    );
     await tester.ensureVisible(
       find.byKey(const Key('open-meal-camera-button')),
     );

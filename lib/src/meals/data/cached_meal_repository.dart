@@ -202,6 +202,14 @@ class CachedMealRepository {
     return operationId;
   }
 
+  /// Drops every locally cached row for [userId].
+  ///
+  /// Sign-out and account deletion both leave the Drift database untouched
+  /// otherwise, so a shared device kept the previous user's meals, photos
+  /// metadata and pending sync operations on disk. Deleting an account has to
+  /// mean the local copy goes too, not just the server rows.
+  Future<void> clearUser(String userId) => _local.clearUser(userId);
+
   Map<String, Object?> _mealPayload({
     required String operationId,
     required String userId,

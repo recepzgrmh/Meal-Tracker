@@ -4,6 +4,7 @@ import 'package:meal_clarity/src/app.dart';
 import 'package:meal_clarity/src/data/meal_repository.dart';
 import 'package:meal_clarity/src/domain/meal_analysis_input.dart';
 import 'package:meal_clarity/src/domain/models.dart';
+import 'package:meal_clarity/src/domain/nutrition_goals.dart';
 import 'package:meal_clarity/src/features/analysis_screen.dart';
 
 void main() {
@@ -147,7 +148,13 @@ void main() {
 
     expect(find.text('Günlük'), findsOneWidget);
     expect(find.text('Geçmiş'), findsOneWidget);
-    expect(find.text('Öğün Ekle'), findsOneWidget);
+    // Visible label is shortened to fit five destinations; the full phrase is
+    // what assistive tech announces.
+    expect(find.text('Ekle'), findsOneWidget);
+    expect(
+      tester.getSemantics(find.byKey(const Key('nav-destination-2'))).label,
+      'Öğün Ekle',
+    );
     expect(find.text('Analiz'), findsOneWidget);
     expect(find.text('Profil'), findsOneWidget);
 
@@ -161,7 +168,7 @@ void main() {
     expect(find.text('Günlük hedef'), findsOneWidget);
     expect(find.text('2.100 kcal'), findsOneWidget);
 
-    await tester.tap(find.text('Öğün Ekle'));
+    await tester.tap(find.byKey(const Key('nav-destination-2')));
     await tester.pumpAndSettle();
     expect(
       find.text('Yemeğini göster,\ngerisini birlikte halledelim.'),
@@ -171,6 +178,48 @@ void main() {
     await tester.tap(find.byKey(const Key('add-meal-text')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('meal-input')), findsOneWidget);
+  });
+
+  testWidgets('daily summary exposes real metrics and opens analysis details', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MealClarityApp());
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('daily-summary-card')), findsOneWidget);
+    expect(find.byKey(const Key('daily-summary-title')), findsOneWidget);
+    expect(find.byKey(const Key('daily-calorie-ring')), findsOneWidget);
+    expect(find.byKey(const Key('daily-consumed-stat')), findsOneWidget);
+    expect(find.byKey(const Key('daily-goal-stat')), findsOneWidget);
+    expect(find.text('Alınan'), findsOneWidget);
+    expect(find.text('Hedef'), findsOneWidget);
+    expect(find.text('Detaylar'), findsOneWidget);
+    expect(find.text('Yakılan'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('daily-summary-details')));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .getSemantics(find.byKey(const Key('nav-destination-3')))
+          .toString(),
+      contains('isSelected'),
+    );
+    expect(find.text('Henüz yeterli veri yok'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('daily summary remains scrollable in landscape', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(844, 390));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MealClarityApp());
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('daily-summary-card')), findsOneWidget);
+    expect(find.byKey(const Key('daily-summary-details')), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('primary tabs support horizontal swipe navigation', (
@@ -210,6 +259,122 @@ void main() {
     );
   });
 
+  testWidgets('bottom navigation skips intermediate destinations', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MealClarityApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('nav-destination-4')));
+    await tester.pump(const Duration(milliseconds: 100));
+
+    expect(
+      tester
+          .getSemantics(find.byKey(const Key('nav-destination-4')))
+          .toString(),
+      contains('isSelected'),
+    );
+    expect(
+      tester
+          .getSemantics(find.byKey(const Key('nav-destination-1')))
+          .toString(),
+      isNot(contains('isSelected')),
+    );
+    expect(
+      tester
+          .getSemantics(find.byKey(const Key('nav-destination-3')))
+          .toString(),
+      isNot(contains('isSelected')),
+    );
+    expect(find.text('Profil'), findsWidgets);
+  });
+
+  testWidgets('bottom navigation uses one interruptible sliding indicator', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MealClarityApp());
+    await tester.pumpAndSettle();
+
+    AnimatedAlign indicator() => tester.widget<AnimatedAlign>(
+      find.byKey(const Key('bottom-nav-selection-indicator')),
+    );
+
+    expect(indicator().alignment, Alignment.centerLeft);
+    final surfaceRect = tester.getRect(
+      find.byKey(const Key('liquid-glass-navigation-surface')),
+    );
+    final fillRect = tester.getRect(
+      find.byKey(const Key('bottom-nav-selection-fill')),
+    );
+    // The selection fills the bar's content box; only the 1 px outline stays
+    // visible around it.
+    expect(fillRect.left, closeTo(surfaceRect.left + 1, 0.01));
+    expect(fillRect.top, closeTo(surfaceRect.top + 1, 0.01));
+    expect(fillRect.height, closeTo(surfaceRect.height - 2, 0.01));
+    expect(fillRect.width, closeTo((surfaceRect.width - 2) / 5, 0.01));
+
+    await tester.tap(find.byKey(const Key('nav-destination-1')));
+    await tester.pump(const Duration(milliseconds: 40));
+    expect(indicator().alignment, const Alignment(-0.5, 0));
+    final pages = tester.widget<PageView>(
+      find.byKey(const Key('primary-tab-page-view')),
+    );
+    expect(pages.controller!.page, 1);
+
+    await tester.tap(find.byKey(const Key('nav-destination-3')));
+    await tester.pump(const Duration(milliseconds: 40));
+    expect(indicator().alignment, const Alignment(0.5, 0));
+    expect(
+      tester
+          .getSemantics(find.byKey(const Key('nav-destination-3')))
+          .toString(),
+      contains('isSelected'),
+    );
+    expect(tester.takeException(), isNull);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('selected bottom tab can be held and scrubbed to a destination', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MealClarityApp());
+    await tester.pumpAndSettle();
+
+    AnimatedAlign indicator() => tester.widget<AnimatedAlign>(
+      find.byKey(const Key('bottom-nav-selection-indicator')),
+    );
+
+    final gesture = await tester.startGesture(
+      tester.getCenter(find.byKey(const Key('nav-destination-0'))),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+    await gesture.moveTo(
+      tester.getCenter(find.byKey(const Key('nav-destination-3'))),
+    );
+    await tester.pump();
+
+    expect((indicator().alignment as Alignment).x, closeTo(0.5, 0.01));
+    expect(indicator().duration, Duration.zero);
+
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .getSemantics(find.byKey(const Key('nav-destination-3')))
+          .toString(),
+      contains('isSelected'),
+    );
+    expect(find.text('Analiz'), findsWidgets);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('analysis period survives tab changes', (tester) async {
     await tester.pumpWidget(const MealClarityApp());
     await tester.pumpAndSettle();
@@ -236,6 +401,56 @@ void main() {
           .toString(),
       contains('isSelected'),
     );
+  });
+
+  testWidgets('analysis period indicator replaces interrupted selection', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MealClarityApp());
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('nav-destination-3')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('analysis-period-30')));
+    await tester.pump(const Duration(milliseconds: 40));
+    await tester.tap(find.byKey(const Key('analysis-period-90')));
+    await tester.pump(const Duration(milliseconds: 40));
+
+    final indicator = tester.widget<AnimatedAlign>(
+      find.byKey(const Key('analysis-period-indicator')),
+    );
+    expect(indicator.alignment, Alignment.centerRight);
+    expect(
+      tester
+          .getSemantics(find.byKey(const Key('analysis-period-90')))
+          .toString(),
+      contains('isSelected'),
+    );
+    expect(tester.takeException(), isNull);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('navigation and period selection respect reduced motion', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MediaQuery(
+        data: MediaQueryData(disableAnimations: true),
+        child: MealClarityApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('nav-destination-3')));
+    await tester.pump();
+    await tester.tap(find.byKey(const Key('analysis-period-90')));
+    await tester.pump();
+
+    final indicator = tester.widget<AnimatedAlign>(
+      find.byKey(const Key('analysis-period-indicator')),
+    );
+    expect(indicator.duration, Duration.zero);
+    expect(indicator.alignment, Alignment.centerRight);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('primary tabs remain usable at 200 percent text scale', (
@@ -379,6 +594,8 @@ void main() {
       MaterialApp(
         home: AnalysisScreen(
           meals: meals,
+          goals: NutritionGoals.fallback,
+          onAddMeal: () {},
           onMealTap: (_) {},
           onNavigationSelected: (_) {},
         ),
@@ -390,7 +607,7 @@ void main() {
     expect(find.text('Henüz yeterli veri yok'), findsNothing);
   });
 
-  for (final width in [360.0, 375.0, 390.0, 430.0]) {
+  for (final width in [320.0, 360.0, 375.0, 390.0, 430.0]) {
     testWidgets('primary dashboard and add meal fit at ${width.round()} px', (
       tester,
     ) async {

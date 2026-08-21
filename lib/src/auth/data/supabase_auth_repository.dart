@@ -80,6 +80,42 @@ class SupabaseAuthRepository implements AuthRepository {
     }
   }
 
+  @override
+  Future<void> deleteAccount() async {
+    try {
+      final response = await _client.functions.invoke('delete-account');
+      final payload = response.data;
+      if (payload is! Map ||
+          payload['contractVersion'] != 'account-delete.v1' ||
+          payload['deleted'] != true) {
+        throw const AuthFailure(
+          AuthFailureCode.unknown,
+          'Hesap silinemedi. Lütfen tekrar dene.',
+        );
+      }
+    } on supabase.FunctionException {
+      throw const AuthFailure(
+        AuthFailureCode.network,
+        'Hesap silinemedi. Bağlantını kontrol edip tekrar dene.',
+      );
+    } on supabase.AuthException catch (error) {
+      throw _mapFailure(error);
+    } on TimeoutException {
+      throw const AuthFailure(
+        AuthFailureCode.network,
+        'Bağlantı zaman aşımına uğradı. Tekrar dene.',
+      );
+    }
+
+    // The account no longer exists server-side, so signing out can legitimately
+    // fail on an already-invalid token. The local session must go either way.
+    try {
+      await _client.auth.signOut();
+    } on supabase.AuthException {
+      // Ignored: the session it would have revoked is already gone.
+    }
+  }
+
   static AuthSession? _mapSession(supabase.Session? session) {
     if (session == null) return null;
     return AuthSession(userId: session.user.id, email: session.user.email);

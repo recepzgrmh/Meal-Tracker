@@ -13,4 +13,8 @@ abstract interface class AuthRepository {
   });
 
   Future<void> signOut();
+
+  /// Permanently deletes the signed-in account and everything keyed to it.
+  /// Irreversible; the local session is dropped as part of the call.
+  Future<void> deleteAccount();
 }

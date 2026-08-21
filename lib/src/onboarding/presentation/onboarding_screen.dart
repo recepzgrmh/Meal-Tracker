@@ -22,8 +22,8 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final _calorieController = TextEditingController();
   bool _demoAnalyzed = false;
-  String _portion = 'regular';
-  String? _calorieError;
+  _DemoPortion? _portion;
+  CalorieTargetError? _calorieError;
 
   @override
   void initState() {
@@ -51,17 +51,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       _calorieController.text,
     );
     if (error != null) {
-      setState(
-        () => _calorieError = context.ota(
-          'calorieTargetValidation',
-          tr: '500–10.000 kcal arasında bir değer gir veya alanı boş bırak.',
-          en: 'Enter a value between 500–10,000 kcal or leave the field blank.',
-        ),
-      );
+      setState(() => _calorieError = error);
       return;
     }
     await widget.viewModel.setCalorieTarget(_calorieController.text);
     await widget.viewModel.finishDraft();
+    await widget.onDraftChanged();
+  }
+
+  /// Signing in is not an answer to onboarding, so this path persists no
+  /// intention and no calorie target — only the step that routes to auth.
+  Future<void> _skipToSignIn() async {
+    await widget.viewModel.skipToSignIn();
     await widget.onDraftChanged();
   }
 
@@ -86,12 +87,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 Expanded(
                   child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 220),
+                    duration: MediaQuery.disableAnimationsOf(context)
+                        ? Duration.zero
+                        : AppMotion.standard,
                     child: switch (step) {
                       0 => _WelcomeStep(
                         key: const ValueKey('welcome'),
                         onContinue: () => _goTo(1),
-                        onSignIn: _finish,
+                        onSignIn: _skipToSignIn,
                       ),
                       1 => _AccuracyDemoStep(
                         key: const ValueKey('demo'),
@@ -134,11 +137,16 @@ class _OnboardingHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 20, 4),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.xs,
+        AppSpacing.page,
+        AppSpacing.xxs,
+      ),
       child: Row(
         children: [
           SizedBox(
-            width: 48,
+            width: AppTouchTarget.minimum,
             child: onBack == null
                 ? null
                 : IconButton(
@@ -220,7 +228,7 @@ class _WelcomeStep extends StatelessWidget {
               letterSpacing: 1.6,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           Text(
             context.ota(
               'onboardingWelcomeTitle',
@@ -229,7 +237,7 @@ class _WelcomeStep extends StatelessWidget {
             ),
             style: Theme.of(context).textTheme.headlineMedium,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             context.ota(
               'onboardingWelcomeBody',
@@ -238,7 +246,7 @@ class _WelcomeStep extends StatelessWidget {
             ),
             style: Theme.of(context).textTheme.bodyLarge,
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: AppSpacing.xl),
           ClipRRect(
             borderRadius: BorderRadius.circular(AppRadius.feature),
             child: AspectRatio(
@@ -247,6 +255,11 @@ class _WelcomeStep extends StatelessWidget {
                 'assets/images/onboarding_breakfast_hero.webp',
                 fit: BoxFit.cover,
                 alignment: const Alignment(0, 0.3),
+                semanticLabel: context.ota(
+                  'onboardingHeroSemantics',
+                  tr: 'Yumurta, beyaz peynir ve simitten oluşan bir kahvaltı tabağı',
+                  en: 'A breakfast plate of eggs, white cheese, and simit',
+                ),
               ),
             ),
           ),
@@ -267,13 +280,16 @@ class _AccuracyDemoStep extends StatelessWidget {
   });
 
   final bool analyzed;
-  final String selectedPortion;
+  final _DemoPortion? selectedPortion;
   final VoidCallback onAnalyze;
-  final ValueChanged<String> onSelectPortion;
+  final ValueChanged<_DemoPortion> onSelectPortion;
   final VoidCallback onContinue;
 
   @override
   Widget build(BuildContext context) {
+    // Until the user picks, the cheese keeps the estimate the analysis would
+    // have produced, so the running total is never a blank promise.
+    final cheese = selectedPortion ?? _DemoPortion.regular;
     return _StepFrame(
       footer: FilledButton(
         key: const Key('demo-continue'),
@@ -303,7 +319,7 @@ class _AccuracyDemoStep extends StatelessWidget {
             ),
             style: Theme.of(context).textTheme.headlineMedium,
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             context.ota(
               'onboardingAccuracyBody',
@@ -312,11 +328,13 @@ class _AccuracyDemoStep extends StatelessWidget {
             ),
             style: Theme.of(context).textTheme.bodyLarge,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.lg),
           const _DemoInput(),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.sm),
           AnimatedSize(
-            duration: const Duration(milliseconds: 220),
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : AppMotion.standard,
             child: analyzed
                 ? Column(
                     children: [
@@ -352,39 +370,66 @@ class _AccuracyDemoStep extends StatelessWidget {
                           tr: 'Beyaz peynir',
                           en: 'White cheese',
                         ),
-                        detail: context.ota(
-                          'demoCheeseDetail',
-                          tr: 'Miktarı kontrol et',
-                          en: 'Check the amount',
-                        ),
-                        needsReview: true,
+                        detail: selectedPortion == null
+                            ? context.ota(
+                                'demoCheeseEstimate',
+                                tr: '~{grams} g tahmin · miktarı kontrol et',
+                                en: '~{grams} g estimate · check the amount',
+                                replacements: {'grams': cheese.grams},
+                              )
+                            : context.ota(
+                                'demoCheeseResolved',
+                                tr: '{grams} g · ~{kcal} kcal',
+                                en: '{grams} g · ~{kcal} kcal',
+                                replacements: {
+                                  'grams': cheese.grams,
+                                  'kcal': cheese.kcal,
+                                },
+                              ),
+                        needsReview: selectedPortion == null,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.sm),
                       Row(
                         children: [
                           _PortionChoice(
                             label: context.l10n.portionSmall,
                             asset: 'assets/images/portion_cheese_small.webp',
-                            selected: selectedPortion == 'small',
-                            onTap: () => onSelectPortion('small'),
+                            selected: selectedPortion == _DemoPortion.small,
+                            onTap: () => onSelectPortion(_DemoPortion.small),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.xs),
                           _PortionChoice(
                             label: context.l10n.portionEstimate,
                             asset: 'assets/images/portion_cheese_regular.webp',
-                            selected: selectedPortion == 'regular',
-                            onTap: () => onSelectPortion('regular'),
+                            selected: selectedPortion == _DemoPortion.regular,
+                            onTap: () => onSelectPortion(_DemoPortion.regular),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.xs),
                           _PortionChoice(
                             label: context.l10n.portionLarge,
                             asset: 'assets/images/portion_cheese_large.webp',
-                            selected: selectedPortion == 'large',
-                            onTap: () => onSelectPortion('large'),
+                            selected: selectedPortion == _DemoPortion.large,
+                            onTap: () => onSelectPortion(_DemoPortion.large),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
+                      Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          context.ota(
+                            'demoRunningTotal',
+                            tr: 'Tahmini toplam: ~{kcal} kcal',
+                            en: 'Estimated total: ~{kcal} kcal',
+                            replacements: {
+                              'kcal': _DemoPortion.baseKcal + cheese.kcal,
+                            },
+                          ),
+                          style: Theme.of(context).textTheme.titleMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         context.ota(
                           'onboardingPortionHint',
@@ -411,10 +456,10 @@ class _DemoInput extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppRadius.feature),
         border: Border.all(color: AppColors.line),
       ),
       child: Text(
@@ -473,8 +518,8 @@ class _PortionChoice extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Semantics(
-        button: true,
-        selected: selected,
+        inMutuallyExclusiveGroup: true,
+        checked: selected,
         label: context.ota(
           'cheesePortionSemantics',
           tr: '{label} peynir porsiyonu',
@@ -483,13 +528,15 @@ class _PortionChoice extends StatelessWidget {
         ),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.input),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 160),
-            padding: const EdgeInsets.all(5),
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : AppMotion.fast,
+            padding: const EdgeInsets.all(AppSpacing.tiny),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.input),
               border: Border.all(
                 color: selected ? AppColors.limeDark : AppColors.line,
                 width: selected ? 2 : 1,
@@ -498,19 +545,25 @@ class _PortionChoice extends StatelessWidget {
             child: Column(
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(11),
+                  borderRadius: BorderRadius.circular(AppRadius.medium),
                   child: AspectRatio(
                     aspectRatio: 1,
-                    child: Image.asset(asset, fit: BoxFit.cover),
+                    // The wrapping Semantics already names the choice; an
+                    // image node here would announce the portion twice.
+                    child: Image.asset(
+                      asset,
+                      fit: BoxFit.cover,
+                      excludeFromSemantics: true,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: AppSpacing.tiny),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (selected) ...[
                       const Icon(Icons.check, size: 14),
-                      const SizedBox(width: 2),
+                      const SizedBox(width: AppSpacing.micro),
                     ],
                     Flexible(
                       child: Text(label, overflow: TextOverflow.ellipsis),
@@ -538,7 +591,7 @@ class _PersonalizationStep extends StatelessWidget {
 
   final OnboardingViewModel viewModel;
   final TextEditingController calorieController;
-  final String? calorieError;
+  final CalorieTargetError? calorieError;
   final VoidCallback onFinish;
   final ValueChanged<TrackingIntention> onIntentionChanged;
 
@@ -568,7 +621,7 @@ class _PersonalizationStep extends StatelessWidget {
             ),
             style: Theme.of(context).textTheme.headlineMedium,
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             context.ota(
               'personalizationBody',
@@ -577,7 +630,7 @@ class _PersonalizationStep extends StatelessWidget {
             ),
             style: Theme.of(context).textTheme.bodyLarge,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.lg),
           _IntentTile(
             key: const Key('intent-understand'),
             title: context.ota(
@@ -610,7 +663,7 @@ class _PersonalizationStep extends StatelessWidget {
             onChanged: onIntentionChanged,
           ),
           if (intention == TrackingIntention.calories) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.sm),
             TextField(
               key: const Key('calorie-target'),
               controller: calorieController,
@@ -622,7 +675,14 @@ class _PersonalizationStep extends StatelessWidget {
                   en: 'Daily goal (optional)',
                 ),
                 suffixText: 'kcal',
-                errorText: calorieError,
+                // A field-level error has to reach screen readers the moment
+                // it appears, which InputDecoration.errorText never announces.
+                error: calorieError == null
+                    ? null
+                    : Semantics(
+                        liveRegion: true,
+                        child: Text(_calorieErrorText(context, calorieError!)),
+                      ),
                 helperText: context.ota(
                   'dailyGoalHelper',
                   tr: 'Demo önerisi: 2.100 kcal — tıbbi tavsiye değildir.',
@@ -631,7 +691,7 @@ class _PersonalizationStep extends StatelessWidget {
               ),
             ),
           ],
-          const SizedBox(height: 18),
+          const SizedBox(height: AppSpacing.lg),
           Text(
             context.ota(
               'medicalDisclaimer',
@@ -664,18 +724,23 @@ class _IntentTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final selected = value == groupValue;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Semantics(
-        selected: selected,
-        button: true,
+        // These three options are one radio group; announcing them as plain
+        // selected buttons hides that picking one clears the others.
+        inMutuallyExclusiveGroup: true,
+        checked: selected,
         child: InkWell(
           onTap: () => onChanged(value),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppRadius.input),
           child: Container(
-            padding: const EdgeInsets.all(16),
+            constraints: const BoxConstraints(
+              minHeight: AppTouchTarget.minimum,
+            ),
+            padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.input),
               border: Border.all(
                 color: selected ? AppColors.limeDark : AppColors.line,
                 width: selected ? 2 : 1,
@@ -689,7 +754,7 @@ class _IntentTile extends StatelessWidget {
                       : Icons.radio_button_off,
                   color: selected ? AppColors.limeDark : AppColors.muted,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(child: Text(title)),
               ],
             ),
@@ -709,7 +774,12 @@ class _StepFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(22, 8, 22, 18),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        AppSpacing.xs,
+        AppSpacing.page,
+        AppSpacing.lg,
+      ),
       child: Column(
         children: [
           Expanded(
@@ -720,7 +790,7 @@ class _StepFrame extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpacing.md),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 560),
             child: footer,
@@ -729,4 +799,32 @@ class _StepFrame extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The canned numbers behind the accuracy demo. Nothing here talks to the
+/// network, but the values are real enough that choosing a portion visibly
+/// changes the cheese row and the running total — the step promises we resolve
+/// what we can and ask only when it matters, so its control has to do that.
+enum _DemoPortion {
+  small(grams: 30, kcal: 75),
+  regular(grams: 50, kcal: 125),
+  large(grams: 80, kcal: 200);
+
+  const _DemoPortion({required this.grams, required this.kcal});
+
+  /// 2 eggs plus half a simit, the two rows the demo resolves on its own.
+  static const baseKcal = 290;
+
+  final int grams;
+  final int kcal;
+}
+
+String _calorieErrorText(BuildContext context, CalorieTargetError error) {
+  return switch (error) {
+    CalorieTargetError.outOfRange => context.ota(
+      'calorieTargetValidation',
+      tr: '500–10.000 kcal arasında bir değer gir veya alanı boş bırak.',
+      en: 'Enter a value between 500–10,000 kcal or leave the field blank.',
+    ),
+  };
 }

@@ -24,6 +24,11 @@ class _AuthScreenState extends State<AuthScreen> {
   final _emailController = TextEditingController();
   final _otpController = TextEditingController();
 
+  /// The last code the field submitted on its own. The button stays reachable
+  /// while a code is complete, so without this the same code could be sent
+  /// twice — once by the sixth keystroke and once by the tap that follows.
+  String? _autoSubmittedOtp;
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -31,7 +36,18 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
+  void _onOtpChanged(String value) {
+    if (value.length < 6) {
+      _autoSubmittedOtp = null;
+      return;
+    }
+    if (_autoSubmittedOtp == value) return;
+    _autoSubmittedOtp = value;
+    _submit();
+  }
+
   Future<void> _submit() async {
+    if (widget.viewModel.isBusy) return;
     FocusScope.of(context).unfocus();
     if (widget.viewModel.step == AuthStep.email) {
       await widget.viewModel.requestOtp(_emailController.text);
@@ -47,11 +63,22 @@ class _AuthScreenState extends State<AuthScreen> {
       listenable: widget.viewModel,
       builder: (context, _) {
         final otpStep = widget.viewModel.step == AuthStep.otp;
+        final actionLabel = otpStep
+            ? context.ota(
+                'authVerifyCodeAction',
+                tr: 'Kodu doğrula',
+                en: 'Verify code',
+              )
+            : context.ota(
+                'authSendCodeAction',
+                tr: 'Kod gönder',
+                en: 'Send code',
+              );
         return Scaffold(
           body: SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.page),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 480),
                   child: Column(
@@ -66,7 +93,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                         child: const Icon(Icons.lock_open_rounded),
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: AppSpacing.x28),
                       Text(
                         otpStep
                             ? context.ota(
@@ -81,7 +108,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               ),
                         style: Theme.of(context).textTheme.headlineMedium,
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: AppSpacing.sm),
                       Text(
                         otpStep
                             ? context.ota(
@@ -99,7 +126,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               ),
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: AppSpacing.x28),
                       if (!otpStep)
                         TextField(
                           key: const Key('auth-email'),
@@ -135,9 +162,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             LengthLimitingTextInputFormatter(6),
                           ],
                           textInputAction: TextInputAction.done,
-                          onChanged: (value) {
-                            if (value.length == 6) _submit();
-                          },
+                          onChanged: _onOtpChanged,
                           decoration: InputDecoration(
                             labelText: context.ota(
                               'authOtpLabel',
@@ -152,7 +177,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                         ),
                       if (widget.viewModel.errorMessage case final error?) ...[
-                        const SizedBox(height: 12),
+                        const SizedBox(height: AppSpacing.sm),
                         Semantics(
                           liveRegion: true,
                           child: Text(
@@ -167,33 +192,32 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 18),
+                      const SizedBox(height: AppSpacing.lg),
                       FilledButton(
                         key: const Key('auth-submit'),
                         onPressed: widget.viewModel.isBusy ? null : _submit,
+                        // The spinner replaces the label visually, so the
+                        // action keeps its name for screen readers here.
                         child: widget.viewModel.isBusy
-                            ? const SizedBox.square(
-                                dimension: 22,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
+                            ? Semantics(
+                                label: context.ota(
+                                  'authSubmitBusySemantics',
+                                  tr: '{action}, sürüyor',
+                                  en: '{action}, in progress',
+                                  replacements: {'action': actionLabel},
+                                ),
+                                excludeSemantics: true,
+                                child: const SizedBox.square(
+                                  dimension: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 ),
                               )
-                            : Text(
-                                otpStep
-                                    ? context.ota(
-                                        'authVerifyCodeAction',
-                                        tr: 'Kodu doğrula',
-                                        en: 'Verify code',
-                                      )
-                                    : context.ota(
-                                        'authSendCodeAction',
-                                        tr: 'Kod gönder',
-                                        en: 'Send code',
-                                      ),
-                              ),
+                            : Text(actionLabel),
                       ),
                       if (otpStep) ...[
-                        const SizedBox(height: 10),
+                        const SizedBox(height: AppSpacing.sm),
                         Row(
                           children: [
                             TextButton(
@@ -234,7 +258,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           ],
                         ),
                       ],
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.xl),
                       Text(
                         context.ota(
                           'authLegalNotice',
@@ -295,9 +319,14 @@ String _localizedAuthError(
   };
 }
 
+/// Masks the local part of an address. Anything we cannot split — no `@`, an
+/// empty local part — is hidden entirely rather than echoed back verbatim, and
+/// a one-character local part is hidden too, since revealing its first
+/// character would reveal all of it.
 String _maskEmail(String email) {
-  final parts = email.split('@');
-  if (parts.length != 2 || parts.first.isEmpty) return email;
-  final visible = parts.first.substring(0, 1);
-  return '$visible•••@${parts.last}';
+  final separator = email.lastIndexOf('@');
+  if (separator <= 0) return '•••';
+  final domain = email.substring(separator + 1);
+  if (separator == 1) return '•••@$domain';
+  return '${email[0]}•••@$domain';
 }

@@ -14,6 +14,8 @@ class FakeAuthRepository implements AuthRepository {
   AuthFailure? nextFailure;
   int requestCount = 0;
   int verifyCount = 0;
+  int signOutCount = 0;
+  int deleteAccountCount = 0;
 
   @override
   AuthSession? get currentSession => session;
@@ -45,6 +47,17 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {
+    signOutCount++;
+    session = null;
+    _sessions.add(null);
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    deleteAccountCount++;
+    final failure = nextFailure;
+    nextFailure = null;
+    if (failure != null) throw failure;
     session = null;
     _sessions.add(null);
   }

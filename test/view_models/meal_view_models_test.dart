@@ -93,17 +93,32 @@ void main() {
     );
 
     test(
-      'returns to composer with a safe message on repository failure',
+      'returns to composer with a reportable failure kind on repository error',
       () async {
         final viewModel = MealFlowViewModel(repository: _ThrowingRepository());
 
         await viewModel.analyze(_input('peynir'));
 
         expect(viewModel.step, MealFlowStep.compose);
-        expect(viewModel.error, isNotEmpty);
+        expect(viewModel.errorKind, MealAnalysisFailureKind.unknown);
         expect(viewModel.draft, isNull);
       },
     );
+
+    test('discards a stale analysis after the user cancels', () async {
+      final repository = _ControllableRepository();
+      final viewModel = MealFlowViewModel(repository: repository);
+
+      final operation = viewModel.analyze(_input('peynir'));
+      expect(viewModel.step, MealFlowStep.analyzing);
+
+      viewModel.showComposer();
+      repository.complete(draft);
+      await operation;
+
+      expect(viewModel.step, MealFlowStep.compose);
+      expect(viewModel.draft, isNull);
+    });
 
     test('shows a corrective message for a grounded no-match', () async {
       final viewModel = MealFlowViewModel(
@@ -119,7 +134,7 @@ void main() {
       await viewModel.analyze(_input('avokado'));
 
       expect(viewModel.step, MealFlowStep.compose);
-      expect(viewModel.error, contains('katalogda güvenle eşleştiremedik'));
+      expect(viewModel.errorKind, MealAnalysisFailureKind.noMatch);
       expect(viewModel.manualSearchSuggested, isTrue);
     });
 
@@ -137,14 +152,43 @@ void main() {
         viewModel.selectManualFood(
           viewModel.catalogResults.single,
           'beyaz peynr',
+          mealName: 'Kahvaltı',
         );
 
         expect(catalog.query, 'beyaz peynr');
         expect(viewModel.step, MealFlowStep.review);
+        expect(viewModel.draft?.mealName, 'Kahvaltı');
         expect(viewModel.draft?.analysisRunId, isNull);
         expect(viewModel.draft?.items.single.matchMethod, 'manual');
         expect(viewModel.draft?.items.single.foodId, 'catalog-cheese');
         expect(viewModel.draft?.reviewCount, 1);
+      },
+    );
+
+    test(
+      'keeps an analyzed draft when a manual correction is picked',
+      () async {
+        final catalog = _FakeCatalogRepository();
+        final viewModel = MealFlowViewModel(
+          repository: _ImmediateRepository(draft),
+          catalogRepository: catalog,
+          manualItemIdFactory: () => 'manual-1',
+        );
+
+        await viewModel.analyze(_input('peynir'));
+        await viewModel.searchCatalog('beyaz peynir', 'tr-TR');
+        viewModel.selectManualFood(
+          viewModel.catalogResults.single,
+          'beyaz peynir',
+          mealName: 'Öğle yemeği',
+        );
+
+        // The correction is additive: the analyzed item survives and the draft
+        // keeps the analysis provenance it was created with.
+        expect(viewModel.draft?.items, hasLength(2));
+        expect(viewModel.draft?.items.first.id, 'cheese');
+        expect(viewModel.draft?.analysisRunId, 'analysis-run');
+        expect(viewModel.draft?.mealName, 'Kahvaltı');
       },
     );
 
@@ -173,6 +217,28 @@ void main() {
         expect(viewModel.draft?.items.last.matchMethod, 'manual');
         viewModel.removeItem('cheese');
         expect(viewModel.draft?.items.single.id, 'manual-1');
+      },
+    );
+
+    test(
+      'adds a catalog food that has no published portion without throwing',
+      () async {
+        final viewModel = MealFlowViewModel(
+          repository: _ImmediateRepository(draft),
+          catalogRepository: _FakePortionlessCatalogRepository(),
+          manualItemIdFactory: () => 'manual-portionless',
+        );
+
+        await viewModel.analyze(_input('semizotu'));
+        await viewModel.searchCatalog('semizotu', 'tr-TR');
+        viewModel.addManualFood(viewModel.catalogResults.single, 'semizotu');
+
+        final added = viewModel.draft!.items.last;
+        // Falls back to the 100 g basis the nutrition is expressed in...
+        expect(added.grams, 100);
+        expect(added.portionLabel, '100 g');
+        // ...and asks the user rather than presenting it as a known amount.
+        expect(added.matchState, MatchState.checkAmount);
       },
     );
   });
@@ -230,6 +296,30 @@ class _DomainFailureRepository implements MealRepository {
 
   @override
   Future<MealDraft> analyze(MealAnalysisInput input) async => throw error;
+}
+
+/// A catalog food with no published portion — the Tier A batch ships these on
+/// purpose, so the flow must handle null grams without throwing.
+class _FakePortionlessCatalogRepository implements FoodCatalogRepository {
+  @override
+  Future<List<CatalogFoodCandidate>> search({
+    required String query,
+    required String locale,
+  }) async => const [
+    CatalogFoodCandidate(
+      foodId: 'catalog-no-portion',
+      name: 'Semizotu',
+      matchedAlias: 'semizotu',
+      score: 0.7,
+      defaultGrams: null,
+      defaultPortionLabel: null,
+      caloriesPer100g: 16,
+      proteinPer100g: 1.3,
+      carbsPer100g: 3.4,
+      fatPer100g: 0.1,
+      nutritionSource: 'turkomp:02.01.0031',
+    ),
+  ];
 }
 
 class _FakeCatalogRepository implements FoodCatalogRepository {

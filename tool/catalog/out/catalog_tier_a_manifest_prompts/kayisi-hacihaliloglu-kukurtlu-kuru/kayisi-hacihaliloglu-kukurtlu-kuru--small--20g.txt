@@ -1,0 +1,6 @@
+# Kayısı, Hacıhaliloğlu, kükürtlü, kuru — small — 20 g
+# target file: food-portions/kayisi-hacihaliloglu-kukurtlu-kuru/kayisi-hacihaliloglu-kukurtlu-kuru--small--20g.webp
+# gram value source: TÜBER 2022 Ek 2.3.1 — Besinlerin standart porsiyonlarının enerji ve besin ögesi içerikleri (Ek 2.3.1 (s.283-284))
+# The image must not contain the gram value. The app renders it.
+
+Photorealistic overhead food reference photograph of Kayısı, Hacıhaliloğlu, kükürtlü, kuru, representing the SMALL controlled portion of 20 grams. Served on the exact same matte white small side plate used across the three portion variants. Fixed 85-degree overhead camera, fixed camera distance, neutral light stone tabletop, soft diffused daylight, natural appetizing food color, realistic household serving, entire small side plate visible, centered composition, no utensils, no hands, no napkin, no packaging, no logo, no text, no watermark, no decorative garnish unless part of the canonical recipe, no dramatic restaurant styling, no hard shadows. Only the amount of food should differ between portion variants. Square 1:1 composition, sRGB, production-quality mobile nutrition tracking reference image.

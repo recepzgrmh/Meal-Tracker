@@ -19,8 +19,14 @@ class CatalogFoodCandidate {
   final String name;
   final String matchedAlias;
   final double score;
-  final double defaultGrams;
-  final String defaultPortionLabel;
+
+  /// Null when the catalog holds no `tr-TR` portion row for this food.
+  ///
+  /// That is a normal state, not an error: Tier A deliberately ships foods
+  /// whose portion could not be resolved from a published TÜBER row. Callers
+  /// must fall back to the per-100 g basis and ask the user for the amount.
+  final double? defaultGrams;
+  final String? defaultPortionLabel;
   final double caloriesPer100g;
   final double proteinPer100g;
   final double carbsPer100g;
@@ -66,8 +72,8 @@ class SupabaseFoodCatalogRepository implements FoodCatalogRepository {
             name: row['canonicalName'] as String,
             matchedAlias: row['matchedAlias'] as String,
             score: (row['score'] as num).toDouble(),
-            defaultGrams: (row['defaultGrams'] as num).toDouble(),
-            defaultPortionLabel: row['defaultPortionLabel'] as String,
+            defaultGrams: (row['defaultGrams'] as num?)?.toDouble(),
+            defaultPortionLabel: row['defaultPortionLabel'] as String?,
             caloriesPer100g: (nutrition['calories'] as num).toDouble(),
             proteinPer100g: (nutrition['protein'] as num).toDouble(),
             carbsPer100g: (nutrition['carbs'] as num).toDouble(),

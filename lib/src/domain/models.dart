@@ -71,21 +71,29 @@ class MealItem {
     String? portionLabel,
     double? grams,
     MatchState? matchState,
+    Nutrition? nutritionPer100g,
+    String? foodId,
+    String? canonicalName,
+    String? displayName,
+    String? sourceName,
+    double? confidence,
+    String? matchMethod,
   }) {
+    final name = displayName ?? this.displayName;
     return MealItem(
       id: id ?? this.id,
-      name: displayName,
-      canonicalName: canonicalName,
-      displayName: displayName,
+      name: name,
+      canonicalName: canonicalName ?? this.canonicalName,
+      displayName: name,
       sourceText: sourceText,
       portionLabel: portionLabel ?? this.portionLabel,
       grams: grams ?? this.grams,
-      nutritionPer100g: nutritionPer100g,
+      nutritionPer100g: nutritionPer100g ?? this.nutritionPer100g,
       matchState: matchState ?? this.matchState,
-      sourceName: sourceName,
-      foodId: foodId,
-      confidence: confidence,
-      matchMethod: matchMethod,
+      sourceName: sourceName ?? this.sourceName,
+      foodId: foodId ?? this.foodId,
+      confidence: confidence ?? this.confidence,
+      matchMethod: matchMethod ?? this.matchMethod,
       portionOptions: portionOptions,
     );
   }
@@ -135,6 +143,7 @@ class MealDraft {
     this.analysisRunId,
     this.traceId,
     this.unmatchedText = const [],
+    this.eatenAt,
   });
 
   final String inputText;
@@ -144,39 +153,49 @@ class MealDraft {
   final String? traceId;
   final List<String> unmatchedText;
 
+  /// When the meal was actually eaten. `null` means "now", so callers keep
+  /// resolving the timestamp at log time instead of freezing it at analysis.
+  final DateTime? eatenAt;
+
   Nutrition get nutrition =>
       items.fold(Nutrition.zero, (total, item) => total + item.nutrition);
 
   int get reviewCount =>
       items.where((item) => item.matchState != MatchState.matched).length;
 
-  MealDraft updateItem(MealItem updated) => MealDraft(
-    inputText: inputText,
-    mealName: mealName,
-    items: items
+  MealDraft updateItem(MealItem updated) => _withItems(
+    items
         .map((item) => item.id == updated.id ? updated : item)
         .toList(growable: false),
-    analysisRunId: analysisRunId,
-    traceId: traceId,
-    unmatchedText: unmatchedText,
   );
 
-  MealDraft addItem(MealItem item) => MealDraft(
-    inputText: inputText,
-    mealName: mealName,
-    items: [...items, item],
-    analysisRunId: analysisRunId,
-    traceId: traceId,
-    unmatchedText: unmatchedText,
+  MealDraft addItem(MealItem item) => _withItems([...items, item]);
+
+  MealDraft removeItem(String itemId) => _withItems(
+    items.where((item) => item.id != itemId).toList(growable: false),
   );
 
-  MealDraft removeItem(String itemId) => MealDraft(
+  /// Explicit setter rather than a `copyWith`, because clearing [eatenAt] back
+  /// to "now" has to be expressible and a nullable named parameter cannot tell
+  /// "omitted" from "set to null".
+  MealDraft withEatenAt(DateTime? value) => MealDraft(
     inputText: inputText,
     mealName: mealName,
-    items: items.where((item) => item.id != itemId).toList(growable: false),
+    items: items,
     analysisRunId: analysisRunId,
     traceId: traceId,
     unmatchedText: unmatchedText,
+    eatenAt: value,
+  );
+
+  MealDraft _withItems(List<MealItem> next) => MealDraft(
+    inputText: inputText,
+    mealName: mealName,
+    items: next,
+    analysisRunId: analysisRunId,
+    traceId: traceId,
+    unmatchedText: unmatchedText,
+    eatenAt: eatenAt,
   );
 }
 

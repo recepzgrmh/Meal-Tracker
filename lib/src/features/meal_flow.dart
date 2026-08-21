@@ -8,8 +8,18 @@ import '../domain/meal_analysis_input.dart';
 import '../domain/models.dart';
 import '../media/meal_photo_picker.dart';
 import '../theme/app_theme.dart';
+import '../util/formatters.dart';
 import '../view_models/meal_flow_view_model.dart';
 import '../widgets/app_surfaces.dart';
+
+/// One ratio for the meal photo across compose, analyze and review. The steps
+/// used to disagree (4/5 then 16/9), so the same plate was recropped as the
+/// user advanced; the taller frame keeps a whole plate visible.
+const _photoAspectRatio = 4 / 5;
+
+/// Accepted range of the exact-gram entry in the portion sheet.
+const _minPortionGrams = 1.0;
+const _maxPortionGrams = 2000.0;
 
 class MealFlow extends StatefulWidget {
   const MealFlow({
@@ -37,8 +47,12 @@ class _MealFlowState extends State<MealFlow> {
   MealPhotoAttachment? _photo;
   String? _photoError;
 
+  /// Set when the user abandons the dedicated photo flow, so the text composer
+  /// takes over even though the screen was launched from the camera.
+  bool _preferTextComposer = false;
+
   String? _localizedAnalysisError(BuildContext context) {
-    if (_viewModel.error == null) return null;
+    if (_viewModel.errorKind == null) return null;
     return switch (_viewModel.errorKind) {
       MealAnalysisFailureKind.noMatch => context.ota(
         'mealErrorNoMatch',
@@ -171,6 +185,7 @@ class _MealFlowState extends State<MealFlow> {
   }
 
   Future<void> _retakeDedicatedPhoto() async {
+    final previous = _photo;
     setState(() {
       _photo = null;
       _photoError = null;
@@ -178,14 +193,30 @@ class _MealFlowState extends State<MealFlow> {
     try {
       final photo = await _photoPicker.pick(widget.initialPhotoSource!);
       if (!mounted) return;
+      // Cancelling a retake used to close the whole flow. The previous photo
+      // comes back instead so the user can retry or leave deliberately.
       if (photo == null) {
-        Navigator.pop(context);
+        setState(() => _photo = previous);
         return;
       }
       _setPhoto(photo);
     } catch (_) {
-      if (mounted) setState(() => _photoError = context.l10n.mealPhotoError);
+      if (mounted) {
+        setState(() {
+          _photo = previous;
+          _photoError = context.l10n.mealPhotoError;
+        });
+      }
     }
+  }
+
+  void _continueWithText() {
+    setState(() {
+      _photo = null;
+      _photoError = null;
+      _preferTextComposer = true;
+    });
+    _focusNode.requestFocus();
   }
 
   void _setPhoto(MealPhotoAttachment photo) {
@@ -207,7 +238,12 @@ class _MealFlowState extends State<MealFlow> {
       showDragHandle: true,
       builder: (context) => SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            0,
+            AppSpacing.md,
+            AppSpacing.sm,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -237,13 +273,39 @@ class _MealFlowState extends State<MealFlow> {
     _viewModel.updateItem(updated);
   }
 
+  Future<void> _editEatenAt() async {
+    final now = DateTime.now();
+    final current = _viewModel.draft?.eatenAt ?? now;
+    final date = await showDatePicker(
+      context: context,
+      initialDate: current,
+      firstDate: now.subtract(const Duration(days: 365)),
+      lastDate: now,
+    );
+    if (date == null || !mounted) return;
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(current),
+    );
+    if (time == null || !mounted) return;
+    final picked = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time.hour,
+      time.minute,
+    );
+    // A meal cannot have been eaten in the future; the time picker has no
+    // bounds of its own, so today's picks are clamped to now.
+    _viewModel.setEatenAt(picked.isAfter(DateTime.now()) ? null : picked);
+  }
+
   Future<void> _showManualSearch({bool addToDraft = false}) async {
     final queryController = TextEditingController(
       text: _controller.text.trim(),
     );
-    final locale = Localizations.localeOf(context).languageCode == 'en'
-        ? 'en-US'
-        : 'tr-TR';
+    final locale = _catalogLocale(context);
+    final mealName = _localizedMealName(context, DateTime.now());
     await _viewModel.searchCatalog(queryController.text, locale);
     if (!mounted) return;
     await showModalBottomSheet<void>(
@@ -256,10 +318,10 @@ class _MealFlowState extends State<MealFlow> {
         top: false,
         child: Padding(
           padding: EdgeInsets.fromLTRB(
-            22,
-            4,
-            22,
-            18 + MediaQuery.viewInsetsOf(sheetContext).bottom,
+            AppSpacing.page,
+            AppSpacing.xxs,
+            AppSpacing.page,
+            AppSpacing.lg + MediaQuery.viewInsetsOf(sheetContext).bottom,
           ),
           child: SizedBox(
             height: MediaQuery.sizeOf(sheetContext).height * 0.64,
@@ -270,12 +332,12 @@ class _MealFlowState extends State<MealFlow> {
                   context.l10n.catalogSearchTitle,
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
                   context.l10n.catalogSearchExplanation,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpacing.md),
                 TextField(
                   key: const Key('manual-catalog-query'),
                   controller: queryController,
@@ -293,7 +355,7 @@ class _MealFlowState extends State<MealFlow> {
                   onSubmitted: (value) =>
                       _viewModel.searchCatalog(value, locale),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: AppSpacing.md),
                 Expanded(
                   child: ListenableBuilder(
                     listenable: _viewModel,
@@ -321,15 +383,21 @@ class _MealFlowState extends State<MealFlow> {
                             contentPadding: EdgeInsets.zero,
                             title: Text(candidate.name),
                             subtitle: Text(
-                              context.ota(
-                                'catalogCandidateSummary',
-                                tr: '{alias} · {grams} g',
-                                en: '{alias} · {grams} g',
-                                replacements: {
-                                  'alias': candidate.matchedAlias,
-                                  'grams': candidate.defaultGrams.round(),
-                                },
-                              ),
+                              // Without a published portion there is no gram
+                              // figure to show; showing the alias alone is
+                              // honest, inventing one is not.
+                              candidate.defaultGrams == null
+                                  ? candidate.matchedAlias
+                                  : context.ota(
+                                      'catalogCandidateSummary',
+                                      tr: '{alias} · {grams} g',
+                                      en: '{alias} · {grams} g',
+                                      replacements: {
+                                        'alias': candidate.matchedAlias,
+                                        'grams': candidate.defaultGrams!
+                                            .round(),
+                                      },
+                                    ),
                             ),
                             trailing: const Icon(Icons.chevron_right_rounded),
                             onTap: () {
@@ -342,6 +410,7 @@ class _MealFlowState extends State<MealFlow> {
                                 _viewModel.selectManualFood(
                                   candidate,
                                   queryController.text.trim(),
+                                  mealName: mealName,
                                 );
                               }
                               Navigator.pop(sheetContext);
@@ -361,90 +430,124 @@ class _MealFlowState extends State<MealFlow> {
     queryController.dispose();
   }
 
-  Future<MealItem?> _showTypeSheet(MealItem item) {
-    final isSauce = item.name.toLowerCase().contains('sos');
+  /// The "which type?" question, answered from the catalog.
+  ///
+  /// Without a catalog there is nothing real to choose between, so the flow
+  /// asks about the amount instead of rendering options that cannot change the
+  /// nutrition.
+  Future<MealItem?> _showTypeSheet(MealItem item) async {
+    if (!_viewModel.canSearchCatalog) return _showPortionSheet(item);
+    final locale = _catalogLocale(context);
+    await _viewModel.searchItemVariants(item, locale);
+    if (!mounted) return null;
     return showModalBottomSheet<MealItem>(
       context: context,
       useSafeArea: true,
       isScrollControlled: true,
       backgroundColor: AppColors.surface,
       showDragHandle: true,
-      builder: (context) => SafeArea(
+      builder: (sheetContext) => SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 4, 22, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                isSauce
-                    ? context.ota(
-                        'sauceTypeQuestion',
-                        tr: 'Bu sos hangisine daha yakındı?',
-                        en: 'Which sauce was this closest to?',
-                      )
-                    : context.l10n.mealTypeQuestion,
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                context.l10n.mealTypeExplanation,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 20),
-              for (final label
-                  in isSauce
-                      ? [
-                          context.ota(
-                            'yogurtSauceOption',
-                            tr: 'Yoğurtlu',
-                            en: 'Yogurt-based',
-                          ),
-                          context.ota(
-                            'mayoSauceOption',
-                            tr: 'Mayonezli',
-                            en: 'Mayonnaise-based',
-                          ),
-                          context.ota('otherOption', tr: 'Diğer', en: 'Other'),
-                          context.ota(
-                            'unsureOption',
-                            tr: 'Emin değilim',
-                            en: 'Not sure',
-                          ),
-                        ]
-                      : [
-                          context.l10n.yogurtWhole,
-                          context.l10n.yogurtStrained,
-                          context.l10n.yogurtLight,
-                        ])
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(label),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () => Navigator.pop(
-                    context,
-                    item.copyWith(matchState: MatchState.matched),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.page,
+            AppSpacing.xxs,
+            AppSpacing.page,
+            AppSpacing.x28,
+          ),
+          child: SizedBox(
+            height: MediaQuery.sizeOf(sheetContext).height * 0.6,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.mealTypeQuestion,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  context.l10n.mealTypeExplanation,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Expanded(
+                  child: ListenableBuilder(
+                    listenable: _viewModel,
+                    builder: (context, _) {
+                      if (_viewModel.isSearchingVariants) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (_viewModel.variantSearchError != null) {
+                        return _SheetMessage(
+                          text: context.l10n.catalogSearchError,
+                        );
+                      }
+                      final candidates = _viewModel.variantResults;
+                      if (candidates.isEmpty) {
+                        return _SheetMessage(
+                          text: context.l10n.catalogSearchEmpty,
+                        );
+                      }
+                      return ListView.separated(
+                        itemCount: candidates.length,
+                        separatorBuilder: (_, _) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final candidate = candidates[index];
+                          return ListTile(
+                            key: Key('variant-${candidate.foodId}'),
+                            contentPadding: EdgeInsets.zero,
+                            title: Text(naturalFoodDisplayName(candidate.name)),
+                            subtitle: Text(
+                              context.ota(
+                                'caloriesPer100g',
+                                tr: '{amount} kcal / 100 g',
+                                en: '{amount} kcal / 100 g',
+                                replacements: {
+                                  'amount': candidate.caloriesPer100g.round(),
+                                },
+                              ),
+                            ),
+                            trailing: const Icon(Icons.chevron_right_rounded),
+                            onTap: () => Navigator.pop(
+                              sheetContext,
+                              _applyVariant(item, candidate),
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
                 ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
+  MealItem _applyVariant(MealItem item, CatalogFoodCandidate candidate) =>
+      item.copyWith(
+        foodId: candidate.foodId,
+        canonicalName: candidate.name,
+        displayName: naturalFoodDisplayName(candidate.name),
+        sourceName: candidate.nutritionSource,
+        nutritionPer100g: Nutrition(
+          calories: candidate.caloriesPer100g,
+          protein: candidate.proteinPer100g,
+          carbs: candidate.carbsPer100g,
+          fat: candidate.fatPer100g,
+        ),
+        confidence: candidate.score,
+        matchMethod: 'variant',
+        matchState: MatchState.matched,
+      );
+
   Future<MealItem?> _showPortionSheet(MealItem item) async {
-    final gramController = TextEditingController();
     final estimated = item.grams.clamp(5, 500).toDouble();
-    final catalogOptions =
-        item.portionOptions
-            .where((option) => option.grams > 0)
-            .toList(growable: false)
-          ..sort((left, right) => left.grams.compareTo(right.grams));
+    final catalogOptions = _rankedCatalogPortions(item.portionOptions);
     final options = catalogOptions.length >= 2
         ? catalogOptions
-              .take(3)
               .map(
                 (option) => (
                   label: _portionSizeLabel(context, option),
@@ -472,7 +575,7 @@ class _MealFlowState extends State<MealFlow> {
               imageUrl: null,
             ),
             (
-              label: context.ota('mediumPortion', tr: 'Orta', en: 'Medium'),
+              label: _regularPortionLabel(context),
               detail: '${estimated.round()} g',
               grams: estimated,
               sizeClass: 'regular',
@@ -494,117 +597,108 @@ class _MealFlowState extends State<MealFlow> {
       showDragHandle: true,
       builder: (context) => SafeArea(
         top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 4, 22, 30),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                context.ota(
-                  'portionQuestion',
-                  tr: '{item} miktarı',
-                  en: '{item} amount',
-                  replacements: {'item': item.name},
+        // Large text and small phones push the three reference cards plus the
+        // exact-gram row past the sheet height, so the content scrolls instead
+        // of overflowing.
+        child: SingleChildScrollView(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(context).bottom,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.page,
+              AppSpacing.xxs,
+              AppSpacing.page,
+              AppSpacing.xxl,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.ota(
+                    'portionQuestion',
+                    tr: '{item} miktarı',
+                    en: '{item} amount',
+                    replacements: {'item': item.name},
+                  ),
+                  key: const Key('portion-title'),
+                  style: Theme.of(context).textTheme.headlineMedium,
                 ),
-                key: const Key('portion-title'),
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                context.ota(
-                  'portionQuestionBody',
-                  tr: 'En yakın seçeneği seç. Besin değerlerini buna göre yeniden hesaplayacağız.',
-                  en: 'Choose the closest option. We will recalculate the nutrition accordingly.',
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  context.ota(
+                    'portionQuestionBody',
+                    tr: 'En yakın seçeneği seç. Besin değerlerini buna göre yeniden hesaplayacağız.',
+                    en: 'Choose the closest option. We will recalculate the nutrition accordingly.',
+                  ),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 20),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final largeText =
-                      MediaQuery.textScalerOf(context).scale(14) >= 20;
-                  final width = largeText
-                      ? constraints.maxWidth
-                      : (constraints.maxWidth - 20) / 3;
-                  return Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: [
-                      for (var index = 0; index < options.length; index++)
-                        SizedBox(
-                          width: width,
-                          child: _PortionOption(
-                            option: options[index],
-                            foodName: item.name,
-                            visualScale: (index + 1) / options.length,
-                            selected: options[index].grams == item.grams,
-                            onTap: () => Navigator.pop(
-                              context,
-                              item.copyWith(
-                                grams: options[index].grams,
-                                portionLabel:
-                                    '${options[index].grams.round()} g',
-                                matchState: MatchState.matched,
+                const SizedBox(height: AppSpacing.lg),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final largeText =
+                        MediaQuery.textScalerOf(context).scale(14) >= 20;
+                    final width = largeText
+                        ? constraints.maxWidth
+                        : (constraints.maxWidth - 20) / 3;
+                    return Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: [
+                        for (var index = 0; index < options.length; index++)
+                          SizedBox(
+                            width: width,
+                            child: _PortionOption(
+                              option: options[index],
+                              foodName: item.name,
+                              visualScale: (index + 1) / options.length,
+                              // Doubles almost never compare equal, so the
+                              // current portion used to look unselected.
+                              selected:
+                                  (options[index].grams - item.grams).abs() <
+                                  0.5,
+                              onTap: () => Navigator.pop(
+                                context,
+                                item.copyWith(
+                                  grams: options[index].grams,
+                                  portionLabel:
+                                      '${options[index].grams.round()} g',
+                                  matchState: MatchState.matched,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                    ],
-                  );
-                },
-              ),
-              const SizedBox(height: 22),
-              Text(
-                context.ota(
-                  'orEnterGrams',
-                  tr: 'veya gram gir',
-                  en: 'or enter grams',
+                      ],
+                    );
+                  },
                 ),
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      key: const Key('portion-grams-input'),
-                      controller: gramController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(suffixText: 'g'),
+                const SizedBox(height: AppSpacing.xl),
+                Text(
+                  context.ota(
+                    'orEnterGrams',
+                    tr: 'veya gram gir',
+                    en: 'or enter grams',
+                  ),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                _PortionGramField(
+                  onApply: (grams) => Navigator.pop(
+                    context,
+                    item.copyWith(
+                      grams: grams,
+                      portionLabel: '${grams.round()} g',
+                      matchState: MatchState.matched,
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  SizedBox(
-                    width: 104,
-                    child: FilledButton(
-                      onPressed: () {
-                        final grams = double.tryParse(
-                          gramController.text.replaceAll(',', '.'),
-                        );
-                        if (grams == null || grams <= 0 || grams > 2000) return;
-                        Navigator.pop(
-                          context,
-                          item.copyWith(
-                            grams: grams,
-                            portionLabel: '${grams.round()} g',
-                            matchState: MatchState.matched,
-                          ),
-                        );
-                      },
-                      child: Text(
-                        context.ota('applyAction', tr: 'Uygula', en: 'Apply'),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
-    gramController.dispose();
     return result;
   }
 
@@ -640,17 +734,22 @@ class _MealFlowState extends State<MealFlow> {
                     : Icons.arrow_back_rounded,
               ),
             ),
-            title: Text('', style: Theme.of(context).textTheme.titleMedium),
+            title: Text(
+              _stepTitle(context, _viewModel.step),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
           ),
           body: SafeArea(
             top: false,
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 260),
+              duration: MediaQuery.disableAnimationsOf(context)
+                  ? Duration.zero
+                  : AppMotion.slow,
               switchInCurve: Curves.easeOutCubic,
               switchOutCurve: Curves.easeInCubic,
               child: switch (_viewModel.step) {
                 MealFlowStep.compose =>
-                  widget.initialPhotoSource == null
+                  widget.initialPhotoSource == null || _preferTextComposer
                       ? _Composer(
                           key: const ValueKey('composer'),
                           controller: _controller,
@@ -677,10 +776,12 @@ class _MealFlowState extends State<MealFlow> {
                           focusNode: _focusNode,
                           onRetake: _retakeDedicatedPhoto,
                           onAnalyze: _analyze,
+                          onUseText: _continueWithText,
                         ),
                 MealFlowStep.analyzing => _Analyzing(
-                  key: ValueKey('analyzing'),
+                  key: const ValueKey('analyzing'),
                   photo: _photo,
+                  onCancel: _viewModel.showComposer,
                 ),
                 MealFlowStep.review => _Review(
                   key: const ValueKey('review'),
@@ -691,6 +792,7 @@ class _MealFlowState extends State<MealFlow> {
                   onAddMissing: _viewModel.canSearchCatalog
                       ? () => _showManualSearch(addToDraft: true)
                       : null,
+                  onEditEatenAt: _editEatenAt,
                   onLog: () => Navigator.pop(context, _viewModel.draft),
                 ),
               },
@@ -713,7 +815,12 @@ class _ScanGuideDialog extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.feature),
       ),
-      contentPadding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+      contentPadding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        AppSpacing.page,
+        AppSpacing.page,
+        AppSpacing.lg,
+      ),
       content: ConstrainedBox(
         constraints: BoxConstraints(
           maxHeight: MediaQuery.sizeOf(context).height * 0.76,
@@ -723,7 +830,7 @@ class _ScanGuideDialog extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const _ScanGuideVisual(),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 context.ota(
                   'scanGuideTitle',
@@ -733,7 +840,7 @@ class _ScanGuideDialog extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 context.ota(
                   'scanGuideBody',
@@ -743,34 +850,7 @@ class _ScanGuideDialog extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              const SizedBox(height: 18),
-              _GuideTip(
-                icon: Icons.wb_sunny_outlined,
-                text: context.ota(
-                  'scanGuideLight',
-                  tr: 'Aydınlık bir ortam kullan',
-                  en: 'Use a well-lit area',
-                ),
-              ),
-              const SizedBox(height: 10),
-              _GuideTip(
-                icon: Icons.center_focus_strong_rounded,
-                text: context.ota(
-                  'scanGuideFrame',
-                  tr: 'Tüm yiyecekleri kadraja al',
-                  en: 'Fit all foods in the frame',
-                ),
-              ),
-              const SizedBox(height: 10),
-              _GuideTip(
-                icon: Icons.straighten_rounded,
-                text: context.ota(
-                  'scanGuidePortions',
-                  tr: 'Porsiyonları kapatmamaya çalış',
-                  en: 'Avoid covering the portions',
-                ),
-              ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.lg),
               FilledButton.icon(
                 key: const Key('open-meal-camera-button'),
                 onPressed: () => Navigator.pop(context, true),
@@ -783,7 +863,7 @@ class _ScanGuideDialog extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.xxs),
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
                 child: Text(
@@ -826,34 +906,6 @@ class _ScanGuideVisual extends StatelessWidget {
   }
 }
 
-class _GuideTip extends StatelessWidget {
-  const _GuideTip({required this.icon, required this.text});
-
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: AppColors.surfaceMuted,
-            borderRadius: BorderRadius.circular(11),
-          ),
-          child: Icon(icon, size: 19),
-        ),
-        const SizedBox(width: 11),
-        Expanded(
-          child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
-        ),
-      ],
-    );
-  }
-}
-
 class _DedicatedPhotoComposer extends StatelessWidget {
   const _DedicatedPhotoComposer({
     super.key,
@@ -864,6 +916,7 @@ class _DedicatedPhotoComposer extends StatelessWidget {
     required this.focusNode,
     required this.onRetake,
     required this.onAnalyze,
+    required this.onUseText,
   });
 
   final MealPhotoAttachment? photo;
@@ -873,11 +926,16 @@ class _DedicatedPhotoComposer extends StatelessWidget {
   final FocusNode focusNode;
   final VoidCallback onRetake;
   final VoidCallback onAnalyze;
+  final VoidCallback onUseText;
 
   @override
   Widget build(BuildContext context) {
     if (photo == null) {
-      return _PhotoLaunchState(error: error, onRetry: onRetake);
+      return _PhotoLaunchState(
+        error: error,
+        onRetry: onRetake,
+        onUseText: onUseText,
+      );
     }
     final largeText = MediaQuery.textScalerOf(context).scale(14) >= 20;
     final retakeButton = OutlinedButton.icon(
@@ -911,7 +969,12 @@ class _DedicatedPhotoComposer extends StatelessWidget {
       ),
     );
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(18, 8, 18, 22),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        AppSpacing.xs,
+        AppSpacing.page,
+        AppSpacing.xl,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -923,7 +986,7 @@ class _DedicatedPhotoComposer extends StatelessWidget {
             ),
             style: Theme.of(context).textTheme.headlineMedium,
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpacing.tiny),
           Text(
             context.ota(
               'photoReadyBody',
@@ -932,11 +995,11 @@ class _DedicatedPhotoComposer extends StatelessWidget {
             ),
             style: Theme.of(context).textTheme.bodyMedium,
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: AppSpacing.lg),
           ClipRRect(
             borderRadius: BorderRadius.circular(AppRadius.feature),
             child: AspectRatio(
-              aspectRatio: 4 / 5,
+              aspectRatio: _photoAspectRatio,
               child: Image.memory(
                 photo!.bytes,
                 key: const Key('dedicated-photo-preview'),
@@ -945,7 +1008,7 @@ class _DedicatedPhotoComposer extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           Text(
             context.ota(
               'photoContextQuestion',
@@ -954,7 +1017,7 @@ class _DedicatedPhotoComposer extends StatelessWidget {
             ),
             style: Theme.of(context).textTheme.titleMedium,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.xs),
           TextField(
             key: const Key('photo-context-input'),
             controller: controller,
@@ -970,13 +1033,13 @@ class _DedicatedPhotoComposer extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           if (largeText)
             Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 retakeButton,
-                const SizedBox(height: 10),
+                const SizedBox(height: AppSpacing.sm),
                 analyzeButton,
               ],
             )
@@ -984,31 +1047,58 @@ class _DedicatedPhotoComposer extends StatelessWidget {
             Row(
               children: [
                 Expanded(child: retakeButton),
-                const SizedBox(width: 10),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(child: analyzeButton),
               ],
             ),
           if (error != null) ...[
-            const SizedBox(height: 10),
-            Text(error!, style: const TextStyle(color: AppColors.destructive)),
+            const SizedBox(height: AppSpacing.sm),
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                error!,
+                style: const TextStyle(color: AppColors.destructive),
+              ),
+            ),
           ],
+          const SizedBox(height: AppSpacing.xs),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: TextButton.icon(
+              key: const Key('use-text-instead-button'),
+              onPressed: onUseText,
+              icon: const Icon(Icons.edit_note_rounded),
+              label: Text(_describeMealInsteadLabel(context)),
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
+String _describeMealInsteadLabel(BuildContext context) => context.ota(
+  'describeMealInsteadAction',
+  tr: 'Fotoğrafsız devam et',
+  en: 'Continue without a photo',
+);
+
 class _PhotoLaunchState extends StatelessWidget {
-  const _PhotoLaunchState({required this.error, required this.onRetry});
+  const _PhotoLaunchState({
+    required this.error,
+    required this.onRetry,
+    required this.onUseText,
+  });
 
   final String? error;
   final VoidCallback onRetry;
+  final VoidCallback onUseText;
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(28),
+        padding: const EdgeInsets.all(AppSpacing.x28),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1021,7 +1111,7 @@ class _PhotoLaunchState extends StatelessWidget {
               ),
               child: const Icon(Icons.photo_camera_outlined, size: 31),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               error == null
                   ? context.ota(
@@ -1036,19 +1126,22 @@ class _PhotoLaunchState extends StatelessWidget {
                     ),
               style: Theme.of(context).textTheme.titleLarge,
             ),
-            const SizedBox(height: 7),
-            Text(
-              error ??
-                  context.ota(
-                    'cameraPreparingBody',
-                    tr: 'Birazdan doğrudan çekim ekranına geçeceksin.',
-                    en: 'You will go directly to the camera in a moment.',
-                  ),
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
+            const SizedBox(height: AppSpacing.xs),
+            Semantics(
+              liveRegion: error != null,
+              child: Text(
+                error ??
+                    context.ota(
+                      'cameraPreparingBody',
+                      tr: 'Birazdan doğrudan çekim ekranına geçeceksin.',
+                      en: 'You will go directly to the camera in a moment.',
+                    ),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
             ),
             if (error != null) ...[
-              const SizedBox(height: 18),
+              const SizedBox(height: AppSpacing.lg),
               OutlinedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh_rounded),
@@ -1061,6 +1154,12 @@ class _PhotoLaunchState extends StatelessWidget {
                 ),
               ),
             ],
+            const SizedBox(height: AppSpacing.xs),
+            TextButton.icon(
+              onPressed: onUseText,
+              icon: const Icon(Icons.edit_note_rounded),
+              label: Text(_describeMealInsteadLabel(context)),
+            ),
           ],
         ),
       ),
@@ -1097,9 +1196,14 @@ class _Composer extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-        padding: const EdgeInsets.fromLTRB(22, 14, 22, 20),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.page,
+          AppSpacing.md,
+          AppSpacing.page,
+          AppSpacing.lg,
+        ),
         child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: constraints.maxHeight - 34),
+          constraints: BoxConstraints(minHeight: constraints.maxHeight - 36),
           child: IntrinsicHeight(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1108,12 +1212,12 @@ class _Composer extends StatelessWidget {
                   context.l10n.mealComposeTitle,
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
-                const SizedBox(height: 9),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
                   context.l10n.mealComposeSubtitle,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: AppSpacing.xl),
                 TextField(
                   key: const Key('meal-input'),
                   controller: controller,
@@ -1125,7 +1229,7 @@ class _Composer extends StatelessWidget {
                     hintText: context.l10n.mealInputHint,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpacing.sm),
                 if (photo == null)
                   OutlinedButton.icon(
                     key: const Key('add-photo-button'),
@@ -1138,11 +1242,11 @@ class _Composer extends StatelessWidget {
                     label: context.l10n.mealPhotoSelected,
                     image: true,
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(AppRadius.feature),
                       child: Stack(
                         children: [
                           AspectRatio(
-                            aspectRatio: 16 / 9,
+                            aspectRatio: _photoAspectRatio,
                             child: Image.memory(
                               photo!.bytes,
                               key: const Key('meal-photo-preview'),
@@ -1151,8 +1255,8 @@ class _Composer extends StatelessWidget {
                             ),
                           ),
                           Positioned(
-                            top: 8,
-                            right: 8,
+                            top: AppSpacing.xs,
+                            right: AppSpacing.xs,
                             child: IconButton.filled(
                               key: const Key('remove-photo-button'),
                               tooltip: context.l10n.mealRemovePhoto,
@@ -1164,26 +1268,32 @@ class _Composer extends StatelessWidget {
                       ),
                     ),
                   ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
                   context.l10n.mealPhotoHint,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 if (photoError != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    photoError!,
-                    style: const TextStyle(color: AppColors.destructive),
+                  const SizedBox(height: AppSpacing.xs),
+                  Semantics(
+                    liveRegion: true,
+                    child: Text(
+                      photoError!,
+                      style: const TextStyle(color: AppColors.destructive),
+                    ),
                   ),
                 ],
                 if (error != null) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    error!,
-                    style: const TextStyle(color: AppColors.destructive),
+                  const SizedBox(height: AppSpacing.sm),
+                  Semantics(
+                    liveRegion: true,
+                    child: Text(
+                      error!,
+                      style: const TextStyle(color: AppColors.destructive),
+                    ),
                   ),
                   if (onManualSearch != null) ...[
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.xs),
                     OutlinedButton.icon(
                       key: const Key('manual-catalog-search-button'),
                       onPressed: onManualSearch,
@@ -1210,9 +1320,10 @@ class _Composer extends StatelessWidget {
 }
 
 class _Analyzing extends StatelessWidget {
-  const _Analyzing({required this.photo, super.key});
+  const _Analyzing({required this.photo, required this.onCancel, super.key});
 
   final MealPhotoAttachment? photo;
+  final VoidCallback onCancel;
 
   @override
   Widget build(BuildContext context) {
@@ -1223,7 +1334,7 @@ class _Analyzing extends StatelessWidget {
           child: Center(
             key: const Key('analysis-loading-center'),
             child: Padding(
-              padding: const EdgeInsets.all(32),
+              padding: const EdgeInsets.all(AppSpacing.xxl),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -1231,7 +1342,7 @@ class _Analyzing extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(AppRadius.feature),
                       child: AspectRatio(
-                        aspectRatio: 16 / 9,
+                        aspectRatio: _photoAspectRatio,
                         child: Image.memory(
                           photo!.bytes,
                           key: const Key('analyzing-photo-preview'),
@@ -1240,24 +1351,24 @@ class _Analyzing extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.xl),
                   ],
                   const SizedBox(
-                    width: 56,
-                    height: 56,
+                    width: AppSpacing.x56,
+                    height: AppSpacing.x56,
                     child: CircularProgressIndicator(
                       strokeWidth: 5,
                       color: AppColors.lime,
                       backgroundColor: AppColors.line,
                     ),
                   ),
-                  const SizedBox(height: 26),
+                  const SizedBox(height: AppSpacing.xl),
                   Text(
                     context.l10n.mealAnalyzingFoods,
                     style: Theme.of(context).textTheme.titleLarge,
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.xs),
                   Text(
                     context.ota(
                       'mealAnalyzingSummary',
@@ -1266,6 +1377,18 @@ class _Analyzing extends StatelessWidget {
                     ),
                     style: Theme.of(context).textTheme.bodyMedium,
                     textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextButton(
+                    key: const Key('cancel-analysis-button'),
+                    onPressed: onCancel,
+                    child: Text(
+                      context.ota(
+                        'cancelAnalysisAction',
+                        tr: 'Analizi iptal et',
+                        en: 'Cancel analysis',
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -1285,6 +1408,7 @@ class _Review extends StatelessWidget {
     required this.onReviewItem,
     required this.onRemoveItem,
     required this.onAddMissing,
+    required this.onEditEatenAt,
     required this.onLog,
   });
 
@@ -1293,6 +1417,7 @@ class _Review extends StatelessWidget {
   final ValueChanged<MealItem> onReviewItem;
   final ValueChanged<MealItem> onRemoveItem;
   final VoidCallback? onAddMissing;
+  final VoidCallback onEditEatenAt;
   final VoidCallback onLog;
 
   @override
@@ -1302,7 +1427,12 @@ class _Review extends StatelessWidget {
       children: [
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(22, 12, 22, 24),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.page,
+              AppSpacing.sm,
+              AppSpacing.page,
+              AppSpacing.xl,
+            ),
             children: [
               Text(
                 context.ota(
@@ -1312,7 +1442,7 @@ class _Review extends StatelessWidget {
                 ),
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
-              const SizedBox(height: 7),
+              const SizedBox(height: AppSpacing.tiny),
               Text(
                 draft.reviewCount == 0
                     ? context.ota(
@@ -1323,12 +1453,12 @@ class _Review extends StatelessWidget {
                     : context.l10n.mealReviewImpactCount(draft.reviewCount),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: AppSpacing.lg),
               if (photo != null) ...[
                 ClipRRect(
                   borderRadius: BorderRadius.circular(AppRadius.feature),
                   child: AspectRatio(
-                    aspectRatio: 16 / 9,
+                    aspectRatio: _photoAspectRatio,
                     child: Image.memory(
                       photo!.bytes,
                       key: const Key('review-photo-preview'),
@@ -1337,20 +1467,20 @@ class _Review extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.lg),
               ],
               if (draft.inputText.trim().isNotEmpty)
                 Container(
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
                     color: AppColors.quoteSurface,
-                    borderRadius: BorderRadius.circular(15),
+                    borderRadius: BorderRadius.circular(AppRadius.large),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Icon(Icons.format_quote_rounded, size: 19),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: AppSpacing.sm),
                       Expanded(
                         child: Text(
                           draft.inputText,
@@ -1361,7 +1491,9 @@ class _Review extends StatelessWidget {
                     ],
                   ),
                 ),
-              const SizedBox(height: 22),
+              const SizedBox(height: AppSpacing.md),
+              _EatenAtRow(eatenAt: draft.eatenAt, onEdit: onEditEatenAt),
+              const SizedBox(height: AppSpacing.xl),
               Text(
                 context.ota(
                   'detectedFoodsTitle',
@@ -1370,12 +1502,12 @@ class _Review extends StatelessWidget {
                 ),
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: AppSpacing.tiny),
               Text(
                 context.l10n.mealFoundCount(draft.items.length),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.sm),
               Container(
                 decoration: BoxDecoration(
                   color: AppColors.surface,
@@ -1419,17 +1551,17 @@ class _Review extends StatelessWidget {
                     ),
                   ),
                 ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.lg),
               _MealTotals(nutrition: nutrition),
             ],
           ),
         ),
         Container(
           padding: EdgeInsets.fromLTRB(
-            22,
-            14,
-            22,
-            14 + MediaQuery.paddingOf(context).bottom,
+            AppSpacing.page,
+            AppSpacing.md,
+            AppSpacing.page,
+            AppSpacing.md + MediaQuery.paddingOf(context).bottom,
           ),
           decoration: const BoxDecoration(
             color: AppColors.surface,
@@ -1439,44 +1571,39 @@ class _Review extends StatelessWidget {
             builder: (context) {
               final largeText =
                   MediaQuery.textScalerOf(context).scale(14) >= 20;
-              final edit = OutlinedButton(
-                key: const Key('review-edit-button'),
-                onPressed: draft.reviewCount > 0
-                    ? () {
-                        final item = draft.items.firstWhere(
-                          (candidate) =>
-                              candidate.matchState != MatchState.matched,
-                        );
-                        onReviewItem(item);
-                      }
-                    : onAddMissing,
-                child: Text(
-                  draft.reviewCount > 0
-                      ? context.l10n.mealReviewPoints(draft.reviewCount)
-                      : context.ota(
-                          'editMealAction',
-                          tr: 'Düzenle',
-                          en: 'Edit',
-                        ),
-                ),
-              );
               final save = FilledButton(
                 key: const Key('review-primary-button'),
                 onPressed: draft.items.isEmpty ? null : onLog,
                 child: Text(context.l10n.mealLog),
               );
-              final canEdit = draft.reviewCount > 0 || onAddMissing != null;
-              if (!canEdit) return save;
+              // The secondary button used to switch between "review" and "add a
+              // missing food" behind one changing label. Adding a food lives in
+              // the list; this button only ever opens the next open question,
+              // and disappears once there is none.
+              if (draft.reviewCount == 0) return save;
+              final review = OutlinedButton(
+                key: const Key('review-edit-button'),
+                onPressed: () => onReviewItem(
+                  draft.items.firstWhere(
+                    (candidate) => candidate.matchState != MatchState.matched,
+                  ),
+                ),
+                child: Text(context.l10n.mealReviewPoints(draft.reviewCount)),
+              );
               if (largeText) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [edit, const SizedBox(height: 10), save],
+                  children: [
+                    review,
+                    const SizedBox(height: AppSpacing.sm),
+                    save,
+                  ],
                 );
               }
               return Row(
                 children: [
-                  Expanded(child: edit),
-                  const SizedBox(width: 10),
+                  Expanded(child: review),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(child: save),
                 ],
               );
@@ -1514,7 +1641,12 @@ class _FoodItemRow extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 15, 12, 14),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.sm,
+              AppSpacing.md,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1526,6 +1658,8 @@ class _FoodItemRow extends StatelessWidget {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
+                    // A compact visual density shrank this below the 48 px the
+                    // rest of the app guarantees.
                     IconButton(
                       tooltip: context.ota(
                         'removeFoodAction',
@@ -1534,11 +1668,14 @@ class _FoodItemRow extends StatelessWidget {
                       ),
                       onPressed: onRemove,
                       icon: const Icon(Icons.close_rounded, size: 19),
-                      visualDensity: VisualDensity.compact,
+                      constraints: const BoxConstraints(
+                        minWidth: AppTouchTarget.minimum,
+                        minHeight: AppTouchTarget.minimum,
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 7),
+                const SizedBox(height: AppSpacing.tiny),
                 Row(
                   children: [
                     Expanded(
@@ -1556,11 +1693,11 @@ class _FoodItemRow extends StatelessWidget {
                   ],
                 ),
                 if (needsReview) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpacing.sm),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 9,
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.surface.withValues(alpha: .72),
@@ -1573,7 +1710,7 @@ class _FoodItemRow extends StatelessWidget {
                           size: 18,
                           color: AppColors.reviewInk,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSpacing.xs),
                         Expanded(
                           child: Text(
                             item.matchState == MatchState.checkAmount
@@ -1612,7 +1749,12 @@ class _MealTotals extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return HeroCardSurface(
-      padding: const EdgeInsets.fromLTRB(22, 20, 22, 21),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        AppSpacing.lg,
+        AppSpacing.page,
+        AppSpacing.lg,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1620,7 +1762,7 @@ class _MealTotals extends StatelessWidget {
             context.l10n.mealEstimatedTotal,
             style: Theme.of(context).textTheme.titleMedium,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.xs),
           Text(
             context.ota(
               'calorieAmount',
@@ -1630,18 +1772,24 @@ class _MealTotals extends StatelessWidget {
             ),
             style: Theme.of(context).textTheme.displaySmall,
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: AppSpacing.xl),
           Row(
             children: [
               _TotalMacro(
                 label: context.l10n.macroProtein,
                 value: nutrition.protein,
+                color: AppColors.protein,
               ),
               _TotalMacro(
                 label: context.l10n.macroCarbs,
                 value: nutrition.carbs,
+                color: AppColors.carbs,
               ),
-              _TotalMacro(label: context.l10n.macroFat, value: nutrition.fat),
+              _TotalMacro(
+                label: context.l10n.macroFat,
+                value: nutrition.fat,
+                color: AppColors.fat,
+              ),
             ],
           ),
         ],
@@ -1651,19 +1799,21 @@ class _MealTotals extends StatelessWidget {
 }
 
 class _TotalMacro extends StatelessWidget {
-  const _TotalMacro({required this.label, required this.value});
+  const _TotalMacro({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   final String label;
   final double value;
 
+  /// Passed in rather than derived from [label]: the colour used to depend on
+  /// the localized text, so a third locale silently painted every macro pink.
+  final Color color;
+
   @override
   Widget build(BuildContext context) {
-    final color = switch (label.toLowerCase()) {
-      final value when value.contains('protein') => AppColors.protein,
-      final value when value.contains('karbon') || value.contains('carb') =>
-        AppColors.carbs,
-      _ => AppColors.fat,
-    };
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1679,7 +1829,7 @@ class _TotalMacro extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.titleMedium,
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: AppSpacing.xxs),
           Row(
             children: [
               Container(
@@ -1687,7 +1837,7 @@ class _TotalMacro extends StatelessWidget {
                 height: 7,
                 decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: AppSpacing.tiny),
               Expanded(
                 child: Text(
                   label,
@@ -1700,6 +1850,101 @@ class _TotalMacro extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Exact-gram entry for the portion sheet.
+///
+/// The controller lives with the field rather than with the sheet: a modal
+/// route keeps rebuilding its content through the exit animation, so a
+/// controller disposed the moment `showModalBottomSheet` returns is used after
+/// disposal and the sheet throws instead of applying the value.
+class _PortionGramField extends StatefulWidget {
+  const _PortionGramField({required this.onApply});
+
+  final ValueChanged<double> onApply;
+
+  @override
+  State<_PortionGramField> createState() => _PortionGramFieldState();
+}
+
+class _PortionGramFieldState extends State<_PortionGramField> {
+  final _controller = TextEditingController();
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  /// Out-of-range input used to make the button look broken: it parsed, failed
+  /// the bounds check and returned without a word.
+  void _apply() {
+    final grams = double.tryParse(_controller.text.replaceAll(',', '.'));
+    if (grams == null || grams < _minPortionGrams || grams > _maxPortionGrams) {
+      setState(
+        () => _error = context.ota(
+          'portionGramsRangeError',
+          tr: '{min} ile {max} g arasında bir değer gir.',
+          en: 'Enter a value between {min} and {max} g.',
+          replacements: {
+            'min': _minPortionGrams.round(),
+            'max': _maxPortionGrams.round(),
+          },
+        ),
+      );
+      return;
+    }
+    setState(() => _error = null);
+    widget.onApply(grams);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Semantics(
+            liveRegion: _error != null,
+            child: TextField(
+              key: const Key('portion-grams-input'),
+              controller: _controller,
+              keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.done,
+              onChanged: (_) {
+                if (_error != null) setState(() => _error = null);
+              },
+              onSubmitted: (_) => _apply(),
+              decoration: InputDecoration(
+                suffixText: 'g',
+                errorText: _error,
+                helperText: _error == null
+                    ? context.ota(
+                        'portionGramsRangeHint',
+                        tr: '{min}-{max} g',
+                        en: '{min}-{max} g',
+                        replacements: {
+                          'min': _minPortionGrams.round(),
+                          'max': _maxPortionGrams.round(),
+                        },
+                      )
+                    : null,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        SizedBox(
+          width: 104,
+          child: FilledButton(
+            onPressed: _apply,
+            child: Text(context.ota('applyAction', tr: 'Uygula', en: 'Apply')),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -1728,85 +1973,115 @@ class _PortionOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      key: Key('portion-${option.grams.round()}'),
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 14),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.selectedSurface : AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: selected ? AppColors.limeDark : AppColors.line,
-            width: selected ? 1.5 : 1,
+    final semanticLabel = '$foodName, ${option.label}, ${option.detail}';
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: semanticLabel,
+      child: InkWell(
+        key: Key('portion-${option.grams.round()}'),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.input),
+        child: AnimatedContainer(
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : AppMotion.fast,
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.xs,
+            AppSpacing.xs,
+            AppSpacing.xs,
+            AppSpacing.md,
           ),
-        ),
-        child: Column(
-          children: [
-            AspectRatio(
-              aspectRatio: 1.25,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: _PortionVisual(
-                  foodName: foodName,
-                  sizeClass: option.sizeClass,
-                  imageUrl: option.imageUrl,
-                  scale: visualScale,
-                ),
-              ),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.selectedSurface : AppColors.surface,
+            borderRadius: BorderRadius.circular(AppRadius.input),
+            border: Border.all(
+              color: selected ? AppColors.limeDark : AppColors.line,
+              width: selected ? 1.5 : 1,
             ),
-            const SizedBox(height: 10),
-            Text(option.label, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 3),
-            Text(option.detail, style: Theme.of(context).textTheme.bodyMedium),
-          ],
+          ),
+          child: ExcludeSemantics(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AspectRatio(
+                  aspectRatio: 1.25,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.medium),
+                    child: _PortionVisual(
+                      imageUrl: option.imageUrl,
+                      scale: visualScale,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  option.label,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: AppSpacing.xxs),
+                Text(
+                  option.detail,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
+/// The reference picture on a portion card.
+///
+/// Only a reviewed [imageUrl] from the catalog earns a photograph. Bundled
+/// assets used to be picked by testing the localized food name for `peynir`,
+/// which no English name could ever match and no third locale could extend;
+/// without a food-id-to-asset mapping in the catalog the schematic is the only
+/// honest fallback.
 class _PortionVisual extends StatelessWidget {
-  const _PortionVisual({
-    required this.foodName,
-    required this.sizeClass,
-    required this.imageUrl,
-    required this.scale,
-  });
+  const _PortionVisual({required this.imageUrl, required this.scale});
 
-  final String foodName;
-  final String? sizeClass;
   final String? imageUrl;
   final double scale;
 
   @override
   Widget build(BuildContext context) {
     final fallback = _relativeVisual();
-    if (imageUrl != null && imageUrl!.isNotEmpty) {
-      return Image.network(
-        imageUrl!,
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => fallback,
-      );
-    }
-    final name = foodName.toLowerCase();
-    final asset = name.contains('peynir')
-        ? switch (sizeClass) {
-            'small' => 'assets/images/portion_cheese_small.webp',
-            'large' => 'assets/images/portion_cheese_large.webp',
-            _ => 'assets/images/portion_cheese_regular.webp',
-          }
-        : null;
-    return asset == null
-        ? fallback
-        : Image.asset(
-            asset,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => fallback,
-          );
+    if (imageUrl == null || imageUrl!.isEmpty) return fallback;
+    return Image.network(
+      imageUrl!,
+      key: const Key('portion-reference-image'),
+      fit: BoxFit.cover,
+      // A reviewed reference is the whole point of the card, so hold the
+      // layout with a neutral placeholder instead of collapsing to the
+      // schematic while the bytes are still in flight.
+      loadingBuilder: (context, child, progress) =>
+          progress == null ? child : _placeholder(),
+      // Offline, 404 or a revoked object: fall back to the relative drawing,
+      // which never claims photographic precision.
+      errorBuilder: (_, _, _) => fallback,
+    );
   }
+
+  Widget _placeholder() => const ColoredBox(
+    key: Key('portion-reference-placeholder'),
+    color: AppColors.surfaceMuted,
+    child: Center(
+      child: SizedBox(
+        width: 18,
+        height: 18,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      ),
+    ),
+  );
 
   Widget _relativeVisual() => ColoredBox(
     color: AppColors.surfaceMuted,
@@ -1854,11 +2129,154 @@ class _PortionScalePainter extends CustomPainter {
       oldDelegate.scale != scale;
 }
 
+/// A centred sentence for the empty and failed states of a sheet list.
+class _SheetMessage extends StatelessWidget {
+  const _SheetMessage({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Text(
+      text,
+      textAlign: TextAlign.center,
+      style: Theme.of(context).textTheme.bodyMedium,
+    ),
+  );
+}
+
+/// When the meal was eaten, with an edit affordance. `null` reads as "now" and
+/// is resolved at log time, so the default never drifts while the sheet is open.
+class _EatenAtRow extends StatelessWidget {
+  const _EatenAtRow({required this.eatenAt, required this.onEdit});
+
+  final DateTime? eatenAt;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final value = eatenAt;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.xs,
+        AppSpacing.xs,
+        AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.schedule_rounded, size: 19),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              value == null
+                  ? context.ota(
+                      'eatenAtNow',
+                      tr: 'Şimdi yendi',
+                      en: 'Eaten now',
+                    )
+                  : context.ota(
+                      'eatenAtValue',
+                      tr: '{date} · {time}',
+                      en: '{date} · {time}',
+                      replacements: {
+                        'date': formatFullDate(context, value),
+                        'time': formatTimeOfDay(context, value),
+                      },
+                    ),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+          ),
+          TextButton(
+            key: const Key('edit-eaten-at-button'),
+            onPressed: onEdit,
+            child: Text(
+              context.ota('changeTimeAction', tr: 'Değiştir', en: 'Change'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _stepTitle(BuildContext context, MealFlowStep step) => switch (step) {
+  MealFlowStep.compose => context.ota(
+    'mealStepComposeTitle',
+    tr: 'Öğün ekle',
+    en: 'Add meal',
+  ),
+  MealFlowStep.analyzing => context.ota(
+    'mealStepAnalyzingTitle',
+    tr: 'Analiz',
+    en: 'Analysis',
+  ),
+  MealFlowStep.review => context.ota(
+    'mealStepReviewTitle',
+    tr: 'Kontrol',
+    en: 'Review',
+  ),
+};
+
+String _catalogLocale(BuildContext context) =>
+    Localizations.localeOf(context).languageCode == 'en' ? 'en-US' : 'tr-TR';
+
+/// The view model used to return Turkish literals here, which then became the
+/// stored meal name every screen shows. The name is resolved at the UI layer so
+/// [MealDraft.mealName] stays a plain, already-localized string for storage.
+String _localizedMealName(BuildContext context, DateTime time) =>
+    switch (time.hour) {
+      >= 5 && < 11 => context.ota(
+        'mealNameBreakfast',
+        tr: 'Kahvaltı',
+        en: 'Breakfast',
+      ),
+      >= 11 && < 16 => context.ota(
+        'mealNameLunch',
+        tr: 'Öğle yemeği',
+        en: 'Lunch',
+      ),
+      >= 16 && < 22 => context.ota(
+        'mealNameDinner',
+        tr: 'Akşam yemeği',
+        en: 'Dinner',
+      ),
+      _ => context.ota('mealNameSnack', tr: 'Atıştırma', en: 'Snack'),
+    };
+
 String _portionSizeLabel(BuildContext context, FoodPortionOption option) {
   return switch (option.sizeClass) {
     'small' => context.l10n.portionSmall,
-    'regular' => context.ota('mediumPortion', tr: 'Orta', en: 'Medium'),
+    'regular' => _regularPortionLabel(context),
     'large' => context.l10n.portionLarge,
     _ => option.label,
   };
+}
+
+String _regularPortionLabel(BuildContext context) =>
+    context.ota('portionRegular', tr: 'Normal', en: 'Regular');
+
+/// Picks the three controlled reference portions to offer, ascending by weight.
+///
+/// The catalog is the source of truth for the gram values, so reviewed
+/// small/regular/large records win over ad-hoc labels. When a food has not been
+/// classified yet the three lightest positive portions are used, which keeps the
+/// sheet working for legacy catalog rows.
+List<FoodPortionOption> _rankedCatalogPortions(
+  List<FoodPortionOption> options,
+) {
+  final positive = options.where((option) => option.grams > 0).toList()
+    ..sort((left, right) => left.grams.compareTo(right.grams));
+
+  final classified = <FoodPortionOption>[
+    for (final sizeClass in const ['small', 'regular', 'large'])
+      ...positive.where((option) => option.sizeClass == sizeClass).take(1),
+  ];
+  if (classified.length == 3) return classified;
+  return positive.take(3).toList(growable: false);
 }

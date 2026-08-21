@@ -1,0 +1,6 @@
+# Peynir, beyaz, yarım yağlı (yağ, kuru maddede > % 20) — large — 90 g
+# target file: food-portions/peynir-beyaz-yarim-yagli-yag-kuru-maddede-20/peynir-beyaz-yarim-yagli-yag-kuru-maddede-20--large--90g.webp
+# gram value source: TÜBER 2022 Ek 2.1 — Standart porsiyon ölçüleri ve miktarları (Ek 2.1.1 (s.262), Ek 2.1.3 (s.264), Ek 2.1.5 (s.266))
+# The image must not contain the gram value. The app renders it.
+
+Photorealistic overhead food reference photograph of Peynir, beyaz, yarım yağlı (yağ, kuru maddede > % 20), representing the LARGE controlled portion of 90 grams. Served on the exact same matte white plate used across the three portion variants. Fixed 85-degree overhead camera, fixed camera distance, neutral light stone tabletop, soft diffused daylight, natural appetizing food color, realistic household serving, entire plate visible, centered composition, no utensils, no hands, no napkin, no packaging, no logo, no text, no watermark, no decorative garnish unless part of the canonical recipe, no dramatic restaurant styling, no hard shadows. Only the amount of food should differ between portion variants. Square 1:1 composition, sRGB, production-quality mobile nutrition tracking reference image.

@@ -1,0 +1,22 @@
+{
+  "rulesVersion": "catalog-selection-v1",
+  "effectiveFrom": "2026-08-21",
+  "statement": "Which TürKomp records enter the catalog, and in what order. Ranked by portion resolvability, because composition is available for every record but a published portion is not. This file is the rule; catalog_selection.json is its output and must never be hand-edited — use catalog_selection_overrides.json instead.",
+  "target": { "tierA": 200 },
+  "signals": [
+    { "id": "tuber_food_row", "points": 50, "test": "head noun resolves to a TÜBER Ek 2.3.1 row, which publishes a portion weight" },
+    { "id": "tuber_member_row", "points": 40, "test": "head noun is a named member of a grouped TÜBER Ek 2.1 row that states grams" },
+    { "id": "tuber_measure_row", "points": 35, "test": "head noun resolves to a whole TÜBER Ek 2.1 row that states grams" },
+    { "id": "prepared_state", "points": 20, "test": "name says pişmiş/haşlanmış/kavrulmuş/közlenmiş — the form a user actually eats and logs" },
+    { "id": "single_ingredient", "points": 10, "test": "at most two comma clauses, so the record is a food rather than a cultivar detail" }
+  ],
+  "penalties": [
+    { "id": "state_mismatch", "points": -25, "test": "an anchor exists but its preparation state differs from the record's; the portion is not transferable without a human decision" },
+    { "id": "industrial", "points": -30, "test": "name contains karışım/konsantre/hammadde/harcı — an input to cooking, not a logged food" }
+  ],
+  "excludeWhen": [
+    { "id": "distinct_species", "test": "species qualifier (bıldırcın, devekuşu, keçi, manda, koyun, şaraplık) makes it a different food from the TÜBER row its head noun matches" }
+  ],
+  "tieBreak": ["score desc", "sourceRecordId asc"],
+  "note": "A record with no anchor is still eligible for Tier A: its composition is published and verified, and the app asks the user for the amount. It simply scores below anything with a published portion."
+}
