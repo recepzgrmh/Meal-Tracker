@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react'
-import { AlertTriangle, DatabaseZap, Gauge, LogOut, ShieldAlert } from 'lucide-react'
+import { AlertTriangle, Check, Copy, DatabaseZap, Gauge, LogOut, RefreshCw, ShieldAlert } from 'lucide-react'
 import { sendEmailCode, signInWithPassword, signOut, verifyEmailCode } from '../lib/queries'
 import { useSession } from '../lib/session'
 import { useI18n } from '../i18n'
@@ -14,7 +14,7 @@ import { Alert, Button, Field, Input, Segmented, Skeleton } from '../ui'
  * has no business being on screen before you are signed in.
  */
 export function Gate({ t, children }: { t: (value: string) => string; children?: ReactNode }) {
-  const { status, refresh } = useSession()
+  const { status, refresh, email } = useSession()
 
   if (status === 'ready') return <>{children}</>
 
@@ -41,13 +41,21 @@ export function Gate({ t, children }: { t: (value: string) => string; children?:
   }
 
   if (status === 'forbidden') {
+    // The allow-list row is the only thing missing at this point, so hand over
+    // the exact statement rather than a description of it.
+    const grant = `insert into public.console_admins (user_id, note)\nselect id, 'console operator' from auth.users\nwhere email = '${email ?? 'you@example.com'}'\non conflict (user_id) do nothing;`
     return (
       <Centered icon={<ShieldAlert size={20} />} title={t('This account cannot read console data')}>
         <Alert tone="danger" title={t('Not on the admin allow-list')}>
-          {t('Apply supabase/migrations/20260821120000_admin_console_reads.sql, then add this user to public.console_admins.')}
+          {email
+            ? `${email} ${t('is signed in but has no row in public.console_admins.')}`
+            : t('This account has no row in public.console_admins.')}
         </Alert>
-        <div className="ds-row" style={{ justifyContent: 'flex-end' }}>
+        <p className="ds-help">{t('Run this in the Supabase SQL editor, then reload:')}</p>
+        <CopyBlock text={grant} t={t} />
+        <div className="ds-row" style={{ justifyContent: 'space-between' }}>
           <Button icon={<LogOut size={14} />} onClick={() => signOut().then(refresh)}>{t('Sign out')}</Button>
+          <Button variant="primary" icon={<RefreshCw size={14} />} onClick={refresh}>{t('Check again')}</Button>
         </div>
       </Centered>
     )
@@ -158,6 +166,34 @@ function SignIn({ t }: { t: (value: string) => string }) {
         <p className="ds-help">{t('Console access is limited to operators listed in public.console_admins.')}</p>
       </form>
     </Centered>
+  )
+}
+
+function CopyBlock({ text, t }: { text: string; t: (value: string) => string }) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <div className="ds-stack ds-stack--sm">
+      <pre
+        className="ds-mono"
+        style={{
+          margin: 0, padding: 'var(--sp-3)', overflow: 'auto',
+          background: 'var(--surface-sunk)', border: '1px solid var(--border)',
+          borderRadius: 'var(--r-2)', fontSize: 'var(--fs-micro)', lineHeight: 1.6,
+        }}
+      >{text}</pre>
+      <Button
+        size="sm"
+        icon={copied ? <Check size={13} /> : <Copy size={13} />}
+        onClick={() => {
+          navigator.clipboard?.writeText(text).then(
+            () => { setCopied(true); window.setTimeout(() => setCopied(false), 2000) },
+            () => undefined,
+          )
+        }}
+      >
+        {copied ? t('Copied') : t('Copy SQL')}
+      </Button>
+    </div>
   )
 }
 

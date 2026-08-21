@@ -105,10 +105,13 @@ describe('console shell', () => {
     expect(screen.queryByRole('heading', { name: 'Overview' })).not.toBeInTheDocument()
   })
 
-  it('blocks an account that is not on the admin allow-list', async () => {
+  it('blocks an account that is not on the admin allow-list and hands over the fix', async () => {
     scenario.admin = false
     renderApp()
     expect(await screen.findByText('This account cannot read console data')).toBeInTheDocument()
+    // The grant statement must be ready to paste, carrying the signed-in email.
+    expect(screen.getByText(/insert into public\.console_admins/)).toHaveTextContent("email = 'ops@example.com'")
+    expect(screen.getByRole('button', { name: 'Check again' })).toBeInTheDocument()
   })
 
   it('asks for credentials when there is no session', async () => {
