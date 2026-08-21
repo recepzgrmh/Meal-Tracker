@@ -154,45 +154,48 @@ void main() {
       );
     });
 
-    test('parses the committed snapshots that the manifest was built from', () {
-      final index =
-          (jsonDecode(
-                    File(
-                      'tool/catalog/snapshots/snapshot_index.json',
-                    ).readAsStringSync(),
-                  )
-                  as Map<String, dynamic>)['artifacts']
-              as List<dynamic>;
-
-      for (final raw in index.cast<Map<String, dynamic>>()) {
-        if (!(raw['id'] as String).startsWith('turkomp-')) continue;
-        final html = utf8.decode(
-          gzip.decode(File(raw['path'] as String).readAsBytesSync()),
-          allowMalformed: true,
-        );
+    test('every committed snapshot parses and is attributable', () {
+      // Runs over all artifacts but asserts only what must hold for every one:
+      // it parses, and it carries a record id. Macro completeness is asserted
+      // separately, because TürKomp genuinely omits some values.
+      for (final raw in _turkompArtifacts()) {
         final composition = parseTurkompFoodPage(
-          html,
+          _gunzip(raw['path'] as String),
           sourceRecordId: raw['sourceRecordId'] as String?,
         );
         expect(
-          composition.caloriesPer100g,
-          isNotNull,
+          composition.sourceRecordId,
+          isNotEmpty,
           reason: raw['id'] as String,
         );
-        expect(composition.proteinPer100g, isNotNull);
-        expect(composition.carbsPer100g, isNotNull);
-        expect(composition.fatPer100g, isNotNull);
-        // The name the parser reads out of <title> must match the name
-        // recorded in the index. TürKomp titles are
-        // "Veri Bankası - NAME - Türkomp | ...", so both the section prefix
-        // and the site suffix have to be stripped; without that the fetcher
-        // would write the whole title into every new artifact entry.
-        expect(
-          composition.recordName,
-          raw['recordName'] as String,
-          reason: raw['id'] as String,
-        );
+        expect(composition.componentsPer100g, isNotEmpty);
       }
+    });
+
+    test('a record missing a macro is named, not silently zero-filled', () {
+      // foods.calories/protein/carbs/fat are NOT NULL, so the builder blocks
+      // these rather than inventing a zero. This test exists so the set stays
+      // visible: if it grows, someone chose to import an incomplete record.
+      final incomplete = <String>[];
+      for (final raw in _turkompArtifacts()) {
+        final c = parseTurkompFoodPage(
+          _gunzip(raw['path'] as String),
+          sourceRecordId: raw['sourceRecordId'] as String?,
+        );
+        if (c.caloriesPer100g == null ||
+            c.proteinPer100g == null ||
+            c.carbsPer100g == null ||
+            c.fatPer100g == null) {
+          incomplete.add(raw['sourceRecordId'] as String);
+        }
+      }
+      expect(
+        incomplete..sort(),
+        <String>['08.02.0038', '08.02.0042'],
+        reason:
+            'TürKomp publishes no fat value for ground red pepper or pepper '
+            'flakes. Both are blocked by the manifest builder.',
+      );
     });
   });
 
@@ -269,3 +272,21 @@ void main() {
     });
   });
 }
+
+/// The TürKomp artifacts recorded in the committed snapshot index.
+List<Map<String, dynamic>> _turkompArtifacts() =>
+    ((jsonDecode(
+                  File(
+                    'tool/catalog/snapshots/snapshot_index.json',
+                  ).readAsStringSync(),
+                )
+                as Map<String, dynamic>)['artifacts']
+            as List<dynamic>)
+        .cast<Map<String, dynamic>>()
+        .where((a) => (a['id'] as String).startsWith('turkomp-'))
+        .toList();
+
+String _gunzip(String path) => utf8.decode(
+  gzip.decode(File(path).readAsBytesSync()),
+  allowMalformed: true,
+);

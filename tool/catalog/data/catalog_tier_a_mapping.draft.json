@@ -23,11 +23,11 @@
       "fruit_whole": 33,
       "meat_cooked": 29,
       "fish_cooked": 18,
-      "vegetable_cooked": 17,
       "dairy_yogurt": 16,
+      "vegetable_cooked": 14,
       "bread": 14,
+      "dried_fruit": 9,
       "beverage_dairy": 6,
-      "dried_fruit": 6,
       "egg_unit": 5,
       "dairy_cheese": 4,
       "grain_cooked": 4,
@@ -52,8 +52,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Patlıcan, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Patlıcan, pişmiş",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -105,8 +105,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Yoğurt, tam yağlı",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Yoğurt, tam yağlı",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -158,8 +158,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Ayran",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Ayran",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -211,8 +211,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Beyaz ekmek",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Beyaz ekmek",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -264,8 +264,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Domates",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Domates",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -317,8 +317,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Havuç",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Havuç",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -370,8 +370,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Havuç",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Havuç",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -423,8 +423,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Karpuz",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Karpuz",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -476,8 +476,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Karpuz",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Karpuz",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -529,8 +529,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Kavun",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Kavun",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -582,8 +582,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Kereviz",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Kereviz",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -635,8 +635,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Kereviz",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Kereviz",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -688,8 +688,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Marul",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Marul",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -741,8 +741,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Maydanoz",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Maydanoz",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -790,8 +790,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Roka",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Roka",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -839,8 +839,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Semizotu",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Semizotu",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -888,8 +888,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Turp",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Turp",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -941,8 +941,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Turp",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Turp",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -994,8 +994,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Turp",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Turp",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -1047,8 +1047,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Domates suyu",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Domates suyu",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -1096,8 +1096,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Ananas",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Ananas",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -1145,8 +1145,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Çilek",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Çilek",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -1194,8 +1194,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "İncir",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "İncir",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -1247,8 +1247,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Kivi",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Kivi",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -1296,8 +1296,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Muz",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Muz",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -1349,8 +1349,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Muz",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Muz",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -1402,8 +1402,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Portakal",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Portakal",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -1455,8 +1455,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Portakal",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Portakal",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -1508,8 +1508,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Portakal",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Portakal",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -1561,8 +1561,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Şeftali",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Şeftali",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -1614,8 +1614,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Şeftali",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Şeftali",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -1667,8 +1667,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Portakal suyu (sıkılmış)",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Portakal suyu (sıkılmış)",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -1716,8 +1716,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Kefir, tam yağlı",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Kefir, tam yağlı",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -1769,8 +1769,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Simit",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Simit",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -1822,8 +1822,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Kefir, tam yağlı",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Kefir, tam yağlı",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -1875,8 +1875,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Yoğurt, tam yağlı",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Yoğurt, tam yağlı",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -1928,8 +1928,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Yufka",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Yufka",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -1982,8 +1982,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Beyaz peynir, tam yağlı",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Beyaz peynir, tam yağlı",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -2035,8 +2035,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Yoğurt, tam yağlı",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Yoğurt, tam yağlı",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -2088,8 +2088,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Yoğurt, tam yağlı",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Yoğurt, tam yağlı",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -2141,8 +2141,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Yoğurt, tam yağlı",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Yoğurt, tam yağlı",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -2194,8 +2194,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Yumurta",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Yumurta",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -2247,8 +2247,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Yumurta",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Yumurta",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -2300,8 +2300,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Yumurta",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Yumurta",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -2353,8 +2353,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Yumurta",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Yumurta",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -2406,8 +2406,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Yumurta",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Yumurta",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -2459,8 +2459,8 @@
       },
       "portion": {
         "mode": "tuberGroupMemberGrams",
-        "rowName": "Galeta veya Grissini",
         "householdMeasureArtifactId": "tuber-ek-2-1",
+        "householdMeasureRow": "Galeta veya Grissini",
         "memberName": "galeta",
         "regularMultiplier": 1
       },
@@ -2513,8 +2513,8 @@
       },
       "portion": {
         "mode": "tuberGroupMemberGrams",
-        "rowName": "Pide- Bazlama-Lavaş",
         "householdMeasureArtifactId": "tuber-ek-2-1",
+        "householdMeasureRow": "Pide- Bazlama-Lavaş",
         "memberName": "bazlama",
         "regularMultiplier": 1
       },
@@ -2563,8 +2563,8 @@
       },
       "portion": {
         "mode": "tuberGroupMemberGrams",
-        "rowName": "Pide- Bazlama-Lavaş",
         "householdMeasureArtifactId": "tuber-ek-2-1",
+        "householdMeasureRow": "Pide- Bazlama-Lavaş",
         "memberName": "lavas",
         "regularMultiplier": 1
       },
@@ -2613,8 +2613,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Kırmızı biber",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Kırmızı biber",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -2666,8 +2666,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Domates",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Domates",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -2719,8 +2719,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Karpuz",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Karpuz",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -2772,8 +2772,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Kavun",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Kavun",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -2825,8 +2825,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Beyaz lahana",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Beyaz lahana",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -2878,8 +2878,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Marul",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Marul",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -2931,8 +2931,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Marul",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Marul",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -2984,8 +2984,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Kırmızı biber",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Kırmızı biber",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -3037,8 +3037,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Armut",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Armut",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -3090,8 +3090,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Armut",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Armut",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -3143,8 +3143,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Elma",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Elma",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -3196,8 +3196,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Erik",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Erik",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -3249,8 +3249,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Erik",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Erik",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -3302,8 +3302,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Kiraz",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Kiraz",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -3355,8 +3355,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Kiraz",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Kiraz",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -3408,8 +3408,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Trabzon hurması",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Trabzon hurması",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -3461,8 +3461,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Trabzon hurması",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Trabzon hurması",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -3514,8 +3514,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Üzüm",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Üzüm",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -3567,8 +3567,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Üzüm",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Üzüm",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -3620,8 +3620,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Üzüm",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Üzüm",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -3673,8 +3673,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Üzüm",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Üzüm",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -3726,8 +3726,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Üzüm",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Üzüm",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -3779,8 +3779,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Üzüm",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Üzüm",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -3832,8 +3832,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Elma",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Elma",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -3885,8 +3885,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Erik (kuru)",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Erik (kuru)",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -3938,8 +3938,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Kayısı (kuru)",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Kayısı (kuru)",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -3991,8 +3991,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Kayısı (kuru)",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Kayısı (kuru)",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -4035,8 +4035,8 @@
       "status": "draft",
       "canonicalNameTr": "İncir, kuru, Aydın, ovalık kesim",
       "canonicalNameEn": null,
-      "portionCategory": "vegetable_cooked",
-      "container": "bowl",
+      "portionCategory": "dried_fruit",
+      "container": "small_plate",
       "nutrition": {
         "artifactId": "turkomp-12.02.0059",
         "basis": "per_100g_published",
@@ -4044,8 +4044,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "İncir (kuru)",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "İncir (kuru)",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -4097,8 +4097,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Ayran",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Ayran",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -4150,8 +4150,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Yoğurt, tam yağlı",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Yoğurt, tam yağlı",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -4194,8 +4194,8 @@
       "status": "draft",
       "canonicalNameTr": "İncir, kuru, İzmir",
       "canonicalNameEn": null,
-      "portionCategory": "vegetable_cooked",
-      "container": "bowl",
+      "portionCategory": "dried_fruit",
+      "container": "small_plate",
       "nutrition": {
         "artifactId": "turkomp-12.02.0082",
         "basis": "per_100g_published",
@@ -4203,8 +4203,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "İncir (kuru)",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "İncir (kuru)",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -4247,8 +4247,8 @@
       "status": "draft",
       "canonicalNameTr": "İncir, kuru, Aydın, dağlık kesim",
       "canonicalNameEn": null,
-      "portionCategory": "vegetable_cooked",
-      "container": "bowl",
+      "portionCategory": "dried_fruit",
+      "container": "small_plate",
       "nutrition": {
         "artifactId": "turkomp-12.02.0083",
         "basis": "per_100g_published",
@@ -4256,8 +4256,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "İncir (kuru)",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "İncir (kuru)",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -4309,8 +4309,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Ayran",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Ayran",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -4362,8 +4362,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Yoğurt, tam yağlı",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Yoğurt, tam yağlı",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -4415,8 +4415,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Ayran",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Ayran",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -4468,8 +4468,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Yoğurt, tam yağlı",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Yoğurt, tam yağlı",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -4521,8 +4521,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Ayran",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Ayran",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -4574,8 +4574,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Yoğurt, tam yağlı",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Yoğurt, tam yağlı",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -4627,8 +4627,8 @@
       },
       "portion": {
         "mode": "tuberGroupMemberGrams",
-        "rowName": "Yulaf ezmesi/Müsli",
         "householdMeasureArtifactId": "tuber-ek-2-1",
+        "householdMeasureRow": "Yulaf ezmesi/Müsli",
         "memberName": "musli",
         "regularMultiplier": 1
       },
@@ -4681,8 +4681,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Yoğurt, tam yağlı",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Yoğurt, tam yağlı",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -4734,8 +4734,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Beyaz ekmek",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Beyaz ekmek",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -4787,8 +4787,8 @@
       },
       "portion": {
         "mode": "tuberMeasureGrams",
-        "rowName": "Mısır gevreği",
         "householdMeasureArtifactId": "tuber-ek-2-1",
+        "householdMeasureRow": "Mısır gevreği",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -4836,8 +4836,8 @@
       },
       "portion": {
         "mode": "tuberMeasureGrams",
-        "rowName": "Beyaz peynir",
         "householdMeasureArtifactId": "tuber-ek-2-1",
+        "householdMeasureRow": "Beyaz peynir",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -4889,8 +4889,8 @@
       },
       "portion": {
         "mode": "tuberMeasureGrams",
-        "rowName": "Beyaz peynir",
         "householdMeasureArtifactId": "tuber-ek-2-1",
+        "householdMeasureRow": "Beyaz peynir",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -4942,8 +4942,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Hamsi, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Hamsi, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -4992,8 +4992,8 @@
       },
       "portion": {
         "mode": "tuberMeasureGrams",
-        "rowName": "Ton balığı konserve",
         "householdMeasureArtifactId": "tuber-ek-2-1",
+        "householdMeasureRow": "Ton balığı konserve",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -5045,8 +5045,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Brokoli, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Brokoli, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -5095,8 +5095,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Ispanak, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Ispanak, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -5145,8 +5145,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Karnabahar, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Karnabahar, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -5195,8 +5195,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Mantar, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Mantar, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -5249,8 +5249,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Patlıcan, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Patlıcan, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -5303,8 +5303,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Pazı, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Pazı, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -5353,8 +5353,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Mısır, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Mısır, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -5407,8 +5407,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Domates",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Domates",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -5461,8 +5461,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Patlıcan, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Patlıcan, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -5515,8 +5515,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Maydanoz",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Maydanoz",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -5569,8 +5569,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Ispanak, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Ispanak, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -5623,8 +5623,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Çilek",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Çilek",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -5677,8 +5677,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Elma",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Elma",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -5731,8 +5731,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Kayısı (kuru)",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Kayısı (kuru)",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -5785,8 +5785,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Şeftali",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Şeftali",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -5839,8 +5839,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Portakal suyu (sıkılmış)",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Portakal suyu (sıkılmış)",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -5892,8 +5892,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Alabalık, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Alabalık, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -5946,8 +5946,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Hamsi, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Hamsi, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -6000,8 +6000,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Mısır, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Mısır, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -6054,8 +6054,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Mısır, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Mısır, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -6108,8 +6108,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Mısır, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Mısır, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -6162,8 +6162,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Mısır, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Mısır, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -6216,8 +6216,8 @@
       },
       "portion": {
         "mode": "tuberGroupMemberGrams",
-        "rowName": "Pirinç, pişmiş",
         "householdMeasureArtifactId": "tuber-ek-2-1",
+        "householdMeasureRow": "Pirinç, pişmiş",
         "memberName": "pirinc",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
@@ -6271,8 +6271,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Yufka",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Yufka",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -6325,8 +6325,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Patates, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Patates, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -6379,8 +6379,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Patates, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Patates, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -6433,8 +6433,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Patlıcan, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Patlıcan, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -6487,8 +6487,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Patates, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Patates, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -6541,8 +6541,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Mısır, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Mısır, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -6595,8 +6595,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Mısır, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Mısır, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -6649,8 +6649,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Mantar, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Mantar, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -6703,8 +6703,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Domates",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Domates",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -6757,8 +6757,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Kırmızı biber",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Kırmızı biber",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -6811,8 +6811,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Kayısı (kuru)",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Kayısı (kuru)",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -6865,8 +6865,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Üzüm",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Üzüm",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -6919,8 +6919,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Üzüm",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Üzüm",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -6973,8 +6973,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Bulgur, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Bulgur, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -7027,8 +7027,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Bulgur, pişmiş",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Bulgur, pişmiş",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
       },
@@ -7081,8 +7081,8 @@
       },
       "portion": {
         "mode": "tuberGroupMemberGrams",
-        "rowName": "Makarna, haşlanmış",
         "householdMeasureArtifactId": "tuber-ek-2-1",
+        "householdMeasureRow": "Makarna, haşlanmış",
         "memberName": "makarna",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
@@ -7182,8 +7182,8 @@
       },
       "portion": {
         "mode": "tuberFoodRow",
-        "rowName": "Kırmızı biber",
         "nutrientTableArtifactId": "tuber-ek-2-3-1",
+        "nutrientTableRow": "Kırmızı biber",
         "regularMultiplier": 1
       },
       "sourceConflicts": [],
@@ -7695,8 +7695,8 @@
       },
       "portion": {
         "mode": "tuberGroupMemberGrams",
-        "rowName": "Makarna, haşlanmış",
         "householdMeasureArtifactId": "tuber-ek-2-1",
+        "householdMeasureRow": "Makarna, haşlanmış",
         "memberName": "makarna",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
@@ -7750,8 +7750,8 @@
       },
       "portion": {
         "mode": "tuberGroupMemberGrams",
-        "rowName": "Nohut, fasulye, barbunya, iç bakla, börülce (haşlanmış)",
         "householdMeasureArtifactId": "tuber-ek-2-1",
+        "householdMeasureRow": "Nohut, fasulye, barbunya, iç bakla, börülce (haşlanmış)",
         "memberName": "nohut",
         "regularMultiplier": 1,
         "status": "needs_state_decision"
@@ -7805,8 +7805,8 @@
       },
       "portion": {
         "mode": "tuberGroupMemberGrams",
-        "rowName": "Makarna, haşlanmış",
         "householdMeasureArtifactId": "tuber-ek-2-1",
+        "householdMeasureRow": "Makarna, haşlanmış",
         "memberName": "makarna",
         "regularMultiplier": 1,
         "status": "needs_state_decision"

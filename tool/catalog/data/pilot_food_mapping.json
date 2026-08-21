@@ -84,7 +84,8 @@
         "nutrientTableRow": "Beyaz pirinç, pişmiş",
         "householdMeasureArtifactId": "tuber-ek-2-1",
         "householdMeasureRow": "Pirinç, pişmiş",
-        "regularMultiplier": 2
+        "regularMultiplier": 2,
+        "multiplierRationale": "The multiplier is published by TÜBER Ek 2.1.5 footnote 4, which states that a home second-course serving of rice/bulgur/pasta equals 2 standard portions."
       },
       "sourceConflicts": [
         "The pilot food was requested as 'Pilav'. TÜBER Ek 2.1.5 footnote 5 states that fat added during cooking is NOT included in these figures, so this record is cooked rice without the butter/oil of a Turkish pilav. It must not be labelled 'Pilav' in the catalog until a pilav-with-fat composition is sourced.",
@@ -133,7 +134,8 @@
         "nutrientTableRow": "Bulgur, pişmiş",
         "householdMeasureArtifactId": "tuber-ek-2-1",
         "householdMeasureRow": "Bulgur, pişmiş",
-        "regularMultiplier": 2
+        "regularMultiplier": 2,
+        "multiplierRationale": "The multiplier is published by TÜBER Ek 2.1.5 footnote 4, which states that a home second-course serving of rice/bulgur/pasta equals 2 standard portions."
       },
       "sourceConflicts": [
         "TÜBER Ek 2.1.5 footnote 6 publishes a separate 100-110 g standard portion for 'bol sebzeli pişirilmiş bulgur pilavı'. That is a different food (vegetable bulgur pilaf) and is NOT used here.",
@@ -179,7 +181,8 @@
         "nutrientTableRow": "Makarna / hazır erişte pişmiş",
         "householdMeasureArtifactId": "tuber-ek-2-1",
         "householdMeasureRow": "Makarna, haşlanmış",
-        "regularMultiplier": 2
+        "regularMultiplier": 2,
+        "multiplierRationale": "The multiplier is published by TÜBER Ek 2.1.5 footnote 4, which states that a home second-course serving of rice/bulgur/pasta equals 2 standard portions."
       },
       "sourceConflicts": [
         "The TÜBER row combines pasta and ready-made noodles ('Makarna / hazır erişte pişmiş'); it is not pasta-specific.",

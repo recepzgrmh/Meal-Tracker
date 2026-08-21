@@ -166,7 +166,14 @@ void main(List<String> args) {
     '${const JsonEncoder.withIndent('  ').convert(manifest)}\n',
   );
   File('$outBase.csv').writeAsStringSync(_csv(rows));
-  _writePrompts(rows);
+  // The pilot keeps its committed location; any other batch gets a directory
+  // beside its own manifest, so one build cannot delete another's prompts.
+  _writePrompts(
+    rows,
+    _stringArg(args, '--out') == null
+        ? '$_root/out/prompts'
+        : '${outBase}_prompts',
+  );
 
   final counts = manifest['counts'] as Map<String, dynamic>;
   final foodCount = counts['foods'] as int;
@@ -205,44 +212,137 @@ List<Map<String, dynamic>> _mappedRows(
   final slug = food['foodSlug'] as String;
   final category = food['portionCategory'] as String;
   final container = food['container'] as String;
-  final portion = food['portion'] as Map<String, dynamic>;
-  final nutrition = food['nutrition'] as Map<String, dynamic>;
-
-  final nutrientRow = findExact<TuberPortionNutrients>(
-    snapshots.tuberNutrients,
-    portion['nutrientTableRow'] as String,
-    (row) => row.foodName,
-  );
-  if (nutrientRow == null) {
-    throw StateError(
-      'TÜBER Ek 2.3.1 row "${portion['nutrientTableRow']}" not found or ambiguous',
+  final portion = food['portion'] as Map<String, dynamic>?;
+  if (portion == null) {
+    // Curated, but no published TÜBER row describes this food in the state
+    // TürKomp records it. The food is NOT excluded from the catalog: its
+    // composition is published and verified, and only the portion is absent.
+    // The app asks the user for the amount rather than showing a weight no
+    // source published.
+    throw const CatalogBuildException(
+      'No published TÜBER portion row applies to this food in its recorded '
+      'preparation state. Composition is unaffected and still published; the '
+      'app asks the user for the amount.',
+      searchedSources: <String>[
+        'TÜBER 2022 Ek 2.1 (standart porsiyon ölçüleri)',
+        'TÜBER 2022 Ek 2.3.1 (standart porsiyon besin ögeleri)',
+      ],
+      resolutionPath:
+          'Cite a published TÜBER row for this food in this preparation '
+          'state, or leave the portion absent.',
     );
   }
+  final nutrition = food['nutrition'] as Map<String, dynamic>;
+  // Reference-image prompts are written in English. A generated mapping leaves
+  // canonicalNameEn null for human translation, so fall back to the Turkish
+  // source name rather than failing the food over a prompt string.
+  final foodEn =
+      food['canonicalNameEn'] as String? ?? food['canonicalNameTr'] as String;
 
-  final measureRow = findExact<TuberHouseholdMeasure>(
-    snapshots.tuberMeasures,
-    portion['householdMeasureRow'] as String,
-    (row) => row.foodName,
-  );
+  final mode = portion['mode'] as String? ?? 'tuberFoodRow';
+
+  // Ek 2.3.1 is only consulted when the mapping points at one of its rows.
+  // The Ek 2.1 modes take their weight from the measure text instead, and
+  // must therefore source composition from TürKomp rather than falling back
+  // to a portion row that does not exist for them.
+  TuberPortionNutrients? nutrientRow;
+  if (mode == 'tuberFoodRow') {
+    final rowName = portion['nutrientTableRow'] as String?;
+    if (rowName == null) {
+      throw const CatalogBuildException(
+        'portion.mode is tuberFoodRow but no nutrientTableRow is named',
+      );
+    }
+    nutrientRow = findExact<TuberPortionNutrients>(
+      snapshots.tuberNutrients,
+      rowName,
+      (row) => row.foodName,
+    );
+    if (nutrientRow == null) {
+      throw CatalogBuildException(
+        'TÜBER Ek 2.3.1 row "$rowName" not found or ambiguous',
+        searchedSources: const <String>['TÜBER 2022 Ek 2.3.1'],
+      );
+    }
+  }
+
+  final measureRow = portion['householdMeasureRow'] == null
+      ? null
+      : findExact<TuberHouseholdMeasure>(
+          snapshots.tuberMeasures,
+          portion['householdMeasureRow'] as String,
+          (row) => row.foodName,
+        );
 
   final multiplier = (portion['regularMultiplier'] as num).toDouble();
-  final publishedPortion = nutrientRow.portionGrams;
+
+  final double publishedPortion;
+  if (nutrientRow != null) {
+    publishedPortion = nutrientRow.portionGrams;
+  } else {
+    if (measureRow?.statedGrams == null) {
+      throw CatalogBuildException(
+        'portion.mode is $mode but TÜBER Ek 2.1 row '
+        '"${portion['householdMeasureRow']}" states no gram weight',
+        searchedSources: const <String>['TÜBER 2022 Ek 2.1'],
+      );
+    }
+    publishedPortion = measureRow!.statedGrams!;
+  }
+
   final regular = roundGrams(
     publishedPortion * multiplier,
     policy.roundToGrams(category),
   );
 
+  // An absolute sanity bound, where the category declares one. Catches a
+  // weight that is arithmetically valid but obviously not a serving.
+  final band = policy.plausibleGramsBand(category);
+  if (band != null && (regular < band.min || regular > band.max)) {
+    throw CatalogBuildException(
+      'regular ${_g(regular)} g is outside the plausible '
+      '${_g(band.min)}-${_g(band.max)} g band for category $category',
+    );
+  }
+
   final transformations = <String>[];
+
+  // Discrete foods derive as unit multiples: 0.65 of an egg is not a portion.
+  double sizeFor(String sizeClass) =>
+      policy.usesUnitMultiple(category, sizeClass)
+      ? policy.deriveFromUnit(category, sizeClass, publishedPortion)
+      : policy.derive(category, sizeClass, regular);
+
   final small = policy.smallIsPublished(category)
       ? publishedPortion
-      : policy.derive(category, 'small', regular);
-  final large = policy.derive(category, 'large', regular);
+      : sizeFor('small');
+  final large = sizeFor('large');
+
+  transformations.add(switch (mode) {
+    'tuberFoodRow' =>
+      'regular = the published TÜBER Ek 2.3.1 standard portion for '
+          '"${portion['nutrientTableRow']}" (${_g(publishedPortion)} g).',
+    'tuberMeasureGrams' =>
+      'regular = the gram weight TÜBER Ek 2.1 prints for '
+          '"${portion['householdMeasureRow']}" (${_g(publishedPortion)} g).',
+    'tuberGroupMemberGrams' =>
+      'regular = the ${_g(publishedPortion)} g TÜBER Ek 2.1 prints for the '
+          'grouped row "${portion['householdMeasureRow']}". This food is one '
+          'named member of that row and is not measured separately.',
+    _ => 'regular = published TÜBER weight ${_g(publishedPortion)} g.',
+  });
 
   if (multiplier != 1) {
+    final rationale = portion['multiplierRationale'] as String?;
+    if (rationale == null) {
+      throw const CatalogBuildException(
+        'regularMultiplier != 1 requires a published multiplierRationale; '
+        'a multiplier with no cited source is an invented portion',
+      );
+    }
     transformations.add(
-      'regular = published TÜBER standard portion (${_g(publishedPortion)} g) x $multiplier. '
-      'The multiplier is published by TÜBER Ek 2.1.5 footnote 4, which states that a '
-      'home second-course serving of rice/bulgur/pasta equals 2 standard portions.',
+      'regular = published TÜBER standard portion (${_g(publishedPortion)} g) '
+      'x $multiplier. $rationale',
     );
   }
   if (policy.smallIsPublished(category)) {
@@ -251,17 +351,9 @@ List<Map<String, dynamic>> _mappedRows(
       'not a derived value.',
     );
   } else {
-    transformations.add(
-      'small = APP-DERIVED from regular using portion policy ${policy.version} '
-      '(category $category), rounded to ${_g(policy.roundToGrams(category))} g steps. '
-      'This is a product reference size, NOT a value published by TÜBER.',
-    );
+    transformations.add(_derivationNote(policy, category, 'small'));
   }
-  transformations.add(
-    'large = APP-DERIVED from regular using portion policy ${policy.version} '
-    '(category $category), rounded to ${_g(policy.roundToGrams(category))} g steps. '
-    'This is a product reference size, NOT a value published by TÜBER.',
-  );
+  transformations.add(_derivationNote(policy, category, 'large'));
 
   final per100g = _nutritionPer100g(
     nutrition,
@@ -271,7 +363,8 @@ List<Map<String, dynamic>> _mappedRows(
   );
 
   final consistencyNote = buildConsistencyNote(
-    foodEn: food['canonicalNameEn'] as String,
+    foodEn:
+        food['canonicalNameEn'] as String? ?? food['canonicalNameTr'] as String,
     container: container,
     smallGrams: small,
     regularGrams: regular,
@@ -283,9 +376,19 @@ List<Map<String, dynamic>> _mappedRows(
     'regular': regular,
     'large': large,
   };
-  final measureArtifact = snapshots.artifact(
-    portion['householdMeasureArtifactId'] as String,
-  );
+  // Which TÜBER artifact is the portion authority depends on the mode: a
+  // food-row anchor cites Ek 2.3.1, the Ek 2.1 modes cite the measure table.
+  final portionArtifactId =
+      (portion['householdMeasureArtifactId'] ??
+              portion['nutrientTableArtifactId'])
+          as String?;
+  if (portionArtifactId == null) {
+    throw const CatalogBuildException(
+      'portion names neither householdMeasureArtifactId nor '
+      'nutrientTableArtifactId, so the weight has no citable source',
+    );
+  }
+  final measureArtifact = snapshots.artifact(portionArtifactId);
   final nutritionArtifact = snapshots.artifact(
     nutrition['artifactId'] as String,
   );
@@ -327,7 +430,7 @@ List<Map<String, dynamic>> _mappedRows(
           grams: entry.value,
         ),
         'image_prompt': buildPortionPrompt(
-          foodEn: food['canonicalNameEn'] as String,
+          foodEn: foodEn,
           sizeClass: entry.key,
           grams: entry.value,
           container: container,
@@ -349,20 +452,22 @@ List<Map<String, dynamic>> _mappedRows(
         // provenance is carried separately by nutrition_source*, because the
         // two can come from different publishers for the same food.
         'source_name': measureArtifact['sourceName'],
-        'source_record_id': portion['nutrientTableRow'],
+        'source_record_id':
+            portion['nutrientTableRow'] ?? portion['householdMeasureRow'],
         'source_url': pdfArtifact['sourceUrl'],
         'source_release': pdfArtifact['sourceRelease'],
-        'source_page_or_table': [
-          if (measureArtifact['sourcePageOrTable'] != null)
-            measureArtifact['sourcePageOrTable'],
-          if (snapshots.artifact(
-                portion['nutrientTableArtifactId'] as String,
-              )['sourcePageOrTable'] !=
-              null)
-            snapshots.artifact(
-              portion['nutrientTableArtifactId'] as String,
-            )['sourcePageOrTable'],
-        ].join('; '),
+        // Cite every TÜBER table the weight depends on. A food-row anchor
+        // cites only Ek 2.3.1; an Ek 2.1 anchor cites only the measure table.
+        'source_page_or_table': <String>{
+          for (final id in <String?>[
+            portionArtifactId,
+            portion['nutrientTableArtifactId'] as String?,
+            portion['householdMeasureArtifactId'] as String?,
+          ])
+            if (id != null &&
+                snapshots.artifact(id)['sourcePageOrTable'] != null)
+              snapshots.artifact(id)['sourcePageOrTable'] as String,
+        }.join('; '),
         'nutrition_source_url':
             nutritionArtifact['sourceUrl'] ?? pdfArtifact['sourceUrl'],
         'retrieved_at': pdfArtifact['retrievedAt'],
@@ -377,12 +482,45 @@ List<Map<String, dynamic>> _mappedRows(
 
 Map<String, dynamic> _nutritionPer100g(
   Map<String, dynamic> nutrition,
-  TuberPortionNutrients nutrientRow,
+  TuberPortionNutrients? nutrientRow,
   _Snapshots snapshots,
   List<String> transformations,
 ) {
   if (nutrition['basis'] == 'per_100g_published') {
-    final composition = snapshots.turkomp[nutrition['artifactId']]!;
+    final composition = snapshots.turkomp[nutrition['artifactId']];
+    if (composition == null) {
+      throw CatalogBuildException(
+        'No TürKomp snapshot is indexed for artifact '
+        '"${nutrition['artifactId']}"',
+        searchedSources: const <String>[
+          'tool/catalog/snapshots/snapshot_index.json',
+        ],
+        resolutionPath:
+            'Promote the record with `fetch_sources.dart promote` before '
+            'building.',
+      );
+    }
+    // foods.calories/protein/carbs/fat are all NOT NULL. Where TürKomp omits a
+    // value -- it publishes no fat for ground red pepper, for instance -- the
+    // only honest options are to block the food or to invent a zero. Block it.
+    final missing = <String>[
+      if (composition.caloriesPer100g == null) 'calories',
+      if (composition.proteinPer100g == null) 'protein',
+      if (composition.carbsPer100g == null) 'carbs',
+      if (composition.fatPer100g == null) 'fat',
+    ];
+    if (missing.isNotEmpty) {
+      throw CatalogBuildException(
+        'TürKomp record ${composition.sourceRecordId} publishes no '
+        '${missing.join('/')} value, and the catalog stores all four macros '
+        'as NOT NULL. Writing a zero would invent a number no source '
+        'published.',
+        searchedSources: <String>['TürKomp ${composition.sourceRecordId}'],
+        resolutionPath:
+            'Drop this food from the selection, or cite another published '
+            'composition record that carries all four macros.',
+      );
+    }
     transformations.add(
       'Composition is the published TürKomp per-100 g record '
       '${composition.sourceRecordId}; no scaling applied.',
@@ -394,6 +532,17 @@ Map<String, dynamic> _nutritionPer100g(
       'fat': composition.fatPer100g,
       'basis': 'per_100g_published',
     };
+  }
+
+  // The TÜBER fallback divides a published per-portion row by its weight.
+  // The Ek 2.1 modes have no such row, so a food using one must carry
+  // published TürKomp composition -- there is nothing to derive from.
+  if (nutrientRow == null) {
+    throw const CatalogBuildException(
+      'Composition basis is derived_from_published_portion, but this food '
+      'takes its portion from TÜBER Ek 2.1 and has no Ek 2.3.1 nutrient row '
+      'to derive from. Use published TürKomp composition instead.',
+    );
   }
 
   final factor = 100 / nutrientRow.portionGrams;
@@ -457,8 +606,8 @@ List<Map<String, dynamic>> _blockedRows(Map<String, dynamic> food) {
   ];
 }
 
-void _writePrompts(List<Map<String, dynamic>> rows) {
-  final dir = Directory('$_root/out/prompts');
+void _writePrompts(List<Map<String, dynamic>> rows, String promptsDir) {
+  final dir = Directory(promptsDir);
   if (dir.existsSync()) dir.deleteSync(recursive: true);
   dir.createSync(recursive: true);
 
@@ -639,3 +788,15 @@ String _portionBasis(Map<String, dynamic> portion) =>
         'Unknown portion mode "$unknown"',
       ),
     };
+
+/// Describes how a non-published size was derived.
+String _derivationNote(PortionPolicy policy, String category, String size) =>
+    policy.usesUnitMultiple(category, size)
+    ? '$size = APP-DERIVED as ${policy.unitMultiple(category, size)}x the '
+          'published unit weight (portion policy ${policy.version}, category '
+          '$category). Discrete foods are counted in units, not scaled by a '
+          'factor. This is a product reference size, NOT published by TÜBER.'
+    : '$size = APP-DERIVED from regular using portion policy '
+          '${policy.version} (category $category), rounded to '
+          '${_g(policy.roundToGrams(category))} g steps. This is a product '
+          'reference size, NOT a value published by TÜBER.';

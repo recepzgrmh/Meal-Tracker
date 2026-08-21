@@ -69,13 +69,18 @@ void main(List<String> args) {
       );
     } else {
       final stateMatches = anchor['stateMatches'] == true;
+      final isFoodRow = anchor['mode'] == 'tuberFoodRow';
       portion = <String, dynamic>{
         'mode': anchor['mode'],
-        'rowName': anchor['rowName'],
-        if (anchor['mode'] == 'tuberFoodRow')
-          'nutrientTableArtifactId': 'tuber-ek-2-3-1'
-        else
+        // Key names match what build_pilot_manifest.dart reads: a food-row
+        // anchor resolves against Ek 2.3.1, the other two against Ek 2.1.
+        if (isFoodRow) ...<String, dynamic>{
+          'nutrientTableArtifactId': 'tuber-ek-2-3-1',
+          'nutrientTableRow': anchor['rowName'],
+        } else ...<String, dynamic>{
           'householdMeasureArtifactId': 'tuber-ek-2-1',
+          'householdMeasureRow': anchor['rowName'],
+        },
         if (anchor['mode'] == 'tuberGroupMemberGrams')
           'memberName': baseFoodName(name),
         'regularMultiplier': 1,
@@ -220,15 +225,26 @@ String _categoryFor(String name, String code) {
           : has('suyu')
           ? 'beverage_dairy'
           : 'fruit_whole',
-    // 12 (traditional/prepared) and 13 (special dietary) have no group-level
-    // portion model; fall back to the closest shape and let review correct it.
+    // 12 (traditional/prepared) and 13 (special dietary) mix everything, so
+    // the shape has to come from the name. TürKomp files dried figs and
+    // sun-dried apricots here rather than under fruit, which is why the
+    // dried-fruit test has to run before the generic fallback.
     _ =>
       has('yogurt|kefir|ayran')
           ? 'dairy_yogurt'
           : has('peynir|kaymak')
           ? 'dairy_cheese'
-          : has('ekmek|simit|borek|corba|makarna|musli')
+          : state == PreparationState.dried &&
+                has('incir|kayisi|uzum|erik|hurma|dut|elma|armut')
+          ? 'dried_fruit'
+          : has('findik|badem|ceviz|fistik|cekirdek|susam')
+          ? 'nuts_seeds'
+          : has(
+              'ekmek|simit|borek|makarna|musli|gevrek|galeta|bazlama|lavas|pide|yufka',
+            )
           ? 'bread'
+          : has('suyu|serbet|boza|salgam')
+          ? 'beverage_dairy'
           : 'vegetable_cooked',
   };
 }

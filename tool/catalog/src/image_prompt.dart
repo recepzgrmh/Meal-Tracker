@@ -11,7 +11,8 @@ const _sizeWord = {'small': 'SMALL', 'regular': 'REGULAR', 'large': 'LARGE'};
 
 /// Builds the image-generation prompt for one portion of one food.
 ///
-/// [foodEn] is the English canonical name, [container] is `plate` or `bowl`,
+/// [foodEn] is the English canonical name, [container] is one of `plate`,
+/// `bowl`, `glass` or `small_plate`,
 /// and [grams] is the catalog portion weight — quoted only so the operator and
 /// the reviewer can tie the render back to its record.
 String buildPortionPrompt({
@@ -32,10 +33,14 @@ String buildPortionPrompt({
   final vessel = switch (container) {
     'plate' => 'plate',
     'bowl' => 'bowl',
+    // A glass of ayran and a spoon of oil cannot be staged on a dinner plate
+    // at a fixed camera height and still read as a portion.
+    'glass' => 'glass',
+    'small_plate' => 'small side plate',
     _ => throw ArgumentError.value(
       container,
       'container',
-      'Expected plate/bowl',
+      'Expected plate/bowl/glass/small_plate',
     ),
   };
   final garnish = canonicalGarnish == null
@@ -63,8 +68,15 @@ String buildConsistencyNote({
   required num regularGrams,
   required num largeGrams,
 }) {
-  final vessel = container == 'bowl' ? 'bowl' : 'plate';
-  final fillClause = container == 'bowl'
+  final vessel = switch (container) {
+    'bowl' => 'bowl',
+    'glass' => 'glass',
+    'small_plate' => 'small side plate',
+    _ => 'plate',
+  };
+  // Vessels that hold a depth of food vary by fill level; flat vessels vary by
+  // the area and height the food occupies.
+  final fillClause = container == 'bowl' || container == 'glass'
       ? 'The $vessel diameter and depth are identical in all three renders; only '
             'the fill level changes.'
       : 'The $vessel diameter is identical in all three renders; only the area, '
