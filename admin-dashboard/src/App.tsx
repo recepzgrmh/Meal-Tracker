@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Activity, BarChart3, Bell, BookOpen, ChevronsUpDown, ClipboardCheck, Gauge, LayoutDashboard,
-  LifeBuoy, Languages, LogOut, Monitor, Moon, Network, PanelLeft, ScrollText,
-  Settings, Smartphone, Sun, Users as UsersIcon, Utensils,
+  LifeBuoy, Languages, LogOut, Monitor, Moon, Network, PanelLeft, Radio, ScrollText,
+  Settings, Smartphone, Sun, TestTube, Users as UsersIcon, Utensils, GitCompare,
 } from 'lucide-react'
 import { useI18n } from './i18n'
 import { signOut } from './lib/queries'
@@ -22,6 +22,9 @@ import { Analytics } from './pages/Analytics'
 import { UsersPage } from './pages/UsersPage'
 import { MobileApp } from './pages/MobileApp'
 import { Audit } from './pages/Audit'
+import { Live } from './pages/Live'
+import { Lab } from './pages/Lab'
+import { Versions } from './pages/Versions'
 import { SettingsPage } from './pages/SettingsPage'
 
 type NavLink = { page: Page; label: string; icon: typeof LayoutDashboard }
@@ -31,6 +34,11 @@ const NAV: NavGroup[] = [
   { label: 'MENU', links: [
     { page: 'overview', label: 'Overview', icon: LayoutDashboard },
     { page: 'analytics', label: 'Analytics', icon: BarChart3 },
+  ] },
+  { label: 'DEVELOPMENT', links: [
+    { page: 'live', label: 'Live', icon: Radio },
+    { page: 'lab', label: 'AI Lab', icon: TestTube },
+    { page: 'versions', label: 'Versions', icon: GitCompare },
   ] },
   { label: 'QUALITY', links: [
     { page: 'quality', label: 'AI Quality', icon: ClipboardCheck },
@@ -52,6 +60,7 @@ const PAGE_LABEL: Record<Page, string> = {
   overview: 'Overview', analytics: 'Analytics', quality: 'AI Quality', reviews: 'Meal Reviews',
   traces: 'Traces', reliability: 'Reliability', users: 'Users', mobile: 'Mobile App',
   audit: 'Audit Log', settings: 'Settings',
+  live: 'Live', lab: 'AI Lab', versions: 'Versions',
 }
 
 function readRoute(): Route {
@@ -65,6 +74,7 @@ function readRoute(): Route {
     userId: params.get('user') || undefined,
     filter: params.get('filter') || undefined,
     section: params.get('section') || undefined,
+    scope: params.get('scope') === 'mine' ? 'mine' : 'all',
   }
 }
 
@@ -103,6 +113,7 @@ function Shell() {
     if (next.userId) query.set('user', next.userId)
     if (next.filter) query.set('filter', next.filter)
     if (next.section) query.set('section', next.section)
+    if (next.scope === 'mine') query.set('scope', 'mine')
     history.pushState(null, '', `/admin/${next.page}${query.size ? `?${query}` : ''}`)
     setRoute(next)
     setDrawer(false)
@@ -258,6 +269,13 @@ function Shell() {
             items={[{ id: 'tr', label: 'TR' }, { id: 'en', label: 'EN' }]}
           />
 
+          <Segmented
+            label={t('Run scope')}
+            value={route.scope === 'mine' ? 'mine' : 'all'}
+            onChange={(next) => navigate({ ...route, scope: next as 'all' | 'mine' })}
+            items={[{ id: 'all', label: t('All') }, { id: 'mine', label: t('Mine') }]}
+          />
+
           <IconButton label={themeLabel} onClick={cycle}><ThemeIcon size={16} /></IconButton>
           <IconButton label={t('Notifications')}><Bell size={16} /></IconButton>
         </header>
@@ -286,6 +304,9 @@ function PageBody(props: { route: Route; navigate: Navigate; range: string; t: (
     case 'users': return <UsersPage {...props} />
     case 'mobile': return <MobileApp {...props} />
     case 'audit': return <Audit {...props} />
+    case 'live': return <Live {...props} />
+    case 'lab': return <Lab {...props} />
+    case 'versions': return <Versions {...props} />
     case 'settings': return <SettingsPage {...props} />
   }
 }

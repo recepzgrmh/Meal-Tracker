@@ -82,6 +82,11 @@ const tr: Record<string, string> = {
   'Rollback available': 'Geri alma mevcut', 'Release': 'Yayın',
   'Every publication and rollback is audit logged': 'Her yayın ve geri alma denetim kaydına yazılır',
   'Changes are versioned and applied through remote configuration.': 'Değişiklikler sürümlenir ve uzak yapılandırma üzerinden uygulanır.',
+  'Cases': 'Vakalar', 'Passed': 'Geçti', 'Identity F1': 'Kimlik F1', 'Portion MAPE': 'Porsiyon MAPE',
+  'No-match specificity': 'Eşleşmeme özgüllüğü', 'Regression coverage': 'Regresyon kapsamı',
+  'Engineering labels · dietitian review is still pending': 'Mühendislik etiketleri · diyetisyen incelemesi bekliyor',
+  'Evaluation runs': 'Değerlendirme koşuları', 'Pinned data, prompt, model, and retrieval versions': 'Sabitlenmiş veri, prompt, model ve retrieval sürümleri',
+  'Save review': 'İncelemeyi kaydet', 'Save and next': 'Kaydet ve sonrakine geç', 'Review saved': 'İnceleme kaydedildi',
 }
 
 type I18nValue = { language: AdminLanguage; setLanguage: (language: AdminLanguage) => void; t: (value: string) => string }

@@ -182,13 +182,14 @@ export type TraceRow = {
 
 export type TraceFilter = 'all' | 'errors' | 'slow' | 'retried'
 
-export async function fetchTraces(filter: TraceFilter, days: number, limit = 200): Promise<TraceRow[]> {
+export async function fetchTraces(filter: TraceFilter, days: number, limit = 200, userId?: string): Promise<TraceRow[]> {
   let query = requireClient()
     .from('analysis_runs')
     .select('*')
     .gte('created_at', sinceIso(days))
     .order('created_at', { ascending: false })
     .limit(limit)
+  if (userId) query = query.eq('user_id', userId)
   if (filter === 'errors') query = query.eq('status', 'failed')
   if (filter === 'slow') query = query.gt('latency_ms', 6000)
   if (filter === 'retried') query = query.gt('provider_attempts', 1)
@@ -265,4 +266,151 @@ export async function fetchBundles(): Promise<BundleRow[]> {
       .order('locale', { ascending: true })
       .order('version', { ascending: false }),
   )
+}
+
+/* ============================================================================
+   Development-phase metrics. Sources are the views added in
+   supabase/migrations/20260822091000_admin_dev_metrics.sql.
+   ========================================================================= */
+
+export type CalibrationRow = {
+  bucket: number
+  bucket_floor_pct: number
+  items: number
+  corrected: number
+  correction_rate: number | null
+  avg_confidence: number | null
+}
+
+export async function fetchCalibration(): Promise<CalibrationRow[]> {
+  return unwrap<CalibrationRow[]>(
+    await requireClient().from('admin_confidence_calibration').select('*').order('bucket', { ascending: true }),
+  )
+}
+
+export type MatchMethodRow = {
+  match_method: string
+  items: number
+  corrected: number
+  correction_rate: number | null
+  avg_confidence: number | null
+}
+
+export async function fetchMatchMethods(): Promise<MatchMethodRow[]> {
+  return unwrap<MatchMethodRow[]>(
+    await requireClient().from('admin_match_method_quality').select('*').order('items', { ascending: false }),
+  )
+}
+
+export type PortionErrorRow = {
+  canonical_name: string
+  corrections: number
+  mean_abs_error_g: number | null
+  mean_signed_error_g: number | null
+  worst_error_g: number | null
+}
+
+export async function fetchPortionError(): Promise<PortionErrorRow[]> {
+  return unwrap<PortionErrorRow[]>(
+    await requireClient().from('admin_portion_error').select('*').order('mean_abs_error_g', { ascending: false, nullsFirst: false }).limit(20),
+  )
+}
+
+export type VersionRow = {
+  model_name: string
+  prompt_version: string
+  runs: number
+  failed: number
+  success_rate: number | null
+  p50_latency_ms: number | null
+  p95_latency_ms: number | null
+  p99_latency_ms: number | null
+  input_tokens: number
+  output_tokens: number
+  embedding_tokens: number
+  cost_micros: number
+  avg_cost_micros: number | null
+  cache_hit_rate: number | null
+  retry_rate: number | null
+  vision_fallback_rate: number | null
+  first_seen: string
+  last_seen: string
+}
+
+export async function fetchVersions(): Promise<VersionRow[]> {
+  return unwrap<VersionRow[]>(
+    await requireClient().from('admin_version_comparison').select('*').order('last_seen', { ascending: false }),
+  )
+}
+
+export type LatencyBucketRow = { bucket_floor_ms: number; runs: number }
+
+export async function fetchLatencyHistogram(): Promise<LatencyBucketRow[]> {
+  return unwrap<LatencyBucketRow[]>(
+    await requireClient().from('admin_latency_histogram').select('*').order('bucket_floor_ms', { ascending: true }),
+  )
+}
+
+export type StuckRunRow = {
+  id: string
+  trace_id: string
+  user_id: string
+  status: string
+  input_kind: string
+  model_name: string | null
+  created_at: string
+  age_seconds: number
+}
+
+export async function fetchStuckRuns(): Promise<StuckRunRow[]> {
+  return unwrap<StuckRunRow[]>(
+    await requireClient().from('admin_stuck_runs').select('*').order('created_at', { ascending: true }),
+  )
+}
+
+export type UncommittedRunRow = {
+  id: string
+  trace_id: string
+  user_id: string
+  input_kind: string
+  raw_input: string
+  model_name: string | null
+  latency_ms: number | null
+  created_at: string
+  proposed_items: number
+}
+
+export async function fetchUncommittedRuns(limit = 50): Promise<UncommittedRunRow[]> {
+  return unwrap<UncommittedRunRow[]>(
+    await requireClient().from('admin_uncommitted_runs').select('*').order('created_at', { ascending: false }).limit(limit),
+  )
+}
+
+export type CandidateMarginRow = {
+  analysis_run_id: string
+  item_key: string
+  candidates: number
+  top_score: number | null
+  runner_up_score: number | null
+  margin: number | null
+  selected_rank: number | null
+}
+
+export async function fetchCandidateMargins(limit = 500): Promise<CandidateMarginRow[]> {
+  return unwrap<CandidateMarginRow[]>(
+    await requireClient().from('admin_candidate_margin').select('*').order('margin', { ascending: true, nullsFirst: false }).limit(limit),
+  )
+}
+
+/** The newest runs, for watching a device hit the pipeline in real time. */
+export async function fetchRecentRuns(limit = 25, userId?: string): Promise<TraceRow[]> {
+  let query = requireClient()
+    .from('analysis_runs')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  if (userId) query = query.eq('user_id', userId)
+  const { data, error } = await query
+  if (error) throw error
+  return (data ?? []) as unknown as TraceRow[]
 }

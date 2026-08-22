@@ -3,6 +3,7 @@ import { ArrowLeft, RotateCcw } from 'lucide-react'
 import { formatMs, formatUsd, formatWhen, shortId } from '../data'
 import { fetchTrace, fetchTraceCandidates, fetchTraces, type TraceFilter, type TraceRow } from '../lib/queries'
 import { useQuery } from '../lib/useQuery'
+import { useSession } from '../lib/session'
 import {
   Alert, Badge, Button, Card, DataTable, DefinitionList, Metric, Metrics, Section, Segmented,
   Tabs, type Column,
@@ -19,7 +20,12 @@ const STATUS_TONE: Record<string, 'ok' | 'warn' | 'danger' | 'neutral'> = {
 export function Traces({ route, navigate, range, t }: PageProps) {
   const days = RANGE_DAYS[range] ?? 30
   const [filter, setFilter] = useState<TraceFilter>((route.filter as TraceFilter) ?? 'all')
-  const traces = useQuery(() => fetchTraces(filter, days), [filter, days])
+  const { session } = useSession()
+  const mine = route.scope === 'mine'
+  const traces = useQuery(
+    () => fetchTraces(filter, days, 200, mine ? session?.user.id : undefined),
+    [filter, days, mine, session?.user.id],
+  )
 
   const columns: Array<Column<TraceRow>> = [
     { id: 'trace', header: t('Trace'), locked: true, cell: (row) => <code className="ds-mono">{row.trace_id.slice(0, 8)}</code> },
@@ -49,7 +55,10 @@ export function Traces({ route, navigate, range, t }: PageProps) {
       <PageHeader
         title={t('Traces')}
         description={t('Follow every meal analysis through the pipeline')}
-        actions={<Button icon={<RotateCcw size={14} />} onClick={traces.refetch}>{t('Refresh')}</Button>}
+        actions={<>
+          {mine && <Badge tone="accent">{t('Only my runs')}</Badge>}
+          <Button icon={<RotateCcw size={14} />} onClick={traces.refetch}>{t('Refresh')}</Button>
+        </>}
       />
 
       <Tabs

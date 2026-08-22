@@ -5,6 +5,7 @@ import type { Tone } from '../ui'
 export type Page =
   | 'overview' | 'analytics' | 'quality' | 'reviews' | 'traces'
   | 'reliability' | 'users' | 'mobile' | 'audit' | 'settings'
+  | 'live' | 'lab' | 'versions'
 
 /** Records are addressed by id, not by object, so a URL always survives a reload. */
 export type Route = {
@@ -14,6 +15,8 @@ export type Route = {
   userId?: string
   filter?: string
   section?: string
+  /** `mine` narrows row-level screens to the signed-in operator's own runs. */
+  scope?: 'all' | 'mine'
 }
 
 export type Navigate = (route: Route) => void
