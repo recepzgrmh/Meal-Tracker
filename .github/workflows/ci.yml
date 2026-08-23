@@ -73,6 +73,35 @@ jobs:
       - name: Run deterministic accuracy regression
         run: deno task --config supabase/deno.json eval
 
+  flutter-macos-regression:
+    name: Flutter golden and integration regression
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: 3.41.2
+          channel: stable
+          cache: true
+
+      - name: Install packages
+        run: flutter pub get
+
+      - name: Verify macOS visual baselines
+        run: flutter test test/golden_test.dart
+
+      - name: Run meal logging integration flow
+        run: flutter test integration_test/meal_logging_test.dart
+
+      - name: Run onboarding and authentication integration flow
+        run: flutter test integration_test/onboarding_auth_test.dart
+
   database:
     name: Supabase migration reset and lint
     runs-on: ubuntu-latest
@@ -97,6 +126,9 @@ jobs:
       - name: Lint database
         run: supabase db lint --local --level warning
 
+      - name: Run database contract tests
+        run: supabase test db
+
       - name: Stop local database
         if: always()
         run: supabase stop --no-backup
@@ -116,7 +148,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if git grep -I -qE '(^|[^A-Za-z0-9_])(sk-[A-Za-z0-9_-]{20,}|re_[A-Za-z0-9_-]{20,}|sbp_[a-f0-9]{32,}|sb_secret_[A-Za-z0-9_-]{20,})' -- . ':(exclude).github/workflows/ci.yml'; then
+          if git grep -I -qE '(^|[^A-Za-z0-9_])(sk-[A-Za-z0-9_-]{20,}|re_[A-Za-z0-9_-]{20,}|sbp_[a-f0-9]{32,}|sb_secret_[A-Za-z0-9_-]{20,}|AIza[A-Za-z0-9_-]{35}|eyJ[A-Za-z0-9_-]{20,}\.)' -- . ':(exclude).github/workflows/ci.yml' ':(exclude)config/app_config.example.json'; then
             echo 'Potential credential detected in tracked content.'
             exit 1
           fi
