@@ -1,6 +1,9 @@
 export interface CommitMealItemRequest {
+  itemId: string
   itemKey: string
-  foodId: string
+  /** Exactly one of foodId and estimateId is set; the RPC re-validates both. */
+  foodId?: string
+  estimateId?: string
   sourceText: string
   portionLabel: string
   grams: number
@@ -23,7 +26,15 @@ const requestKeys = new Set([
   'occurredAt',
   'items',
 ])
-const itemKeys = new Set(['itemKey', 'foodId', 'sourceText', 'portionLabel', 'grams'])
+const itemKeys = new Set([
+  'itemId',
+  'itemKey',
+  'foodId',
+  'estimateId',
+  'sourceText',
+  'portionLabel',
+  'grams',
+])
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu
 const databaseUuidPattern = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/iu
 
@@ -55,9 +66,20 @@ export function parseCommitMealRequest(value: unknown): CommitMealRequest {
         `items[${index}].grams`,
       )
     }
+    // Exactly one of foodId and estimateId: an item is either catalog-grounded
+    // or commits against a server-recorded AI estimate, never both.
+    if ((item.foodId === undefined) === (item.estimateId === undefined)) {
+      throw new CommitRequestValidationError(
+        'exactly one of foodId and estimateId is required',
+        `items[${index}].foodId`,
+      )
+    }
     return {
+      itemId: uuid(item.itemId, `items[${index}].itemId`),
       itemKey: boundedString(item.itemKey, `items[${index}].itemKey`, 120),
-      foodId: databaseUuid(item.foodId, `items[${index}].foodId`),
+      ...(item.foodId !== undefined
+        ? { foodId: databaseUuid(item.foodId, `items[${index}].foodId`) }
+        : { estimateId: databaseUuid(item.estimateId, `items[${index}].estimateId`) }),
       sourceText: boundedString(item.sourceText, `items[${index}].sourceText`, 400),
       portionLabel: boundedString(item.portionLabel, `items[${index}].portionLabel`, 120),
       grams,
@@ -65,6 +87,9 @@ export function parseCommitMealRequest(value: unknown): CommitMealRequest {
   })
   if (new Set(items.map((item) => item.itemKey)).size !== items.length) {
     throw new CommitRequestValidationError('item keys must be unique', 'items')
+  }
+  if (new Set(items.map((item) => item.itemId)).size !== items.length) {
+    throw new CommitRequestValidationError('item ids must be unique', 'items')
   }
   return { analysisRunId, commitRequestId, mealId, name, occurredAt, items }
 }

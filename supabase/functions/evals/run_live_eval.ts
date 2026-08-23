@@ -1,3 +1,5 @@
+import { type EvalCaseRecord, persistenceRequested, persistEvalRun } from './persist_eval_run.ts'
+
 interface ExpectedItem {
   foodId: string
   grams?: number
@@ -39,10 +41,13 @@ if (Deno.env.get('LIVE_EVAL_ACK') !== 'I_ACCEPT_PROVIDER_COST') {
   throw new Error('Set LIVE_EVAL_ACK=I_ACCEPT_PROVIDER_COST to run paid provider evals')
 }
 const maxCases = Math.min(100, Math.max(1, Number(Deno.env.get('EVAL_MAX_CASES') ?? 20)))
-const datasetArg = Deno.args[0] ?? 'evals/gold/bilingual_hybrid_v1.jsonl'
+const datasetArg = Deno.args.find((arg) => !arg.startsWith('--')) ??
+  'evals/gold/bilingual_hybrid_v1.jsonl'
 const cases = (await loadCases(new URL(datasetArg, root))).slice(0, maxCases)
 const userId = jwtSubject(userJwt)
 const results: CaseResult[] = []
+const caseRecords: EvalCaseRecord[] = []
+const startedAt = new Date().toISOString()
 
 for (const gold of cases) {
   const clientRequestId = crypto.randomUUID()
@@ -64,9 +69,16 @@ for (const gold of cases) {
   const error = payload.error as Record<string, unknown> | undefined
   if (!response.ok) {
     const noMatchCorrect = gold.expectNoMatch === true && error?.code === 'NO_MATCH'
-    results.push(
-      emptyResult(gold.id, latencyMs, noMatchCorrect, String(error?.code ?? response.status)),
-    )
+    const errorCode = String(error?.code ?? response.status)
+    results.push(emptyResult(gold.id, latencyMs, noMatchCorrect, errorCode))
+    caseRecords.push({
+      caseId: gold.id,
+      passed: noMatchCorrect,
+      expected: { items: gold.expectedItems, expectNoMatch: gold.expectNoMatch === true },
+      actual: { error: errorCode },
+      failureKind: noMatchCorrect ? null : errorCode,
+      latencyMs,
+    })
     continue
   }
 
@@ -90,9 +102,18 @@ for (const gold of cases) {
     return [0]
   })
   const telemetry = await loadTelemetry(String(payload.analysisRunId))
+  const passed = identityExact && portionErrors.every((error) => error <= 0.10)
+  caseRecords.push({
+    caseId: gold.id,
+    passed,
+    expected: { items: gold.expectedItems, expectNoMatch: gold.expectNoMatch === true },
+    actual: { items: actualItems },
+    failureKind: passed ? null : identityExact ? 'portion' : 'identity',
+    latencyMs,
+  })
   results.push({
     id: gold.id,
-    passed: identityExact && portionErrors.every((error) => error <= 0.10),
+    passed,
     identityExact,
     noMatchCorrect: gold.expectNoMatch === true ? false : null,
     portionErrors,
@@ -147,6 +168,22 @@ const report = {
 }
 
 console.log(JSON.stringify(report, null, 2))
+
+if (persistenceRequested()) {
+  await persistEvalRun({
+    kind: 'live',
+    suite: report.dataset,
+    model: null,
+    promptVersion: null,
+    startedAt,
+    finishedAt: report.generatedAt,
+    caseCount: results.length,
+    passedCount: results.filter((result) => result.passed).length,
+    metrics: report.metrics,
+    costMicros: sum(results, 'estimatedCostMicros'),
+    notes: `pricing ${report.pricingVersion}`,
+  }, caseRecords)
+}
 
 async function loadCases(url: URL): Promise<EvalCase[]> {
   const content = await Deno.readTextFile(url)

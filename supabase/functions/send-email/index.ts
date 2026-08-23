@@ -73,11 +73,16 @@ Deno.serve(async (request) => {
     }))
     return Response.json({})
   } catch (error) {
+    // Every error constructed above is deliberately scrubbed: it contains
+    // only a missing secret name or the provider status/request id, never an
+    // address, OTP, API key, webhook body, or provider response body.
+    const safeError = error instanceof Error ? error.message : 'Unknown authentication email error'
     console.error(JSON.stringify({
       level: 'error',
       event: 'auth_email_failed',
       webhookId,
       errorType: error instanceof Error ? error.name : 'UnknownError',
+      error: safeError,
       durationMs: Math.round(performance.now() - startedAt),
     }))
 

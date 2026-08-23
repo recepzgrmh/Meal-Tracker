@@ -1,7 +1,7 @@
 import { withSupabase } from 'npm:@supabase/server@1.4.1'
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.112.3'
 import { errorResponse, jsonResponse, redactedLog } from '../_shared/http.ts'
-import { hybridSearch } from './hybrid.ts'
+import { hybridSearch, lexicalSearch } from './hybrid.ts'
 import { parseSearchRequest, SearchRequestValidationError } from './request.ts'
 
 interface SearchContext {
@@ -36,14 +36,23 @@ export default {
     let search
     try {
       const apiKey = Deno.env.get('OPENAI_API_KEY')?.trim()
-      if (!apiKey) throw new Error('OPENAI_API_KEY is not configured')
-      search = await hybridSearch(context.supabase, context.supabaseAdmin, {
-        query: body.query,
-        locale: body.locale,
-        limit: body.limit,
-        openAiApiKey: apiKey,
+      const semanticEnabled = Deno.env.get('CATALOG_SEMANTIC_SEARCH_ENABLED') === 'true'
+      search = semanticEnabled && apiKey
+        ? await hybridSearch(context.supabase, context.supabaseAdmin, {
+          query: body.query,
+          locale: body.locale,
+          limit: body.limit,
+          openAiApiKey: apiKey,
+        })
+        : await lexicalSearch(context.supabase, body, 0)
+    } catch (error) {
+      redactedLog('error', 'catalog_search_failed', {
+        traceId,
+        userId: userIdFromClaims(context.userClaims),
+        queryLength: body.query.length,
+        errorType: error instanceof Error ? error.name : 'UnknownError',
+        latencyMs: Math.round(performance.now() - startedAt),
       })
-    } catch {
       return errorResponse('INTERNAL_ERROR', 'Katalog araması tamamlanamadı', traceId, 500, true)
     }
 
@@ -86,6 +95,7 @@ export default {
       query: body.query,
       candidates,
       telemetry: {
+        provider: 'supabase_lean',
         cacheHit: search.cacheHit,
         fallback: search.fallback,
         embeddingModel: search.embeddingModel,

@@ -39,7 +39,7 @@ export async function hybridSearch(
     backfilledFoods = backfill.updated
     backfillTokens = backfill.promptTokens
   } catch {
-    return lexicalFallback(userClient, options, backfilledFoods)
+    return lexicalSearch(userClient, options, backfilledFoods)
   }
 
   const catalogFingerprint = await computeCatalogFingerprint(adminClient, options.locale, model)
@@ -95,11 +95,11 @@ export async function hybridSearch(
       backfilledFoods,
     }
   } catch {
-    return lexicalFallback(userClient, options, backfilledFoods)
+    return lexicalSearch(userClient, options, backfilledFoods)
   }
 }
 
-async function lexicalFallback(
+export async function lexicalSearch(
   client: SupabaseClient,
   options: Pick<HybridSearchOptions, 'query' | 'locale' | 'limit'>,
   backfilledFoods: number,
@@ -126,11 +126,26 @@ async function computeCatalogFingerprint(
   locale: string,
   model: string,
 ): Promise<string> {
-  const { data, error } = await client.from('foods')
-    .select('id,embedding_source_hash,embedding_model,updated_at')
-    .eq('is_active', true).order('id')
-  if (error) throw error
-  return sha256(JSON.stringify({ locale, model, foods: data ?? [] }))
+  // Reading every food row cost a full-table transfer per request and was
+  // silently truncated by the API row cap, so the fingerprint described only a
+  // fraction of the catalog. Three aggregates describe all of it instead.
+  const [active, embedded, latest] = await Promise.all([
+    client.from('foods').select('id', { count: 'exact', head: true }).eq('is_active', true),
+    client.from('foods').select('id', { count: 'exact', head: true })
+      .eq('is_active', true).eq('embedding_model', model).not('embedding_source_hash', 'is', null),
+    client.from('foods').select('updated_at')
+      .eq('is_active', true).order('updated_at', { ascending: false }).limit(1).maybeSingle(),
+  ])
+  for (const result of [active, embedded, latest]) {
+    if (result.error) throw result.error
+  }
+  return sha256(JSON.stringify({
+    locale,
+    model,
+    activeFoods: active.count ?? 0,
+    embeddedFoods: embedded.count ?? 0,
+    updatedAt: latest.data?.updated_at ?? null,
+  }))
 }
 
 export function normalizeQuery(value: string, locale: 'tr-TR' | 'en-US'): string {

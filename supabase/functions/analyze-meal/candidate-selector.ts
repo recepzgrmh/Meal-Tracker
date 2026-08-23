@@ -98,11 +98,7 @@ export async function selectCatalogCandidates(
       if (![408, 409, 429].includes(response.status) && response.status < 500) break
     } catch (error) {
       if (error instanceof ProviderRefusalError) throw error
-      if (
-        !(error instanceof DOMException && error.name === 'AbortError') || attempt === maxAttempts
-      ) {
-        if (attempt === maxAttempts) throw error
-      }
+      if (attempt === maxAttempts) throw error
     } finally {
       clearTimeout(timeout)
     }
@@ -116,6 +112,12 @@ function buildRequest(options: SelectorOptions, model: string): Record<string, u
   return {
     model,
     store: false,
+    // Reasoning tokens are drawn from this budget. At 500 the model could burn
+    // the whole allowance before emitting the JSON payload, and the response
+    // then carried no output_text at all — which surfaced to the user as
+    // "no catalog match" rather than a provider failure.
+    max_output_tokens: 4000,
+    reasoning: { effort: 'minimal' },
     input: [
       {
         role: 'system',
@@ -209,6 +211,10 @@ function outputText(payload: Record<string, unknown>): string {
       if (typed.type === 'refusal') throw new ProviderRefusalError()
       if (typed.type === 'output_text' && typeof typed.text === 'string') return typed.text
     }
+  }
+  if (payload.status === 'incomplete') {
+    const reason = (payload.incomplete_details as Record<string, unknown> | undefined)?.reason
+    throw new Error(`Candidate selector response was incomplete: ${String(reason ?? 'unknown')}`)
   }
   throw new Error('Candidate selector returned no output text')
 }

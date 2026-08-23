@@ -105,6 +105,80 @@ const ignoredTokens = new Set([
   ...Object.keys(numberWords),
 ])
 
+// Mirrors the single optional suffix group in inflectedAliasPattern, so a key
+// generated here matches exactly the aliases the matcher can still resolve.
+const inflectionSuffixes = [
+  'lar',
+  'ler',
+  'yı',
+  'yi',
+  'yu',
+  'yü',
+  'ya',
+  'ye',
+  'ın',
+  'in',
+  'un',
+  'ün',
+  'dan',
+  'den',
+  'tan',
+  'ten',
+  'da',
+  'de',
+  'ta',
+  'te',
+  'es',
+  'ı',
+  'i',
+  'u',
+  'ü',
+  'a',
+  'e',
+  's',
+]
+
+const MAX_ALIAS_WORDS = 5
+const MAX_LOOKUP_KEYS = 500
+
+/**
+ * Every catalog alias that could still match `input` once inflection and
+ * consonant softening are undone. The catalog is far too large to load whole,
+ * so these keys scope the alias query to the phrases actually typed.
+ */
+export function aliasLookupKeys(inputs: string[]): string[] {
+  const keys = new Set<string>()
+  for (const input of inputs) {
+    const words = normalizeTurkishInput(input).split(' ').filter(Boolean)
+    for (let start = 0; start < words.length; start += 1) {
+      const limit = Math.min(words.length, start + MAX_ALIAS_WORDS)
+      for (let end = start + 1; end <= limit; end += 1) {
+        const prefix = words.slice(start, end - 1).join(' ')
+        for (const variant of deinflect(words[end - 1])) {
+          keys.add(prefix ? `${prefix} ${variant}` : variant)
+          if (keys.size >= MAX_LOOKUP_KEYS) return [...keys]
+        }
+      }
+    }
+  }
+  return [...keys]
+}
+
+function deinflect(word: string): string[] {
+  const stems = new Set<string>([word])
+  for (const suffix of inflectionSuffixes) {
+    if (!word.endsWith(suffix)) continue
+    const stem = word.slice(0, -suffix.length)
+    if (stem.length >= 2) stems.add(stem)
+  }
+  const variants = new Set<string>(stems)
+  for (const stem of stems) {
+    if (stem.endsWith('d')) variants.add(`${stem.slice(0, -1)}t`)
+    if (stem.endsWith('ğ') || stem.endsWith('g')) variants.add(`${stem.slice(0, -1)}k`)
+  }
+  return [...variants]
+}
+
 export function normalizeTurkishInput(input: string): string {
   return input
     .replace(/½/gu, ' yarım ')

@@ -367,6 +367,11 @@ inspector_port = 8083
 # The Deno major version to use.
 deno_version = 2
 
+# Auth email hook requests are signed by Supabase Auth rather than carrying a
+# user access token. Keep this deployment setting explicit and reproducible.
+[functions.send-email]
+verify_jwt = false
+
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 

@@ -70,6 +70,26 @@ Deno.test('vision refusal is not retried', async () => {
   assertEquals(calls, 1)
 })
 
+Deno.test('vision success with zero foods is not retried and is not a provider failure', async () => {
+  let calls = 0
+  const extractor = () =>
+    requestVisionExtraction({
+      ...baseOptions,
+      userText: '',
+      maxAttempts: 3,
+      fetcher: (() => {
+        calls += 1
+        return Promise.resolve(emptyFoodsResponse())
+      }) as typeof fetch,
+    })
+
+  // Photo-only input (no user text) must not throw either: an empty answer
+  // flows to no-match handling instead of a retryable provider failure.
+  const attempt = await extractVisionWithTextFallback('', extractor)
+  assertEquals(calls, 1)
+  assertEquals(attempt, { extraction: null, fallbackReason: 'no_food_detected' })
+})
+
 Deno.test('mixed input safely falls back to text when vision fails', async () => {
   const result = await extractVisionWithTextFallback(
     'two eggs',
@@ -88,6 +108,13 @@ Deno.test('photo-only input preserves provider failure for retryable API respons
     VisionProviderError,
   )
 })
+
+function emptyFoodsResponse(): Response {
+  return Response.json({
+    output: [{ content: [{ type: 'output_text', text: JSON.stringify({ foods: [] }) }] }],
+    usage: { input_tokens: 25, output_tokens: 4 },
+  })
+}
 
 function providerResponse(): Response {
   return Response.json({

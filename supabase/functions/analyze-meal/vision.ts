@@ -21,7 +21,12 @@ export interface VisionExtraction {
   attempts: number
 }
 
-export type VisionFallbackReason = 'timeout' | 'rate_limit' | 'refusal' | 'provider_error'
+export type VisionFallbackReason =
+  | 'timeout'
+  | 'rate_limit'
+  | 'refusal'
+  | 'provider_error'
+  | 'no_food_detected'
 
 export interface VisionAttempt {
   extraction: VisionExtraction | null
@@ -126,7 +131,14 @@ export async function extractVisionWithTextFallback(
   extractor: () => Promise<VisionExtraction>,
 ): Promise<VisionAttempt> {
   try {
-    return { extraction: await extractor(), fallbackReason: null }
+    const extraction = await extractor()
+    if (extraction.foods.length === 0) {
+      // The provider answered but recognized nothing edible. This is not an
+      // outage, so even photo-only input must not surface a retryable 503:
+      // the caller falls through to text analysis and no-match handling.
+      return { extraction: null, fallbackReason: 'no_food_detected' }
+    }
+    return { extraction, fallbackReason: null }
   } catch (error) {
     if (!userText.trim()) throw error
     return {
@@ -140,6 +152,7 @@ function buildVisionRequest(options: VisionRequestOptions, model: string): Recor
   return {
     model,
     store: false,
+    max_output_tokens: 800,
     input: [
       {
         role: 'system',
@@ -211,10 +224,10 @@ function parseVisionResponse(payload: unknown, model: string, attempts: number):
     throw new VisionProviderError('Vision response is invalid', 'provider_error')
   }
   const parsed = JSON.parse(outputText(payload)) as { foods?: unknown[] }
+  // Zero foods is a *successful* answer ("nothing edible here"), not a provider
+  // failure: throwing here caused paid retries and a misleading 503. The caller
+  // routes an empty extraction to the normal no-match handling instead.
   const foods = parseFoods(parsed.foods)
-  if (foods.length === 0) {
-    throw new VisionProviderError('Vision provider returned no supported foods', 'provider_error')
-  }
   const usage = (payload as Record<string, unknown>).usage as Record<string, unknown> | undefined
   return {
     foods,
