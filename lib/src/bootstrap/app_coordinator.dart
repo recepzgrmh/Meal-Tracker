@@ -42,8 +42,9 @@ class AppCoordinator extends ChangeNotifier {
   bool get isCompletingProfile => _isCompletingProfile;
   ProfileCompletionError? get profileError => _profileError;
 
-  /// Daily targets derived from what the user actually chose during onboarding.
-  NutritionGoals get goals => NutritionGoals.fromDraft(_draft);
+  /// Daily targets derived from the body profile the user answered during
+  /// setup, or the app default while that is still unanswered.
+  NutritionGoals get goals => NutritionGoals.fromPlan(_draft.plan);
 
   AppFlowState get state {
     if (!_initialized) return AppFlowState.booting;
@@ -99,6 +100,16 @@ class AppCoordinator extends ChangeNotifier {
       _isCompletingProfile = false;
       notifyListeners();
     }
+  }
+
+  /// Sends the user back through setup with their previous answers intact, so
+  /// a target can be revised without starting from an empty profile. Only the
+  /// in-memory completion marker is cleared: an interrupted edit leaves the
+  /// stored profile exactly as it was.
+  void reopenSetup() {
+    _completedVersion = 0;
+    _profileError = null;
+    notifyListeners();
   }
 
   /// Ends the session. The `sessionChanges` subscription drives the redirect,

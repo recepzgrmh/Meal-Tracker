@@ -10,10 +10,91 @@ abstract final class SyncOperationStatus {
   static const succeeded = 'succeeded';
 }
 
+/// How much work the outbox is still holding, split by whether it will move on
+/// its own.
+///
+/// [pending] retries by itself; [blocked] has given up — [OutboxDao.nextReady]
+/// only ever picks `pending` or `failed` rows, so a blocked operation stays put
+/// until something requeues it. That difference is the whole reason the two are
+/// counted apart: one is "wait", the other is "this needs you".
+class OutboxSummary {
+  const OutboxSummary({required this.pending, required this.blocked});
+
+  static const empty = OutboxSummary(pending: 0, blocked: 0);
+
+  final int pending;
+  final int blocked;
+
+  bool get isEmpty => pending == 0 && blocked == 0;
+
+  @override
+  bool operator ==(Object other) =>
+      other is OutboxSummary &&
+      other.pending == pending &&
+      other.blocked == blocked;
+
+  @override
+  int get hashCode => Object.hash(pending, blocked);
+}
+
 class OutboxDao {
   const OutboxDao(this.database);
 
   final AppDatabase database;
+
+  Stream<OutboxSummary> watchSummary(String userId) {
+    final count = database.syncOperations.id.count();
+    final status = database.syncOperations.status;
+    final query = database.selectOnly(database.syncOperations)
+      ..addColumns([status, count])
+      ..where(
+        database.syncOperations.userId.equals(userId) &
+            status.isIn([
+              SyncOperationStatus.pending,
+              SyncOperationStatus.inFlight,
+              SyncOperationStatus.failed,
+              SyncOperationStatus.blocked,
+            ]),
+      )
+      ..groupBy([status]);
+
+    return query.watch().map((rows) {
+      var pending = 0;
+      var blocked = 0;
+      for (final row in rows) {
+        final rowCount = row.read(count) ?? 0;
+        if (row.read(status) == SyncOperationStatus.blocked) {
+          blocked += rowCount;
+        } else {
+          pending += rowCount;
+        }
+      }
+      return OutboxSummary(pending: pending, blocked: blocked);
+    });
+  }
+
+  /// Puts blocked operations back in the queue.
+  ///
+  /// The attempt counter resets too: the backoff ladder exists to stop a client
+  /// hammering a server that is failing, and an explicit "try again" from the
+  /// person holding the phone is a new intent, not the seventh automatic retry
+  /// of the old one.
+  Future<int> requeueBlocked(String userId, DateTime now) {
+    return (database.update(database.syncOperations)..where(
+          (row) =>
+              row.userId.equals(userId) &
+              row.status.equals(SyncOperationStatus.blocked),
+        ))
+        .write(
+          SyncOperationsCompanion(
+            status: const Value(SyncOperationStatus.pending),
+            attemptCount: const Value(0),
+            nextAttemptAt: const Value(null),
+            lastErrorCode: const Value(null),
+            updatedAt: Value(now),
+          ),
+        );
+  }
 
   Stream<int> watchOutstandingCount(String userId) {
     final count = database.syncOperations.id.count();
@@ -76,7 +157,8 @@ class OutboxDao {
         ),
       );
       if (operation.entityType == 'meal' &&
-          operation.operationType == 'upsert') {
+          (operation.operationType == 'upsert' ||
+              operation.operationType == 'commit')) {
         await (database.update(database.localMeals)..where(
               (meal) =>
                   meal.id.equals(operation.entityId) &

@@ -14,10 +14,13 @@ void main() {
     final onboarding = FakeOnboardingRepository();
 
     await tester.pumpWidget(
-      MealClarityRoot(
-        authRepository: auth,
-        onboardingRepository: onboarding,
-        profileRepository: FakeProfileRepository(),
+      MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: MealClarityRoot(
+          authRepository: auth,
+          onboardingRepository: onboarding,
+          profileRepository: FakeProfileRepository(),
+        ),
       ),
     );
     await tester.pumpAndSettle();
@@ -26,20 +29,55 @@ void main() {
     await tester.tap(find.byKey(const Key('onboarding-continue')));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('demo-continue')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('demo-continue')));
-    await tester.pumpAndSettle();
-    expect(find.byKey(const Key('demo-continue')), findsOneWidget);
-    await tester.tap(find.byKey(const Key('demo-continue')));
+    expect(find.byKey(const Key('photo-guide-continue')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('photo-guide-continue')));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('intent-understand')));
+    expect(find.byKey(const Key('demo-cheese-row')), findsOneWidget);
+    final suggestedPortion = find.byKey(const Key('demo-portion-50'));
+    await tester.ensureVisible(suggestedPortion);
+    await tester.tap(suggestedPortion);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('onboarding-finish')));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('auth-email')), findsOneWidget);
     expect(onboarding.draft.step, 3);
+
+    await auth.close();
+  });
+
+  testWidgets('example result expands inline and updates the total', (
+    tester,
+  ) async {
+    tester.binding.platformDispatcher.localeTestValue = const Locale('tr');
+    addTearDown(tester.binding.platformDispatcher.clearLocaleTestValue);
+    final auth = FakeAuthRepository();
+
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(disableAnimations: true),
+        child: MealClarityRoot(
+          authRepository: auth,
+          onboardingRepository: FakeOnboardingRepository(),
+          profileRepository: FakeProfileRepository(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('≈ 415 kcal'), findsNothing);
+    await tester.tap(find.byKey(const Key('onboarding-continue')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('photo-guide-continue')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('demo-cheese-row')), findsOneWidget);
+    final seventyFiveGrams = find.byKey(const Key('demo-portion-75'));
+    await tester.ensureVisible(seventyFiveGrams);
+    await tester.tap(seventyFiveGrams);
+    await tester.pumpAndSettle();
+    expect(find.text('≈ 478 kcal'), findsOneWidget);
 
     await auth.close();
   });

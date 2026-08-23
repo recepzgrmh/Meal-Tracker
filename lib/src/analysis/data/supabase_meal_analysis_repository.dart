@@ -16,15 +16,18 @@ class SupabaseMealAnalysisRepository implements MealRepository {
     MealPhotoStorage? photoStorage,
     AnalysisRequestIdFactory? requestIdFactory,
     AnalysisClock? clock,
+    AnalysisRequestIdFactory? itemIdFactory,
   }) : _remote = remote,
        _photoStorage = photoStorage,
        _requestIdFactory = requestIdFactory ?? const Uuid().v4,
-       _clock = clock ?? DateTime.now;
+       _clock = clock ?? DateTime.now,
+       _itemIdFactory = itemIdFactory ?? const Uuid().v4;
 
   final AnalysisRemoteDataSource _remote;
   final MealPhotoStorage? _photoStorage;
   final AnalysisRequestIdFactory _requestIdFactory;
   final AnalysisClock _clock;
+  final AnalysisRequestIdFactory _itemIdFactory;
 
   @override
   Future<MealDraft> analyze(MealAnalysisInput request) async {
@@ -46,12 +49,22 @@ class SupabaseMealAnalysisRepository implements MealRepository {
         mealName: _mealName(_clock()),
         analysisRunId: response.analysisRunId,
         traceId: response.traceId,
-        unmatchedText: response.unmatchedText,
+        imagePath: photo?.path,
+        imageUrl: photo?.signedUrl,
+        // `unmatchedItems` is the authoritative shape now; the legacy string
+        // list keeps older recorded responses parsing.
+        unmatchedText: response.unmatchedItems.isNotEmpty
+            ? response.unmatchedItems
+                  .map((item) => item.text)
+                  .toList(growable: false)
+            : response.unmatchedText,
         items: response.items
             .map(
               (item) => MealItem(
-                id: item.itemKey,
+                id: _itemIdFactory(),
+                analysisItemKey: item.itemKey,
                 foodId: item.foodId,
+                estimateId: item.estimateId,
                 name: naturalFoodDisplayName(item.canonicalName),
                 canonicalName: item.canonicalName,
                 sourceText: item.sourceText,
@@ -64,9 +77,14 @@ class SupabaseMealAnalysisRepository implements MealRepository {
                   fat: item.nutritionPer100g.fat,
                 ),
                 matchState: _matchState(item),
-                sourceName: 'Curated food catalog · exact-alias-v1',
+                // An estimate has no catalog provenance to claim; the empty
+                // string is what lets the UI skip the source label for it.
+                sourceName: item.estimated
+                    ? ''
+                    : 'Curated food catalog · exact-alias-v1',
                 confidence: item.confidence,
                 matchMethod: item.matchMethod,
+                alternativeFoodIds: item.alternativeFoodIds,
                 portionOptions: item.portionOptions
                     .map(
                       (option) => FoodPortionOption(
@@ -135,6 +153,7 @@ class SupabaseMealAnalysisRepository implements MealRepository {
       kind: kind,
       code: error.code,
       retryable: error.retryable,
+      unmatchedTexts: error.unmatchedTexts,
     );
   }
 

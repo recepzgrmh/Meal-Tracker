@@ -128,11 +128,34 @@ class SupabaseAuthRepository implements AuthRepository {
   static AuthFailure _mapFailure(supabase.AuthException error) {
     final message = error.message.toLowerCase();
     final statusCode = int.tryParse(error.statusCode ?? '');
+    final retryAfter = _retryAfterFrom(message);
 
+    if (error.code == 'over_email_send_rate_limit') {
+      return AuthFailure(
+        AuthFailureCode.emailRateLimited,
+        'E-posta gönderim sınırına ulaşıldı.',
+        // Supabase does not include the remaining project-quota window in
+        // every response. Do not invent a one-hour lockout in that case;
+        // the view model applies its short, local anti-spam cooldown.
+        retryAfter: retryAfter,
+      );
+    }
     if (statusCode == 429 || message.contains('rate limit')) {
-      return const AuthFailure(
+      return AuthFailure(
         AuthFailureCode.rateLimited,
         'Çok sık deneme yapıldı. Geri sayım bitince tekrar dene.',
+        retryAfter: retryAfter ?? const Duration(minutes: 1),
+      );
+    }
+    if (message.contains('confirmation email') ||
+        message.contains('email could not be delivered') ||
+        message.contains('send email hook') ||
+        message.contains('hook errored') ||
+        error.code == 'unexpected_failure' ||
+        (statusCode != null && statusCode >= 500)) {
+      return const AuthFailure(
+        AuthFailureCode.emailDeliveryFailed,
+        'Doğrulama e-postası şu anda gönderilemedi. Biraz sonra tekrar dene.',
       );
     }
     if (message.contains('expired')) {
@@ -151,5 +174,13 @@ class SupabaseAuthRepository implements AuthRepository {
       AuthFailureCode.unknown,
       'İşlem tamamlanamadı. Lütfen tekrar dene.',
     );
+  }
+
+  static Duration? _retryAfterFrom(String message) {
+    final match = RegExp(
+      r'(\d+)\s*(?:second|seconds|saniye)',
+    ).firstMatch(message);
+    final seconds = int.tryParse(match?.group(1) ?? '');
+    return seconds == null ? null : Duration(seconds: seconds);
   }
 }

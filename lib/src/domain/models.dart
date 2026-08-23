@@ -41,8 +41,11 @@ class MealItem {
     required this.matchState,
     this.sourceName = 'Curated food catalog',
     this.foodId,
+    this.estimateId,
     this.confidence,
     this.matchMethod,
+    this.analysisItemKey,
+    this.alternativeFoodIds = const [],
     this.portionOptions = const [],
     String? canonicalName,
     String? displayName,
@@ -60,8 +63,26 @@ class MealItem {
   final MatchState matchState;
   final String sourceName;
   final String? foodId;
+
+  /// Server-recorded AI-estimate row this item commits against when the
+  /// catalog held no match. Exactly one of [foodId] and [estimateId] is set on
+  /// an analyzed item.
+  final String? estimateId;
   final double? confidence;
   final String? matchMethod;
+
+  /// True when the nutrition was estimated by the model rather than grounded
+  /// in the curated catalog. Derived from the server's `matchMethod` so the
+  /// flag survives every copy and persistence round-trip that keeps it.
+  bool get isAiEstimate => matchMethod == 'ai_estimate';
+
+  /// Runner-up catalog foods the server offered for an identity question
+  /// (`clarificationReason == 'identity'`), best match first.
+  final List<String> alternativeFoodIds;
+
+  /// Stable key emitted by analyze-meal and used only for grounded commit
+  /// validation. The local/server row id remains the UUID in [id].
+  final String? analysisItemKey;
   final List<FoodPortionOption> portionOptions;
 
   Nutrition get nutrition => nutritionPer100g.scale(grams / 100);
@@ -78,6 +99,7 @@ class MealItem {
     String? sourceName,
     double? confidence,
     String? matchMethod,
+    String? analysisItemKey,
   }) {
     final name = displayName ?? this.displayName;
     return MealItem(
@@ -92,8 +114,11 @@ class MealItem {
       matchState: matchState ?? this.matchState,
       sourceName: sourceName ?? this.sourceName,
       foodId: foodId ?? this.foodId,
+      estimateId: estimateId,
       confidence: confidence ?? this.confidence,
       matchMethod: matchMethod ?? this.matchMethod,
+      analysisItemKey: analysisItemKey ?? this.analysisItemKey,
+      alternativeFoodIds: alternativeFoodIds,
       portionOptions: portionOptions,
     );
   }
@@ -144,6 +169,8 @@ class MealDraft {
     this.traceId,
     this.unmatchedText = const [],
     this.eatenAt,
+    this.imagePath,
+    this.imageUrl,
   });
 
   final String inputText;
@@ -152,6 +179,8 @@ class MealDraft {
   final String? analysisRunId;
   final String? traceId;
   final List<String> unmatchedText;
+  final String? imagePath;
+  final String? imageUrl;
 
   /// When the meal was actually eaten. `null` means "now", so callers keep
   /// resolving the timestamp at log time instead of freezing it at analysis.
@@ -186,6 +215,8 @@ class MealDraft {
     traceId: traceId,
     unmatchedText: unmatchedText,
     eatenAt: value,
+    imagePath: imagePath,
+    imageUrl: imageUrl,
   );
 
   MealDraft _withItems(List<MealItem> next) => MealDraft(
@@ -196,6 +227,8 @@ class MealDraft {
     traceId: traceId,
     unmatchedText: unmatchedText,
     eatenAt: eatenAt,
+    imagePath: imagePath,
+    imageUrl: imageUrl,
   );
 }
 
@@ -207,6 +240,7 @@ class LoggedMeal {
     required this.items,
     this.imageAsset,
     this.occurredAt,
+    this.isPending = false,
   });
 
   final String id;
@@ -216,15 +250,38 @@ class LoggedMeal {
   final String? imageAsset;
   final DateTime? occurredAt;
 
+  /// True while this meal exists only on the device and still has to reach the
+  /// server. Carried on the domain object rather than looked up per row so the
+  /// list can say so without every tile querying the sync tables.
+  final bool isPending;
+
   Nutrition get nutrition =>
       items.fold(Nutrition.zero, (total, item) => total + item.nutrition);
 
-  LoggedMeal copyWith({List<MealItem>? items}) => LoggedMeal(
+  /// Minutes past local midnight, used to place the meal in a part of the day.
+  ///
+  /// [occurredAt] is authoritative; [timeLabel] is the fallback for meals that
+  /// only ever carried the rendered `HH:mm`. Meals with neither sort last
+  /// rather than silently landing at midnight.
+  int? get minutesOfDay {
+    final date = occurredAt;
+    if (date != null) return date.hour * 60 + date.minute;
+    final parts = timeLabel.split(':');
+    if (parts.length != 2) return null;
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null) return null;
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+    return hour * 60 + minute;
+  }
+
+  LoggedMeal copyWith({List<MealItem>? items, bool? isPending}) => LoggedMeal(
     id: id,
     name: name,
     timeLabel: timeLabel,
     items: items ?? this.items,
     imageAsset: imageAsset,
     occurredAt: occurredAt,
+    isPending: isPending ?? this.isPending,
   );
 }

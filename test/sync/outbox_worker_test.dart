@@ -62,6 +62,27 @@ void main() {
     expect(meal.rowVersion, 2);
   });
 
+  test('successful analyzed commit clears the pending meal badge', () async {
+    await database
+        .into(database.localMeals)
+        .insert(
+          LocalMealsCompanion.insert(
+            id: 'meal-commit',
+            userId: 'user-a',
+            name: 'Öğle yemeği',
+            eatenAt: now,
+            syncStatus: const Value('pending'),
+            localUpdatedAt: now,
+          ),
+        );
+    await _insert(database, _operation('commit', now, operationType: 'commit'));
+
+    expect((await worker.runOnce('user-a')).outcome, SyncRunOutcome.succeeded);
+    final meal = await database.select(database.localMeals).getSingle();
+    expect(meal.syncStatus, 'synced');
+    expect(meal.rowVersion, 2);
+  });
+
   test(
     'transient failure schedules deterministic full-jitter backoff',
     () async {
@@ -154,13 +175,14 @@ SyncOperationsCompanion _operation(
   DateTime now, {
   String status = SyncOperationStatus.pending,
   int attemptCount = 0,
+  String operationType = 'upsert',
 }) {
   return SyncOperationsCompanion.insert(
     id: id,
     userId: 'user-a',
     entityType: 'meal',
     entityId: 'meal-$id',
-    operationType: 'upsert',
+    operationType: operationType,
     payloadJson: '{}',
     status: Value(status),
     attemptCount: Value(attemptCount),

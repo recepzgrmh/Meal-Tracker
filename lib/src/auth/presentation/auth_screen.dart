@@ -24,26 +24,11 @@ class _AuthScreenState extends State<AuthScreen> {
   final _emailController = TextEditingController();
   final _otpController = TextEditingController();
 
-  /// The last code the field submitted on its own. The button stays reachable
-  /// while a code is complete, so without this the same code could be sent
-  /// twice — once by the sixth keystroke and once by the tap that follows.
-  String? _autoSubmittedOtp;
-
   @override
   void dispose() {
     _emailController.dispose();
     _otpController.dispose();
     super.dispose();
-  }
-
-  void _onOtpChanged(String value) {
-    if (value.length < 6) {
-      _autoSubmittedOtp = null;
-      return;
-    }
-    if (_autoSubmittedOtp == value) return;
-    _autoSubmittedOtp = value;
-    _submit();
   }
 
   Future<void> _submit() async {
@@ -57,225 +42,468 @@ class _AuthScreenState extends State<AuthScreen> {
     if (session != null) await widget.onAuthenticated();
   }
 
+  void _editEmail() {
+    _otpController.clear();
+    widget.viewModel.editEmail();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: widget.viewModel,
       builder: (context, _) {
         final otpStep = widget.viewModel.step == AuthStep.otp;
-        final actionLabel = otpStep
-            ? context.ota(
-                'authVerifyCodeAction',
-                tr: 'Kodu doğrula',
-                en: 'Verify code',
-              )
-            : context.ota(
-                'authSendCodeAction',
-                tr: 'Kod gönder',
-                en: 'Send code',
-              );
+        final coolingDown = widget.viewModel.resendSeconds > 0;
+        final canSubmit = otpStep
+            ? !widget.viewModel.isBusy && _otpController.text.length == 6
+            : widget.viewModel.canRequestOtp;
+
         return Scaffold(
           body: SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.page),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 480),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 54,
-                        height: 54,
-                        decoration: const BoxDecoration(
-                          color: AppColors.lime,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.lock_open_rounded),
-                      ),
-                      const SizedBox(height: AppSpacing.x28),
-                      Text(
-                        otpStep
-                            ? context.ota(
-                                'authOtpTitle',
-                                tr: 'E-postandaki kodu gir.',
-                                en: 'Enter the code in your email.',
-                              )
-                            : context.ota(
-                                'authEmailTitle',
-                                tr: 'İlerlemeni cihazların arasında koru.',
-                                en: 'Keep your progress across devices.',
-                              ),
-                        style: Theme.of(context).textTheme.headlineMedium,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        otpStep
-                            ? context.ota(
-                                'authOtpBody',
-                                tr: 'Altı haneli kodu {email} adresine gönderdik.',
-                                en: 'We sent a six-digit code to {email}.',
-                                replacements: {
-                                  'email': _maskEmail(widget.viewModel.email),
-                                },
-                              )
-                            : context.ota(
-                                'authEmailBody',
-                                tr: 'Şifre yok. Giriş ve kayıt için e-postana tek kullanımlık bir kod göndeririz.',
-                                en: 'No password. We send a one-time code to your email to sign in or register.',
-                              ),
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                      const SizedBox(height: AppSpacing.x28),
-                      if (!otpStep)
-                        TextField(
-                          key: const Key('auth-email'),
-                          controller: _emailController,
-                          enabled: !widget.viewModel.isBusy,
-                          keyboardType: TextInputType.emailAddress,
-                          autofillHints: const [AutofillHints.email],
-                          textInputAction: TextInputAction.done,
-                          onSubmitted: (_) => _submit(),
-                          decoration: InputDecoration(
-                            labelText: context.ota(
-                              'authEmailLabel',
-                              tr: 'E-posta',
-                              en: 'Email',
-                            ),
-                            hintText: context.ota(
-                              'authEmailHint',
-                              tr: 'sen@ornek.com',
-                              en: 'you@example.com',
-                            ),
-                          ),
-                        )
-                      else
-                        TextField(
-                          key: const Key('auth-otp'),
-                          controller: _otpController,
-                          enabled: !widget.viewModel.isBusy,
-                          autofocus: true,
-                          keyboardType: TextInputType.number,
-                          autofillHints: const [AutofillHints.oneTimeCode],
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(6),
-                          ],
-                          textInputAction: TextInputAction.done,
-                          onChanged: _onOtpChanged,
-                          decoration: InputDecoration(
-                            labelText: context.ota(
-                              'authOtpLabel',
-                              tr: '6 haneli kod',
-                              en: '6-digit code',
-                            ),
-                            hintText: context.ota(
-                              'authOtpHint',
-                              tr: '000000',
-                              en: '000000',
-                            ),
-                          ),
-                        ),
-                      if (widget.viewModel.errorMessage case final error?) ...[
-                        const SizedBox(height: AppSpacing.sm),
-                        Semantics(
-                          liveRegion: true,
-                          child: Text(
-                            _localizedAuthError(
-                              context,
-                              widget.viewModel.errorCode,
-                              error,
-                            ),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: AppSpacing.lg),
-                      FilledButton(
-                        key: const Key('auth-submit'),
-                        onPressed: widget.viewModel.isBusy ? null : _submit,
-                        // The spinner replaces the label visually, so the
-                        // action keeps its name for screen readers here.
-                        child: widget.viewModel.isBusy
-                            ? Semantics(
-                                label: context.ota(
-                                  'authSubmitBusySemantics',
-                                  tr: '{action}, sürüyor',
-                                  en: '{action}, in progress',
-                                  replacements: {'action': actionLabel},
+            child: Column(
+              children: [
+                _AuthHeader(onBack: otpStep ? _editEmail : null),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.xl,
+                      AppSpacing.xxl,
+                      AppSpacing.xl,
+                      AppSpacing.xl,
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 440),
+                        child: AnimatedSwitcher(
+                          duration: MediaQuery.disableAnimationsOf(context)
+                              ? Duration.zero
+                              : AppMotion.standard,
+                          child: otpStep
+                              ? _OtpForm(
+                                  key: const ValueKey('otp-form'),
+                                  viewModel: widget.viewModel,
+                                  controller: _otpController,
+                                  canSubmit: canSubmit,
+                                  onChanged: (_) {
+                                    widget.viewModel.clearError();
+                                    setState(() {});
+                                  },
+                                  onSubmit: _submit,
+                                  onEditEmail: _editEmail,
+                                )
+                              : _EmailForm(
+                                  key: const ValueKey('email-form'),
+                                  viewModel: widget.viewModel,
+                                  controller: _emailController,
+                                  canSubmit: canSubmit,
+                                  coolingDown: coolingDown,
+                                  onChanged: (_) {
+                                    widget.viewModel.clearError();
+                                    setState(() {});
+                                  },
+                                  onSubmit: _submit,
+                                  onUseExistingCode:
+                                      widget.viewModel.useExistingCode,
                                 ),
-                                excludeSemantics: true,
-                                child: const SizedBox.square(
-                                  dimension: 22,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                              )
-                            : Text(actionLabel),
-                      ),
-                      if (otpStep) ...[
-                        const SizedBox(height: AppSpacing.sm),
-                        Row(
-                          children: [
-                            TextButton(
-                              onPressed: widget.viewModel.isBusy
-                                  ? null
-                                  : widget.viewModel.editEmail,
-                              child: Text(
-                                context.ota(
-                                  'authChangeEmailAction',
-                                  tr: 'E-postayı değiştir',
-                                  en: 'Change email',
-                                ),
-                              ),
-                            ),
-                            const Spacer(),
-                            TextButton(
-                              onPressed: widget.viewModel.canResend
-                                  ? widget.viewModel.resendOtp
-                                  : null,
-                              child: Text(
-                                widget.viewModel.canResend
-                                    ? context.ota(
-                                        'authResendCodeAction',
-                                        tr: 'Kodu yeniden gönder',
-                                        en: 'Resend code',
-                                      )
-                                    : context.ota(
-                                        'secondsShort',
-                                        tr: '{seconds} sn',
-                                        en: '{seconds} sec',
-                                        replacements: {
-                                          'seconds':
-                                              widget.viewModel.resendSeconds,
-                                        },
-                                      ),
-                              ),
-                            ),
-                          ],
                         ),
-                      ],
-                      const SizedBox(height: AppSpacing.xl),
-                      Text(
-                        context.ota(
-                          'authLegalNotice',
-                          tr: 'Devam ederek Kullanım Koşulları ve Gizlilik Politikasını kabul edersin.',
-                          en: 'By continuing, you agree to the Terms of Use and Privacy Policy.',
-                        ),
-                        style: Theme.of(context).textTheme.bodySmall,
-                        textAlign: TextAlign.center,
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class _AuthHeader extends StatelessWidget {
+  const _AuthHeader({required this.onBack});
+
+  final VoidCallback? onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: AppTouchTarget.minimum,
+            height: AppTouchTarget.minimum,
+            child: onBack == null
+                ? null
+                : IconButton(
+                    tooltip: context.ota('commonBack', tr: 'Geri', en: 'Back'),
+                    onPressed: onBack,
+                    icon: const Icon(Icons.arrow_back_rounded),
+                  ),
+          ),
+          Expanded(
+            child: Text(
+              'Meal Clarity',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+          ),
+          const SizedBox(
+            width: AppTouchTarget.minimum,
+            height: AppTouchTarget.minimum,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmailForm extends StatelessWidget {
+  const _EmailForm({
+    required this.viewModel,
+    required this.controller,
+    required this.canSubmit,
+    required this.coolingDown,
+    required this.onChanged,
+    required this.onSubmit,
+    required this.onUseExistingCode,
+    super.key,
+  });
+
+  final AuthViewModel viewModel;
+  final TextEditingController controller;
+  final bool canSubmit;
+  final bool coolingDown;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onSubmit;
+  final VoidCallback onUseExistingCode;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          context.ota(
+            'authEmailTitle',
+            tr: 'E-postanla devam et.',
+            en: 'Continue with your email.',
+          ),
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          context.ota(
+            'authEmailBody',
+            tr: 'Şifre yok. Sana tek kullanımlık 6 haneli bir kod göndereceğiz.',
+            en: 'No password. We will send you a one-time six-digit code.',
+          ),
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
+        const SizedBox(height: AppSpacing.x28),
+        TextField(
+          key: const Key('auth-email'),
+          controller: controller,
+          enabled: !viewModel.isBusy,
+          keyboardType: TextInputType.emailAddress,
+          autofillHints: const [AutofillHints.email],
+          textCapitalization: TextCapitalization.none,
+          autocorrect: false,
+          textInputAction: TextInputAction.done,
+          onChanged: onChanged,
+          onSubmitted: canSubmit ? (_) => onSubmit() : null,
+          decoration: InputDecoration(
+            labelText: context.ota(
+              'authEmailLabel',
+              tr: 'E-posta',
+              en: 'Email',
+            ),
+            hintText: context.ota(
+              'authEmailHint',
+              tr: 'sen@ornek.com',
+              en: 'you@example.com',
+            ),
+          ),
+        ),
+        if (viewModel.errorMessage case final error?) ...[
+          const SizedBox(height: AppSpacing.sm),
+          _AuthErrorPanel(
+            code: viewModel.errorCode,
+            fallback: error,
+            seconds: viewModel.resendSeconds,
+            onUseExistingCode: viewModel.isEmailRateLimited
+                ? onUseExistingCode
+                : null,
+          ),
+        ],
+        const SizedBox(height: AppSpacing.lg),
+        FilledButton(
+          key: const Key('auth-submit'),
+          onPressed: canSubmit ? onSubmit : null,
+          child: viewModel.isBusy
+              ? const SizedBox.square(
+                  dimension: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(
+                  coolingDown
+                      ? context.ota(
+                          'authRetryCountdown',
+                          tr: '{time} sonra tekrar dene',
+                          en: 'Try again in {time}',
+                          replacements: {
+                            'time': _formatCountdown(viewModel.resendSeconds),
+                          },
+                        )
+                      : context.ota(
+                          'authSendCodeAction',
+                          tr: 'Kod gönder',
+                          en: 'Send code',
+                        ),
+                ),
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        Text(
+          context.ota(
+            'authLegalNotice',
+            tr: 'Devam ederek Kullanım Koşulları ve Gizlilik Politikasını kabul edersin.',
+            en: 'By continuing, you agree to the Terms of Use and Privacy Policy.',
+          ),
+          style: Theme.of(context).textTheme.bodySmall,
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+}
+
+class _OtpForm extends StatelessWidget {
+  const _OtpForm({
+    required this.viewModel,
+    required this.controller,
+    required this.canSubmit,
+    required this.onChanged,
+    required this.onSubmit,
+    required this.onEditEmail,
+    super.key,
+  });
+
+  final AuthViewModel viewModel;
+  final TextEditingController controller;
+  final bool canSubmit;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onSubmit;
+  final VoidCallback onEditEmail;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          context.ota(
+            'authOtpTitle',
+            tr: 'Kodunu kontrol et.',
+            en: 'Check your code.',
+          ),
+          style: Theme.of(context).textTheme.headlineMedium,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          context.ota(
+            'authOtpBody',
+            tr: '6 haneli kodu {email} adresine gönderdik.',
+            en: 'We sent a six-digit code to {email}.',
+            replacements: {'email': _maskEmail(viewModel.email)},
+          ),
+          style: Theme.of(context).textTheme.bodyLarge,
+        ),
+        const SizedBox(height: AppSpacing.x28),
+        TextField(
+          key: const Key('auth-otp'),
+          controller: controller,
+          enabled: !viewModel.isBusy,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          autofillHints: const [AutofillHints.oneTimeCode],
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(6),
+          ],
+          textInputAction: TextInputAction.done,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            letterSpacing: 8,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+          onChanged: onChanged,
+          onSubmitted: canSubmit ? (_) => onSubmit() : null,
+          decoration: InputDecoration(
+            labelText: context.ota(
+              'authOtpLabel',
+              tr: '6 haneli kod',
+              en: '6-digit code',
+            ),
+            hintText: '000000',
+          ),
+        ),
+        if (viewModel.errorMessage case final error?) ...[
+          const SizedBox(height: AppSpacing.sm),
+          _AuthErrorPanel(
+            code: viewModel.errorCode,
+            fallback: error,
+            seconds: viewModel.resendSeconds,
+          ),
+        ],
+        const SizedBox(height: AppSpacing.lg),
+        FilledButton(
+          key: const Key('auth-submit'),
+          onPressed: canSubmit ? onSubmit : null,
+          child: viewModel.isBusy
+              ? const SizedBox.square(
+                  dimension: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(
+                  context.ota(
+                    'authVerifyCodeAction',
+                    tr: 'Kodu doğrula',
+                    en: 'Verify code',
+                  ),
+                ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.xs,
+          children: [
+            TextButton(
+              onPressed: viewModel.isBusy ? null : onEditEmail,
+              child: Text(
+                context.ota(
+                  'authChangeEmailAction',
+                  tr: 'E-postayı değiştir',
+                  en: 'Change email',
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: viewModel.canResend ? viewModel.resendOtp : null,
+              child: Text(
+                viewModel.canResend
+                    ? context.ota(
+                        'authResendCodeAction',
+                        tr: 'Yeniden gönder',
+                        en: 'Resend',
+                      )
+                    : _formatCountdown(viewModel.resendSeconds),
+              ),
+            ),
+          ],
+        ),
+        Text(
+          context.ota(
+            'authSpamHint',
+            tr: 'Kod görünmüyorsa spam klasörünü de kontrol et.',
+            en: 'If you cannot see the code, check your spam folder too.',
+          ),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
+    );
+  }
+}
+
+class _AuthErrorPanel extends StatelessWidget {
+  const _AuthErrorPanel({
+    required this.code,
+    required this.fallback,
+    required this.seconds,
+    this.onUseExistingCode,
+  });
+
+  final AuthFailureCode? code;
+  final String fallback;
+  final int seconds;
+  final VoidCallback? onUseExistingCode;
+
+  @override
+  Widget build(BuildContext context) {
+    final emailLimit = code == AuthFailureCode.emailRateLimited;
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.reviewSurface,
+          borderRadius: BorderRadius.circular(AppRadius.large),
+          border: Border.all(color: AppColors.warning.withValues(alpha: 0.35)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.schedule_rounded,
+                  size: 20,
+                  color: AppColors.reviewInk,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    emailLimit
+                        ? context.ota(
+                            'authErrorEmailLimit',
+                            tr: 'E-posta gönderim sınırına ulaşıldı. Daha önce gelen kod hâlâ geçerliyse onu kullanabilirsin.',
+                            en: 'The email sending limit was reached. If your previous code is still valid, you can use it.',
+                          )
+                        : _localizedAuthError(context, code, fallback),
+                    style: const TextStyle(color: AppColors.reviewInk),
+                  ),
+                ),
+              ],
+            ),
+            if (seconds > 0) ...[
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                context.ota(
+                  'authLimitCountdownDetail',
+                  tr: 'Yeni istek: yaklaşık {time} sonra',
+                  en: 'New request: in about {time}',
+                  replacements: {'time': _formatCountdown(seconds)},
+                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.reviewInk),
+              ),
+            ],
+            if (onUseExistingCode != null) ...[
+              const SizedBox(height: AppSpacing.xs),
+              TextButton(
+                key: const Key('auth-use-existing-code'),
+                onPressed: onUseExistingCode,
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.reviewInk,
+                  padding: EdgeInsets.zero,
+                ),
+                child: Text(
+                  context.ota(
+                    'authUseExistingCode',
+                    tr: 'Daha önce gelen kodu kullan',
+                    en: 'Use the code already sent',
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
@@ -301,6 +529,12 @@ String _localizedAuthError(
       tr: 'Kodun süresi dolmuş. Yeni bir kod iste.',
       en: 'The code has expired. Request a new one.',
     ),
+    AuthFailureCode.emailDeliveryFailed => context.ota(
+      'authErrorEmailDelivery',
+      tr: 'Doğrulama e-postası şu anda gönderilemedi. Biraz sonra tekrar dene.',
+      en: 'The verification email could not be sent right now. Please try again shortly.',
+    ),
+    AuthFailureCode.emailRateLimited ||
     AuthFailureCode.rateLimited => context.ota(
       'authErrorRateLimited',
       tr: 'Çok sık deneme yapıldı. Geri sayım bitince tekrar dene.',
@@ -319,10 +553,12 @@ String _localizedAuthError(
   };
 }
 
-/// Masks the local part of an address. Anything we cannot split — no `@`, an
-/// empty local part — is hidden entirely rather than echoed back verbatim, and
-/// a one-character local part is hidden too, since revealing its first
-/// character would reveal all of it.
+String _formatCountdown(int seconds) {
+  final minutes = seconds ~/ 60;
+  final remaining = seconds % 60;
+  return '$minutes:${remaining.toString().padLeft(2, '0')}';
+}
+
 String _maskEmail(String email) {
   final separator = email.lastIndexOf('@');
   if (separator <= 0) return '•••';

@@ -221,6 +221,99 @@ void main() {
     );
 
     test(
+      'replaces an AI-estimate row with the picked catalog food in place',
+      () async {
+        const estimateItem = MealItem(
+          id: 'est-1',
+          analysisItemKey: 'item-1',
+          estimateId: '0190aaaa-bbbb-7ccc-8ddd-eeeeffff0001',
+          matchMethod: 'ai_estimate',
+          sourceName: '',
+          name: 'Kısır',
+          sourceText: 'ev yapımı kısır',
+          portionLabel: '150 g',
+          grams: 150,
+          nutritionPer100g: Nutrition(
+            calories: 190,
+            protein: 4.2,
+            carbs: 30.1,
+            fat: 6.4,
+          ),
+          matchState: MatchState.checkAmount,
+        );
+        const estimateDraft = MealDraft(
+          inputText: 'ev yapımı kısır',
+          mealName: 'Akşam yemeği',
+          analysisRunId: 'analysis-run',
+          traceId: 'trace-id',
+          items: [estimateItem],
+        );
+        final viewModel = MealFlowViewModel(
+          repository: const _ImmediateRepository(estimateDraft),
+          catalogRepository: _FakeCatalogRepository(),
+          manualItemIdFactory: () => 'manual-never-used',
+        );
+
+        await viewModel.analyze(_input('ev yapımı kısır'));
+        await viewModel.searchCatalog('kısır', 'tr-TR');
+        viewModel.replaceWithManualFood(
+          estimateItem,
+          viewModel.catalogResults.single,
+          'kısır',
+        );
+
+        // Replaced, not added beside the guess.
+        final replaced = viewModel.draft!.items.single;
+        expect(replaced.id, 'est-1');
+        expect(replaced.analysisItemKey, 'item-1');
+        expect(replaced.foodId, 'catalog-cheese');
+        expect(replaced.estimateId, isNull);
+        expect(replaced.isAiEstimate, isFalse);
+        expect(replaced.matchMethod, 'manual');
+        expect(replaced.sourceName, 'curated:test');
+        // A picked catalog food still needs its amount confirmed.
+        expect(replaced.matchState, MatchState.checkAmount);
+      },
+    );
+
+    test(
+      'variant search leads with the server-suggested identity alternatives',
+      () async {
+        const identityItem = MealItem(
+          id: 'cheese',
+          name: 'Beyaz Peynir',
+          sourceText: 'peynir',
+          portionLabel: '30 g',
+          grams: 30,
+          nutritionPer100g: Nutrition(
+            calories: 300,
+            protein: 20,
+            carbs: 2,
+            fat: 24,
+          ),
+          matchState: MatchState.checkType,
+          foodId: 'food-a',
+          alternativeFoodIds: ['food-c', 'food-b'],
+        );
+        final viewModel = MealFlowViewModel(
+          repository: _ThrowingRepository(),
+          catalogRepository: _MultiResultCatalogRepository(),
+        );
+
+        await viewModel.searchItemVariants(identityItem, 'tr-TR');
+
+        // The server's runner-ups lead in their own order; retrieval order is
+        // preserved behind them.
+        expect(viewModel.variantResults.map((result) => result.foodId), [
+          'food-c',
+          'food-b',
+          'food-a',
+          'food-d',
+        ]);
+      },
+    );
+
+    test(
       'adds a catalog food that has no published portion without throwing',
       () async {
         final viewModel = MealFlowViewModel(
@@ -319,6 +412,31 @@ class _FakePortionlessCatalogRepository implements FoodCatalogRepository {
       fatPer100g: 0.1,
       nutritionSource: 'turkomp:02.01.0031',
     ),
+  ];
+}
+
+/// Four candidates in retrieval order, so alternative-first reordering has
+/// something to prove.
+class _MultiResultCatalogRepository implements FoodCatalogRepository {
+  @override
+  Future<List<CatalogFoodCandidate>> search({
+    required String query,
+    required String locale,
+  }) async => [
+    for (final foodId in const ['food-a', 'food-b', 'food-c', 'food-d'])
+      CatalogFoodCandidate(
+        foodId: foodId,
+        name: 'Peynir',
+        matchedAlias: 'peynir',
+        score: 0.8,
+        defaultGrams: 30,
+        defaultPortionLabel: '1 porsiyon',
+        caloriesPer100g: 289,
+        proteinPer100g: 16,
+        carbsPer100g: 2.5,
+        fatPer100g: 24,
+        nutritionSource: 'curated:test',
+      ),
   ];
 }
 

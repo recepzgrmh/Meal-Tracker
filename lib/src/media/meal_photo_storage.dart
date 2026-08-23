@@ -7,11 +7,13 @@ class StoredMealPhoto {
     required this.bucket,
     required this.path,
     required this.mimeType,
+    this.signedUrl,
   });
 
   final String bucket;
   final String path;
   final String mimeType;
+  final String? signedUrl;
 
   Map<String, String> toJson() => {
     'bucket': bucket,
@@ -69,6 +71,9 @@ class SupabaseMealPhotoStorage implements MealPhotoStorage {
         bucket: bucket,
         path: path,
         mimeType: photo.mimeType,
+        signedUrl: await _client.storage
+            .from(bucket)
+            .createSignedUrl(path, 3600),
       );
     } on StorageException catch (error) {
       throw MealPhotoStorageException(

@@ -28,6 +28,11 @@ abstract final class AppColors {
   static const protein = Color(0xFF1769AA);
   static const carbs = Color(0xFFD46A0A);
   static const fat = Color(0xFFB23A67);
+
+  /// Loading placeholders. Two steps so a skeleton can pulse between them
+  /// without ever dropping below the contrast of a real disabled control.
+  static const skeleton = Color(0xFFE3EDE7);
+  static const skeletonHighlight = Color(0xFFEFF5F1);
 }
 
 /// The 4 px spacing scale. Every gap in the app snaps to one of these steps;
@@ -97,6 +102,33 @@ abstract final class AppMotion {
   static const fast = Duration(milliseconds: 160);
   static const standard = Duration(milliseconds: 220);
   static const slow = Duration(milliseconds: 280);
+
+  /// The pulse of a loading placeholder. Long enough to read as "waiting"
+  /// rather than as a blinking control.
+  static const skeleton = Duration(milliseconds: 1100);
+
+  /// Deceleration used by every positional transition in the app, so a tab
+  /// change and the navigation indicator that tracks it share one feel.
+  static const curve = Curves.easeOutCubic;
+
+  /// True when the user asked the system for less movement.
+  ///
+  /// [MediaQueryData.disableAnimations] only carries Android's "Remove
+  /// animations". iOS surfaces Reduce Motion through
+  /// `AccessibilityFeatures.reduceMotion` instead and deliberately leaves the
+  /// MediaQuery flag alone, so honouring only the first setting would ignore
+  /// every iOS user who asked for this.
+  static bool reduced(BuildContext context) =>
+      MediaQuery.disableAnimationsOf(context) ||
+      WidgetsBinding
+          .instance
+          .platformDispatcher
+          .accessibilityFeatures
+          .reduceMotion;
+
+  /// [duration], or nothing at all when the user opted out of motion.
+  static Duration respecting(BuildContext context, Duration duration) =>
+      reduced(context) ? Duration.zero : duration;
 }
 
 abstract final class AppTouchTarget {

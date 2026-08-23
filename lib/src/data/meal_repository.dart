@@ -20,11 +20,16 @@ class MealAnalysisException implements Exception {
     required this.kind,
     required this.code,
     required this.retryable,
+    this.unmatchedTexts = const [],
   });
 
   final MealAnalysisFailureKind kind;
   final String code;
   final bool retryable;
+
+  /// On a NO_MATCH failure, the inputs the server could neither ground in the
+  /// catalog nor estimate (from the error's `unmatchedItems` details).
+  final List<String> unmatchedTexts;
 }
 
 class MockMealRepository implements MealRepository {

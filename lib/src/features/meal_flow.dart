@@ -9,6 +9,7 @@ import '../domain/models.dart';
 import '../media/meal_photo_picker.dart';
 import '../theme/app_theme.dart';
 import '../util/formatters.dart';
+import '../util/haptics.dart';
 import '../view_models/meal_flow_view_model.dart';
 import '../widgets/app_surfaces.dart';
 
@@ -124,6 +125,12 @@ class _MealFlowState extends State<MealFlow> {
         photo: _photo,
       ),
     );
+    // Several seconds have passed with the phone likely face-down or the user
+    // looking elsewhere. This is the "come back, it's ready" tap — and it only
+    // fires on the path that actually reached a result, so a failure or a
+    // response the view model discarded as stale stays silent.
+    if (!mounted || _viewModel.step != MealFlowStep.review) return;
+    AppHaptics.arrived();
   }
 
   Future<void> _recoverLostPhoto() async {
@@ -300,9 +307,19 @@ class _MealFlowState extends State<MealFlow> {
     _viewModel.setEatenAt(picked.isAfter(DateTime.now()) ? null : picked);
   }
 
-  Future<void> _showManualSearch({bool addToDraft = false}) async {
+  /// One sheet, three intents: start a draft from scratch, add a missing food
+  /// to the draft, or — when [replaceItem] is set — swap an AI-estimate row
+  /// for the picked catalog food.
+  Future<void> _showManualSearch({
+    bool addToDraft = false,
+    MealItem? replaceItem,
+  }) async {
     final queryController = TextEditingController(
-      text: _controller.text.trim(),
+      text: replaceItem != null
+          ? (replaceItem.sourceText.trim().isNotEmpty
+                ? replaceItem.sourceText.trim()
+                : replaceItem.canonicalName.trim())
+          : _controller.text.trim(),
     );
     final locale = _catalogLocale(context);
     final mealName = _localizedMealName(context, DateTime.now());
@@ -401,7 +418,13 @@ class _MealFlowState extends State<MealFlow> {
                             ),
                             trailing: const Icon(Icons.chevron_right_rounded),
                             onTap: () {
-                              if (addToDraft) {
+                              if (replaceItem != null) {
+                                _viewModel.replaceWithManualFood(
+                                  replaceItem,
+                                  candidate,
+                                  queryController.text.trim(),
+                                );
+                              } else if (addToDraft) {
                                 _viewModel.addManualFood(
                                   candidate,
                                   queryController.text.trim(),
@@ -789,6 +812,9 @@ class _MealFlowState extends State<MealFlow> {
                   photo: _photo,
                   onReviewItem: _reviewItem,
                   onRemoveItem: (item) => _viewModel.removeItem(item.id),
+                  onReplaceItem: _viewModel.canSearchCatalog
+                      ? (item) => _showManualSearch(replaceItem: item)
+                      : null,
                   onAddMissing: _viewModel.canSearchCatalog
                       ? () => _showManualSearch(addToDraft: true)
                       : null,
@@ -1407,6 +1433,7 @@ class _Review extends StatelessWidget {
     required this.photo,
     required this.onReviewItem,
     required this.onRemoveItem,
+    required this.onReplaceItem,
     required this.onAddMissing,
     required this.onEditEatenAt,
     required this.onLog,
@@ -1416,6 +1443,10 @@ class _Review extends StatelessWidget {
   final MealPhotoAttachment? photo;
   final ValueChanged<MealItem> onReviewItem;
   final ValueChanged<MealItem> onRemoveItem;
+
+  /// Opens the manual catalog search to swap an AI-estimate row for a real
+  /// catalog food. Null when no catalog is available to search.
+  final ValueChanged<MealItem>? onReplaceItem;
   final VoidCallback? onAddMissing;
   final VoidCallback onEditEatenAt;
   final VoidCallback onLog;
@@ -1527,6 +1558,11 @@ class _Review extends StatelessWidget {
                         item: draft.items[index],
                         onTap: () => onReviewItem(draft.items[index]),
                         onRemove: () => onRemoveItem(draft.items[index]),
+                        onReplace:
+                            draft.items[index].isAiEstimate &&
+                                onReplaceItem != null
+                            ? () => onReplaceItem!(draft.items[index])
+                            : null,
                       ),
                       if (index < draft.items.length - 1)
                         const Divider(
@@ -1539,6 +1575,13 @@ class _Review extends StatelessWidget {
                   ],
                 ),
               ),
+              if (draft.unmatchedText.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.sm),
+                _UnmatchedWarning(
+                  texts: draft.unmatchedText,
+                  onSearch: onAddMissing,
+                ),
+              ],
               if (onAddMissing != null)
                 TextButton.icon(
                   onPressed: onAddMissing,
@@ -1620,15 +1663,23 @@ class _FoodItemRow extends StatelessWidget {
     required this.item,
     required this.onTap,
     required this.onRemove,
+    this.onReplace,
   });
 
   final MealItem item;
   final VoidCallback onTap;
   final VoidCallback onRemove;
 
+  /// Offered on AI-estimate rows only: replaces the estimate with a catalog
+  /// food through the manual search.
+  final VoidCallback? onReplace;
+
   @override
   Widget build(BuildContext context) {
     final needsReview = item.matchState != MatchState.matched;
+    // The estimate keeps its `~` even after the portion question is answered:
+    // the nutrition itself is still a model guess, not a catalog row.
+    final approximate = needsReview || item.isAiEstimate;
     return DecoratedBox(
       decoration: BoxDecoration(
         color: needsReview ? AppColors.reviewSurface : Colors.transparent,
@@ -1680,11 +1731,12 @@ class _FoodItemRow extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        '${needsReview ? '~' : ''}${item.grams.round()} g',
+                        '${approximate ? '~' : ''}${item.grams.round()} g',
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
                     ),
                     Text(
+                      '${item.isAiEstimate ? '~' : ''}'
                       '${item.nutrition.calories.round()} kcal',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w600,
@@ -1692,6 +1744,16 @@ class _FoodItemRow extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (item.isAiEstimate) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  const _AiEstimateChip(),
+                ] else if (item.foodId != null &&
+                    item.sourceName.isNotEmpty) ...[
+                  // Provenance for catalog-grounded rows; estimate rows carry
+                  // the AI chip instead, and it says everything this would.
+                  const SizedBox(height: AppSpacing.xs),
+                  _ProvenanceLabel(sourceName: item.sourceName),
+                ],
                 if (needsReview) ...[
                   const SizedBox(height: AppSpacing.sm),
                   Container(
@@ -1732,10 +1794,188 @@ class _FoodItemRow extends StatelessWidget {
                     ),
                   ),
                 ],
+                if (onReplace != null) ...[
+                  const SizedBox(height: AppSpacing.xxs),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: TextButton.icon(
+                      key: Key('replace-estimate-${item.id}'),
+                      onPressed: onReplace,
+                      icon: const Icon(Icons.search_rounded, size: 18),
+                      label: Text(
+                        context.ota(
+                          'replaceEstimateAction',
+                          tr: 'Katalogdan seç',
+                          en: 'Choose from catalog',
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The mark that says this row's nutrition came from the model, not the
+/// curated catalog. Deliberately not the orange review palette: review means
+/// "answer a question", this means "different provenance", and the two can
+/// appear on the same row.
+class _AiEstimateChip extends StatelessWidget {
+  const _AiEstimateChip();
+
+  @override
+  Widget build(BuildContext context) {
+    final label = context.ota(
+      'aiEstimateChip',
+      tr: 'Yapay zekâ tahmini',
+      en: 'AI estimate',
+    );
+    return Semantics(
+      label: label,
+      child: ExcludeSemantics(
+        child: Container(
+          key: const Key('ai-estimate-chip'),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xs,
+            vertical: AppSpacing.micro,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.brandSoft,
+            borderRadius: BorderRadius.circular(AppRadius.small),
+            border: Border.all(color: AppColors.brand),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.auto_awesome_rounded,
+                size: 13,
+                color: AppColors.brandStrong,
+              ),
+              const SizedBox(width: AppSpacing.xxs),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.brandStrong,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Where a catalog-grounded row's nutrition comes from. A quiet label, not a
+/// judgement — numeric confidence deliberately stays out of the UI.
+class _ProvenanceLabel extends StatelessWidget {
+  const _ProvenanceLabel({required this.sourceName});
+
+  final String sourceName;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = context.ota(
+      'nutritionSourceLabel',
+      tr: 'Kaynak: {source}',
+      en: 'Source: {source}',
+      replacements: {'source': sourceName},
+    );
+    return Semantics(
+      label: label,
+      child: ExcludeSemantics(
+        child: Text(
+          label,
+          key: const Key('provenance-label'),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: AppColors.muted),
+        ),
+      ),
+    );
+  }
+}
+
+/// The foods the server could neither ground nor estimate. Non-blocking: the
+/// meal stays loggable, this row only names what is missing and offers the
+/// manual search as the way to add it.
+class _UnmatchedWarning extends StatelessWidget {
+  const _UnmatchedWarning({required this.texts, required this.onSearch});
+
+  final List<String> texts;
+  final VoidCallback? onSearch;
+
+  @override
+  Widget build(BuildContext context) {
+    final message = context.ota(
+      'unmatchedItemsWarning',
+      tr: 'Eşleştirilemedi: {items}',
+      en: 'Could not match: {items}',
+      replacements: {'items': texts.join(', ')},
+    );
+    return Container(
+      key: const Key('unmatched-warning'),
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      // The review rows' warning grammar: tinted surface, left accent. No
+      // corner radius — a non-uniform border cannot carry one.
+      decoration: const BoxDecoration(
+        color: AppColors.reviewSurface,
+        border: Border(left: BorderSide(color: AppColors.warning, width: 3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.info_outline_rounded,
+                size: 18,
+                color: AppColors.reviewInk,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(
+                    color: AppColors.reviewInk,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (onSearch != null) ...[
+            const SizedBox(height: AppSpacing.xxs),
+            TextButton.icon(
+              key: const Key('unmatched-search-button'),
+              onPressed: onSearch,
+              icon: const Icon(Icons.search_rounded, size: 18),
+              label: Text(
+                context.ota(
+                  'unmatchedSearchAction',
+                  tr: 'Katalogdan ekle',
+                  en: 'Add from catalog',
+                ),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -1980,7 +2220,13 @@ class _PortionOption extends StatelessWidget {
       label: semanticLabel,
       child: InkWell(
         key: Key('portion-${option.grams.round()}'),
-        onTap: onTap,
+        // Moving between discrete portions is the one place in this flow where
+        // the tap changes a value rather than navigating, which is exactly what
+        // a selection tick is for.
+        onTap: () {
+          AppHaptics.selection();
+          onTap();
+        },
         borderRadius: BorderRadius.circular(AppRadius.input),
         child: AnimatedContainer(
           duration: MediaQuery.disableAnimationsOf(context)

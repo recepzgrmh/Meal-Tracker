@@ -52,6 +52,12 @@ class LocalMealItems extends Table {
   RealColumn get fatPer100g => real()();
   TextColumn get matchState => text()();
   TextColumn get sourceName => text()();
+
+  /// How the item's nutrition was matched (`exact`, `llm`, `manual`,
+  /// `ai_estimate`, ...). Nullable: rows written before schema v2 never
+  /// recorded it, and "unknown" must stay distinct from any real method —
+  /// `ai_estimate` in particular drives the persistent AI-estimate marker.
+  TextColumn get matchMethod => text().nullable()();
   IntColumn get position => integer()();
 
   @override

@@ -6,6 +6,7 @@ import 'package:meal_clarity/src/domain/meal_analysis_input.dart';
 import 'package:meal_clarity/src/domain/models.dart';
 import 'package:meal_clarity/src/domain/nutrition_goals.dart';
 import 'package:meal_clarity/src/features/analysis_screen.dart';
+import 'package:meal_clarity/src/widgets/meal_list_tile.dart';
 
 void main() {
   test('meal nutrition is always derived from its items', () {
@@ -72,9 +73,18 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Kahvaltı kaydedildi'), findsOneWidget);
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -340));
+    // Matched through the tile rather than by bare text: Today groups meals by
+    // part of the day, and a meal the analyzer named "Kahvaltı" logged during
+    // breakfast hours sits under a group header reading the same word. The
+    // assertion is about the meal being in the list, not about how many times
+    // the string appears on screen.
+    await tester.scrollUntilVisible(
+      find.widgetWithText(MealListTile, 'Kahvaltı'),
+      240,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.pumpAndSettle();
-    expect(find.text('Kahvaltı'), findsOneWidget);
+    expect(find.widgetWithText(MealListTile, 'Kahvaltı'), findsOneWidget);
 
     await tester.tap(find.text('Analiz'));
     await tester.pumpAndSettle();
@@ -170,10 +180,6 @@ void main() {
 
     await tester.tap(find.byKey(const Key('nav-destination-2')));
     await tester.pumpAndSettle();
-    expect(
-      find.text('Yemeğini göster,\ngerisini birlikte halledelim.'),
-      findsOneWidget,
-    );
     expect(find.byKey(const Key('add-meal-camera')), findsOneWidget);
     await tester.tap(find.byKey(const Key('add-meal-text')));
     await tester.pumpAndSettle();
@@ -319,11 +325,16 @@ void main() {
 
     await tester.tap(find.byKey(const Key('nav-destination-1')));
     await tester.pump(const Duration(milliseconds: 40));
+    // The indicator commits to the tap on the first frame; the page it points
+    // at is still travelling. This used to assert `controller.page == 1` at
+    // 40 ms, which only held because the tab change was an instantaneous
+    // `jumpToPage`. Acknowledging a tap immediately is the contract worth
+    // holding; arriving instantly is not — so the indicator is checked now and
+    // the page is checked once it lands.
     expect(indicator().alignment, const Alignment(-0.5, 0));
     final pages = tester.widget<PageView>(
       find.byKey(const Key('primary-tab-page-view')),
     );
-    expect(pages.controller!.page, 1);
 
     await tester.tap(find.byKey(const Key('nav-destination-3')));
     await tester.pump(const Duration(milliseconds: 40));
@@ -336,6 +347,8 @@ void main() {
     );
     expect(tester.takeException(), isNull);
     await tester.pumpAndSettle();
+    // Interrupting one tab change with another still arrives at the second.
+    expect(pages.controller!.page, 2);
   });
 
   testWidgets('selected bottom tab can be held and scrubbed to a destination', (
@@ -482,9 +495,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('add meal sheet centers copy and camera action fills width', (
-    tester,
-  ) async {
+  testWidgets('add meal sheet camera action fills width', (tester) async {
     await tester.binding.setSurfaceSize(const Size(390, 844));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(const MealClarityApp());
@@ -492,12 +503,11 @@ void main() {
     await tester.tap(find.byKey(const Key('nav-destination-2')));
     await tester.pumpAndSettle();
 
-    final title = tester.widget<Text>(find.text('Öğün ekle'));
-    final subtitle = tester.widget<Text>(
+    expect(find.text('Öğün ekle'), findsNothing);
+    expect(
       find.text('Yemeğini göster,\ngerisini birlikte halledelim.'),
+      findsNothing,
     );
-    expect(title.textAlign, TextAlign.center);
-    expect(subtitle.textAlign, TextAlign.center);
     expect(
       tester.getSize(find.byKey(const Key('add-meal-camera'))).width,
       greaterThanOrEqualTo(350),

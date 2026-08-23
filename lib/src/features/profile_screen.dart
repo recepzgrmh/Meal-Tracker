@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../util/formatters.dart';
 import '../domain/nutrition_goals.dart';
+import '../onboarding/domain/nutrition_plan.dart';
 import '../widgets/app_surfaces.dart';
 import '../widgets/liquid_glass_bottom_bar.dart';
 import '../../l10n/l10n.dart';
@@ -20,6 +21,7 @@ class ProfileScreen extends StatefulWidget {
     this.onLocaleChanged,
     this.onSignOut,
     this.onDeleteAccount,
+    this.onEditGoals,
     this.showBottomNavigationBar = true,
     super.key,
   });
@@ -39,10 +41,36 @@ class ProfileScreen extends StatefulWidget {
   /// Returns `true` when the account was actually deleted.
   final Future<bool> Function()? onDeleteAccount;
 
+  /// Reopens the setup flow so the target can be revised. When null the
+  /// card stays read-only rather than showing a dead control.
+  final VoidCallback? onEditGoals;
+
   final bool showBottomNavigationBar;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+/// Where the shown target came from. Kept beside the card so the three cases
+/// stay legible next to each other.
+String _goalProvenance(BuildContext context, NutritionGoals goals) {
+  return switch (goals.source) {
+    PlanSource.appDefault => context.ota(
+      'dailyGoalSourceDefault',
+      tr: 'Uygulamanın varsayılan hedefi. Kurulum sorularını yanıtlayarak kendine göre hesaplatabilirsin.',
+      en: 'The app default. Answer the setup questions to have it calculated for you.',
+    ),
+    PlanSource.computed => context.ota(
+      'dailyGoalSourceComputed',
+      tr: 'Boy, kilo, yaş, aktivite ve hedefine göre hesaplandı. Bu bir tahmindir, tıbbi tavsiye değildir.',
+      en: 'Calculated from your height, weight, age, activity, and goal. An estimate, not medical advice.',
+    ),
+    PlanSource.manual => context.ota(
+      'dailyGoalSourceManual',
+      tr: 'Kendi girdiğin hedef.',
+      en: 'The target you set yourself.',
+    ),
+  };
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
@@ -127,19 +155,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: AppSpacing.xs),
                   Text(
-                    goals.isDefault
-                        ? context.ota(
-                            'dailyGoalSourceDefault',
-                            tr: 'Uygulamanın varsayılan hedefi. Başlangıç sorularını yeniden yanıtlayarak değiştirebilirsin.',
-                            en: 'The app default. Answer the setup questions again to change it.',
-                          )
-                        : context.ota(
-                            'dailyGoalSourceOnboarding',
-                            tr: 'Başlangıçta seçtiğin hedefe göre hesaplandı.',
-                            en: 'Calculated from the target you chose during setup.',
-                          ),
+                    _goalProvenance(context, goals),
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
+                  if (goals.bmr case final bmr?) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      context.ota(
+                        'dailyGoalWorking',
+                        tr: 'Dinlenme metabolizman ≈ {bmr} kcal · bakım seviyen ≈ {tdee} kcal',
+                        en: 'Resting metabolism ≈ {bmr} kcal · maintenance ≈ {tdee} kcal',
+                        replacements: {
+                          'bmr': formatNumber(context, bmr.round()),
+                          'tdee': formatNumber(
+                            context,
+                            (goals.tdee ?? bmr).round(),
+                          ),
+                        },
+                      ),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                  if (widget.onEditGoals case final onEditGoals?) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: TextButton(
+                        key: const Key('profile-edit-goals'),
+                        onPressed: onEditGoals,
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, AppTouchTarget.minimum),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          context.ota(
+                            'dailyGoalEditAction',
+                            tr: 'Hedefimi güncelle',
+                            en: 'Update my goal',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -614,7 +672,9 @@ class _SettingRow extends StatelessWidget {
           );
 
     final padded = Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      // The 48 px minimum below already carries the touch target, so the row
+      // only needs breathing room for content that outgrows it (large text).
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: AppTouchTarget.minimum),
         child: Align(alignment: Alignment.centerLeft, child: content),

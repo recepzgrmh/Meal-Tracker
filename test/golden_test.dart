@@ -3,10 +3,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:meal_clarity/src/app.dart';
 
 void main() {
+  // Today renders the real date in its header and seeds its demo meals off the
+  // clock, so these baselines used to stop matching the moment the day rolled
+  // over — three of them were already failing before anyone touched the UI.
+  // Freezing "now" makes the screenshots depend on the code alone.
+  DateTime frozenNow() => DateTime(2026, 8, 22, 18, 30);
+
   Future<void> pumpApp(WidgetTester tester) async {
     await tester.binding.setSurfaceSize(const Size(390, 844));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(const MealClarityApp());
+    await tester.pumpWidget(MealClarityApp(clock: frozenNow));
     await tester.pumpAndSettle();
   }
 

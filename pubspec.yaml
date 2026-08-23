@@ -44,6 +44,8 @@ dependencies:
   uuid: ^4.6.0
   intl: any
   image_picker: ^1.2.3
+  firebase_core: ^4.13.0
+  firebase_crashlytics: ^5.2.7
 
 dev_dependencies:
   flutter_test:

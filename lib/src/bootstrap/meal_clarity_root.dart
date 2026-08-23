@@ -20,9 +20,12 @@ import '../onboarding/data/onboarding_repository.dart';
 import '../onboarding/data/profile_repository.dart';
 import '../onboarding/presentation/onboarding_screen.dart';
 import '../onboarding/presentation/onboarding_view_model.dart';
-import '../onboarding/presentation/profile_completion_screen.dart';
+import '../onboarding/presentation/profile_setup_screen.dart';
+import '../onboarding/presentation/profile_setup_view_model.dart';
 import '../theme/app_theme.dart';
+import '../local/outbox_dao.dart';
 import '../sync/outbox_worker.dart';
+import '../sync/sync_status.dart';
 import 'app_coordinator.dart';
 
 class MealClarityRoot extends StatefulWidget {
@@ -34,6 +37,7 @@ class MealClarityRoot extends StatefulWidget {
     this.analysisRepository,
     this.catalogRepository,
     this.outboxWorker,
+    this.outboxDao,
     this.ownedDatabase,
     this.translationRepository = const BundledOnlyTranslationRepository(),
     this.localePreference,
@@ -47,6 +51,11 @@ class MealClarityRoot extends StatefulWidget {
   final MealRepository? analysisRepository;
   final FoodCatalogRepository? catalogRepository;
   final OutboxWorker? outboxWorker;
+
+  /// Read-side of the same queue [outboxWorker] drains, used to tell the user
+  /// what is still outstanding.
+  final OutboxDao? outboxDao;
+
   final AppDatabase? ownedDatabase;
   final OtaTranslationRepository translationRepository;
 
@@ -61,15 +70,22 @@ class MealClarityRoot extends StatefulWidget {
 class _MealClarityRootState extends State<MealClarityRoot> {
   late final AppCoordinator _coordinator;
   late final OnboardingViewModel _onboardingViewModel;
+  late final ProfileSetupViewModel _profileSetupViewModel;
   late final AuthViewModel _authViewModel;
   late final LocalePreference _localePreference;
   late final GoRouter _router;
+  SyncStatusNotifier? _syncStatus;
   bool _isDrainingOutbox = false;
+  Timer? _outboxRetryTimer;
   Locale? _locale;
 
   @override
   void initState() {
     super.initState();
+    final outboxDao = widget.outboxDao;
+    if (outboxDao != null) {
+      _syncStatus = SyncStatusNotifier(outbox: outboxDao, drain: _drainOutbox);
+    }
     _localePreference = widget.localePreference ?? LocalePreference();
     unawaited(_restoreLocale());
     _coordinator = AppCoordinator(
@@ -78,6 +94,7 @@ class _MealClarityRootState extends State<MealClarityRoot> {
       profileRepository: widget.profileRepository,
     );
     _onboardingViewModel = OnboardingViewModel(widget.onboardingRepository);
+    _profileSetupViewModel = ProfileSetupViewModel(widget.onboardingRepository);
     _authViewModel = AuthViewModel(widget.authRepository);
     _router = GoRouter(
       initialLocation: '/boot',
@@ -96,27 +113,40 @@ class _MealClarityRootState extends State<MealClarityRoot> {
           path: '/auth',
           builder: (_, _) => AuthScreen(
             viewModel: _authViewModel,
-            onAuthenticated: _coordinator.completeProfile,
+            onAuthenticated: _coordinator.refreshOnboarding,
           ),
         ),
         GoRoute(
           path: '/profile',
-          builder: (_, _) => ProfileCompletionScreen(coordinator: _coordinator),
+          builder: (_, _) => ProfileSetupScreen(
+            viewModel: _profileSetupViewModel,
+            coordinator: _coordinator,
+          ),
         ),
         GoRoute(
           path: '/app',
-          builder: (_, _) => MealClarityShell(
-            cachedRepository: widget.mealRepository,
-            analysisRepository: widget.analysisRepository,
-            catalogRepository: widget.catalogRepository,
-            userId: _coordinator.session?.userId,
-            onSyncRequested: widget.outboxWorker == null ? null : _drainOutbox,
-            goals: _coordinator.goals,
-            locale: _locale,
-            onLocaleChanged: _changeLocale,
-            onSignOut: _signOut,
-            onDeleteAccount: _deleteAccount,
-          ),
+          builder: (_, _) {
+            // The queue is per-user, so the reporter has to be pointed at
+            // whoever is signed in now rather than at whoever was signed in
+            // when the router was built.
+            _syncStatus?.watch(_coordinator.session?.userId);
+            return MealClarityShell(
+              cachedRepository: widget.mealRepository,
+              analysisRepository: widget.analysisRepository,
+              catalogRepository: widget.catalogRepository,
+              userId: _coordinator.session?.userId,
+              onSyncRequested: widget.outboxWorker == null
+                  ? null
+                  : (_syncStatus?.run ?? _drainOutbox),
+              syncStatus: widget.outboxWorker == null ? null : _syncStatus,
+              goals: _coordinator.goals,
+              locale: _locale,
+              onLocaleChanged: _changeLocale,
+              onSignOut: _signOut,
+              onDeleteAccount: _deleteAccount,
+              onEditGoals: _coordinator.reopenSetup,
+            );
+          },
         ),
       ],
     );
@@ -180,16 +210,32 @@ class _MealClarityRootState extends State<MealClarityRoot> {
     final worker = widget.outboxWorker;
     final userId = _coordinator.session?.userId;
     if (worker == null || userId == null || _isDrainingOutbox) return;
+    _outboxRetryTimer?.cancel();
+    _outboxRetryTimer = null;
     _isDrainingOutbox = true;
     try {
       await worker.recoverInterrupted(userId);
       for (var index = 0; index < 20; index++) {
         final result = await worker.runOnce(userId);
+        if (result.outcome == SyncRunOutcome.retryScheduled) {
+          _scheduleOutboxRetry(result.nextAttemptAt);
+          break;
+        }
         if (result.outcome != SyncRunOutcome.succeeded) break;
       }
     } finally {
       _isDrainingOutbox = false;
     }
+  }
+
+  void _scheduleOutboxRetry(DateTime? nextAttemptAt) {
+    if (nextAttemptAt == null) return;
+    final delay = nextAttemptAt.difference(DateTime.now());
+    _outboxRetryTimer?.cancel();
+    _outboxRetryTimer = Timer(
+      delay.isNegative ? Duration.zero : delay,
+      () => unawaited(_drainOutbox()),
+    );
   }
 
   String? _redirect(BuildContext context, GoRouterState routerState) {
@@ -205,6 +251,8 @@ class _MealClarityRootState extends State<MealClarityRoot> {
 
   @override
   void dispose() {
+    _outboxRetryTimer?.cancel();
+    _syncStatus?.dispose();
     _router.dispose();
     _authViewModel.dispose();
     _onboardingViewModel.dispose();

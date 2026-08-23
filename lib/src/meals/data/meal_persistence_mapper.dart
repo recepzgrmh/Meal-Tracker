@@ -46,6 +46,7 @@ class MealPersistenceMapper {
               fatPer100g: item.fatPer100g,
               matchState: _matchStateForReview(item.reviewStatus).name,
               sourceName: item.nutritionSource,
+              matchMethod: Value(item.matchMethod),
               position: item.position,
             ),
           )
@@ -89,6 +90,7 @@ class MealPersistenceMapper {
             fatPer100g: item.nutritionPer100g.fat,
             matchState: item.matchState.name,
             sourceName: item.sourceName,
+            matchMethod: Value(item.matchMethod),
             position: position,
           ),
       ],
@@ -104,6 +106,10 @@ class MealPersistenceMapper {
           '${eatenAt.hour.toString().padLeft(2, '0')}:${eatenAt.minute.toString().padLeft(2, '0')}',
       imageAsset: bundle.meal.imageAsset,
       occurredAt: eatenAt,
+      // The row already tracks whether it has reached the server; the domain
+      // object dropped it, which is why the UI had no way to tell a saved meal
+      // from one still sitting in the outbox.
+      isPending: bundle.meal.syncStatus != 'synced',
       items: bundle.items
           .map(
             (item) => MealItem(
@@ -125,6 +131,7 @@ class MealPersistenceMapper {
               ),
               sourceName: item.sourceName,
               foodId: item.foodId,
+              matchMethod: item.matchMethod,
             ),
           )
           .toList(growable: false),

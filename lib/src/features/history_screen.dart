@@ -4,8 +4,11 @@ import '../../l10n/l10n.dart';
 import '../domain/models.dart';
 import '../theme/app_theme.dart';
 import '../util/formatters.dart';
+import '../widgets/app_skeleton.dart';
 import '../widgets/app_surfaces.dart';
+import '../widgets/empty_state_view.dart';
 import '../widgets/liquid_glass_bottom_bar.dart';
+import '../widgets/loading_placeholders.dart';
 import '../widgets/meal_list_tile.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -16,6 +19,8 @@ class HistoryScreen extends StatefulWidget {
     required this.onNavigationSelected,
     this.selectedDayIndex,
     this.onSelectedDayIndexChanged,
+    this.isLoading = false,
+    this.onDeleteMeal,
     this.showBottomNavigationBar = true,
     super.key,
   });
@@ -26,6 +31,11 @@ class HistoryScreen extends StatefulWidget {
   final ValueChanged<int> onNavigationSelected;
   final int? selectedDayIndex;
   final ValueChanged<int>? onSelectedDayIndexChanged;
+
+  /// True while history has not been read yet — see [TodayScreen.isLoading].
+  final bool isLoading;
+
+  final ValueChanged<LoggedMeal>? onDeleteMeal;
   final bool showBottomNavigationBar;
 
   @override
@@ -98,7 +108,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     style: Theme.of(context).textTheme.displaySmall,
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  if (selectedDay == null)
+                  if (widget.isLoading)
+                    SkeletonGroup(
+                      label: context.ota(
+                        'historyLoading',
+                        tr: 'Geçmişin yükleniyor',
+                        en: 'Loading your history',
+                      ),
+                      child: const Column(
+                        children: [
+                          SkeletonBox(width: null, height: 110, radius: 24),
+                          SizedBox(height: AppSpacing.xl),
+                          MealListSkeleton(rows: 4),
+                        ],
+                      ),
+                    )
+                  else if (selectedDay == null)
                     _EmptyHistory(onAddMeal: widget.onAddMeal)
                   else ...[
                     if (days.length > 1) ...[
@@ -150,6 +175,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       MealListTile(
                         meal: meal,
                         onTap: () => widget.onMealTap(meal),
+                        onDelete: widget.onDeleteMeal == null
+                            ? null
+                            : () => widget.onDeleteMeal!(meal),
                         subtitle: context.ota(
                           'mealFoodCount',
                           tr: '{time} · {count} yiyecek',
@@ -266,41 +294,25 @@ class _EmptyHistory extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
-      child: Column(
-        children: [
-          Text(
-            context.ota(
-              'historyEmptyTitle',
-              tr: 'Henüz geçmiş öğün yok',
-              en: 'No meal history yet',
-            ),
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: AppSpacing.tiny),
-          Text(
-            context.ota(
-              'historyEmptyBody',
-              tr: 'Kaydettiğin öğünler burada günlere göre görünecek.',
-              en: 'Meals you log will appear here grouped by day.',
-            ),
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          TextButton(
-            onPressed: onAddMeal,
-            child: Text(
-              context.ota(
-                'historyEmptyAction',
-                tr: 'İlk öğünü ekle',
-                en: 'Add your first meal',
-              ),
-            ),
-          ),
-        ],
+    return EmptyStateView(
+      icon: Icons.calendar_month_rounded,
+      title: context.ota(
+        'historyEmptyTitle',
+        tr: 'Henüz geçmiş öğün yok',
+        en: 'No meal history yet',
       ),
+      body: context.ota(
+        'historyEmptyBody',
+        tr: 'Kaydettiğin öğünler burada günlere göre görünecek.',
+        en: 'Meals you log will appear here grouped by day.',
+      ),
+      actionKey: const Key('history-empty-action'),
+      actionLabel: context.ota(
+        'historyEmptyAction',
+        tr: 'İlk öğünü ekle',
+        en: 'Add your first meal',
+      ),
+      onAction: onAddMeal,
     );
   }
 }
