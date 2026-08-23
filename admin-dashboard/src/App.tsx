@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-  Activity, BarChart3, Bell, BookOpen, ChevronsUpDown, ClipboardCheck, Gauge, LayoutDashboard,
-  LifeBuoy, Languages, LogOut, Monitor, Moon, Network, PanelLeft, Radio, ScrollText,
+  Activity, BarChart3, Bell, BookOpen, ChevronsUpDown, ClipboardCheck, Database, FlaskConical, Gauge,
+  LayoutDashboard, LifeBuoy, Languages, LogOut, Monitor, Moon, Network, PanelLeft, Radio, ScrollText,
   Settings, Smartphone, Sun, TestTube, Users as UsersIcon, Utensils, GitCompare,
 } from 'lucide-react'
 import { useI18n } from './i18n'
@@ -25,7 +25,9 @@ import { Audit } from './pages/Audit'
 import { Live } from './pages/Live'
 import { Lab } from './pages/Lab'
 import { Versions } from './pages/Versions'
+import { Evals } from './pages/Evals'
 import { SettingsPage } from './pages/SettingsPage'
+import { FoodCatalog } from './pages/FoodCatalog'
 
 type NavLink = { page: Page; label: string; icon: typeof LayoutDashboard }
 type NavGroup = { label: string; links: NavLink[] }
@@ -38,6 +40,7 @@ const NAV: NavGroup[] = [
   { label: 'DEVELOPMENT', links: [
     { page: 'live', label: 'Live', icon: Radio },
     { page: 'lab', label: 'AI Lab', icon: TestTube },
+    { page: 'evals', label: 'AI Evals', icon: FlaskConical },
     { page: 'versions', label: 'Versions', icon: GitCompare },
   ] },
   { label: 'QUALITY', links: [
@@ -48,6 +51,7 @@ const NAV: NavGroup[] = [
   ] },
   { label: 'PRODUCT', links: [
     { page: 'users', label: 'Users', icon: UsersIcon },
+    { page: 'catalog', label: 'Food Catalog', icon: Database },
     { page: 'mobile', label: 'Mobile App', icon: Smartphone },
   ] },
   { label: 'SYSTEM', links: [
@@ -59,8 +63,8 @@ const NAV: NavGroup[] = [
 const PAGE_LABEL: Record<Page, string> = {
   overview: 'Overview', analytics: 'Analytics', quality: 'AI Quality', reviews: 'Meal Reviews',
   traces: 'Traces', reliability: 'Reliability', users: 'Users', mobile: 'Mobile App',
-  audit: 'Audit Log', settings: 'Settings',
-  live: 'Live', lab: 'AI Lab', versions: 'Versions',
+  catalog: 'Food Catalog', audit: 'Audit Log', settings: 'Settings',
+  live: 'Live', lab: 'AI Lab', versions: 'Versions', evals: 'AI Evals',
 }
 
 function readRoute(): Route {
@@ -302,11 +306,13 @@ function PageBody(props: { route: Route; navigate: Navigate; range: string; t: (
     case 'traces': return <Traces {...props} />
     case 'reliability': return <Reliability {...props} />
     case 'users': return <UsersPage {...props} />
+    case 'catalog': return <FoodCatalog {...props} />
     case 'mobile': return <MobileApp {...props} />
     case 'audit': return <Audit {...props} />
     case 'live': return <Live {...props} />
     case 'lab': return <Lab {...props} />
     case 'versions': return <Versions {...props} />
+    case 'evals': return <Evals {...props} />
     case 'settings': return <SettingsPage {...props} />
   }
 }

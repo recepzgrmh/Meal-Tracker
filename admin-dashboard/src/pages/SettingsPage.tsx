@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { LogOut } from 'lucide-react'
-import { signOut } from '../lib/queries'
+import { fetchProductionCatalogStatus, signOut, type ProductionCatalogStatus } from '../lib/queries'
 import { useSession } from '../lib/session'
 import { Alert, Badge, Button, Card, DefinitionList, Section, Segmented, useTheme } from '../ui'
 import { useI18n } from '../i18n'
@@ -127,8 +127,30 @@ function AccessSettings({ t }: T) {
 }
 
 function SourceSettings({ t }: T) {
+  const [status, setStatus] = useState<ProductionCatalogStatus | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchProductionCatalogStatus().then(setStatus).catch(() => setMessage(t('Production catalog status is not available.')))
+  }, [t])
+
   return (
     <Section title={t('Data sources')} subtitle={t('Where each screen reads from')}>
+      <Card title={t('Production food catalog')} subtitle={t('The mobile application uses the validated Supabase 60K catalog.')}>
+        <div className="settings__group">
+          <Row label={t('Runtime source')} help={t('Provider switching is disabled; production has one deterministic catalog.') }>
+            <Badge tone="ok" dot>Supabase · 60K</Badge>
+          </Row>
+          <DefinitionList rows={[
+            [t('Catalog version'), status?.catalog_version ?? 'canonical-v2-lean-60k'],
+            [t('Food records'), status ? status.food_records.toLocaleString() : '—'],
+            [t('Macro-complete records'), status ? status.macro_complete_records.toLocaleString() : '—'],
+            [t('Search aliases'), status ? status.alias_records.toLocaleString() : '—'],
+            [t('Portion records'), status ? status.portion_records.toLocaleString() : '—'],
+          ]} />
+        </div>
+        {message && <p className="settings__field-help" role="status">{message}</p>}
+      </Card>
       <Card>
         <DefinitionList rows={[
           [t('Overview, Reliability, Analytics'), <code className="ds-mono" key="1">admin_analysis_daily</code>],

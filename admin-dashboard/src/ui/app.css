@@ -110,6 +110,31 @@
 
 .hairline { height: 1px; background: var(--border); border: 0; margin: 0; }
 
+/* Production catalog — server-paginated so the 60K dataset never reaches the
+   browser as one payload. */
+.catalog-toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid var(--border);
+}
+.catalog-toolbar__search { flex: 1 1 18rem; min-width: min(18rem, 100%); }
+.catalog-table { min-width: 62rem; }
+.catalog-food-name { display: grid; gap: .125rem; min-width: 12rem; }
+.catalog-food-name strong { max-width: 28rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.catalog-food-name span { color: var(--text-faint); font-family: var(--font-mono); font-size: var(--fs-micro); }
+.catalog-cell-clamp { display: block; max-width: 16rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.catalog-detail-section { display: grid; gap: var(--sp-3); }
+.catalog-detail-section > h3 { font-size: var(--fs-sm); font-weight: 650; }
+.catalog-reasons { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.catalog-record-list { display: grid; border: 1px solid var(--border); border-radius: var(--r-3); overflow: hidden; }
+.catalog-record-list > div { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-3); border-bottom: 1px solid var(--border); }
+.catalog-record-list > div:last-child { border-bottom: 0; }
+.catalog-record-list strong { min-width: 0; flex: 1; overflow-wrap: anywhere; font-size: var(--fs-sm); }
+
+@media (max-width: 40rem) {
+  .catalog-toolbar > .ds-select-wrap { flex: 1 1 calc(50% - var(--sp-2)); }
+  .catalog-toolbar .ds-select { width: 100%; }
+}
+
 /* ── App compositions ────────────────────────────────────────────────────── */
 
 /* Signal list — the "what needs attention" board on Overview. */

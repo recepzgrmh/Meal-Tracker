@@ -3,7 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { I18nProvider } from './i18n'
-import type { CategoryQualityRow, CorrectionReasonRow, DailyRow, QueueRow } from './lib/queries'
+import type {
+  CatalogFoodRow, CategoryQualityRow, CorrectionReasonRow, DailyRow, EvalCaseRow, EvalRunRow, QueueRow,
+} from './lib/queries'
 
 /* The console has no demo mode, so these tests drive it the only way it can be
    driven: by standing in for Supabase and asserting the four states each screen
@@ -17,6 +19,9 @@ type Scenario = {
   reasons: CorrectionReasonRow[]
   categories: CategoryQualityRow[]
   queue: QueueRow[]
+  catalog: CatalogFoodRow[]
+  evalRuns: EvalRunRow[]
+  evalCases: EvalCaseRow[]
 }
 
 const scenario: Scenario = {
@@ -27,6 +32,9 @@ const scenario: Scenario = {
   reasons: [],
   categories: [],
   queue: [],
+  catalog: [],
+  evalRuns: [],
+  evalCases: [],
 }
 
 vi.mock('./lib/supabase', async (importOriginal) => {
@@ -63,7 +71,26 @@ vi.mock('./lib/queries', () => ({
   fetchTrace: async () => null,
   fetchTraceCandidates: async () => [],
   fetchAccounts: async () => [],
+  fetchProductionCatalogStatus: async () => ({
+    catalog_version: 'canonical-v2-lean-60k', food_records: 60_000,
+    macro_complete_records: 60_000, alias_records: 120_000, portion_records: 120_000,
+  }),
+  fetchProductionCatalogFoods: async () => ({ rows: scenario.catalog, total: scenario.catalog.length }),
+  fetchProductionCatalogFood: async (foodId: string) => {
+    const row = scenario.catalog.find((food) => food.food_id === foodId)!
+    return {
+      id: row.food_id, canonical_name: row.canonical_name, locale: row.locale,
+      source: 'canonical_v2_lean', source_food_id: 'canonical-1',
+      calories_per_100g: row.calories_per_100g, protein_per_100g: row.protein_per_100g,
+      carbs_per_100g: row.carbs_per_100g, fat_per_100g: row.fat_per_100g,
+      metadata: { brand: row.brand, barcode: row.barcode, category: row.category, tier: row.tier, canonical_id: 'canonical-1' },
+      food_aliases: [{ id: 1, alias: row.canonical_name, locale: 'tr-TR', priority: 90 }],
+      food_portions: [{ id: 1, label: '1 porsiyon', grams: 100, locale: 'tr-TR', is_default: true }],
+    }
+  },
   fetchBundles: async () => [],
+  fetchEvalRuns: async () => scenario.evalRuns,
+  fetchEvalCases: async () => scenario.evalCases,
 }))
 
 const day = (over: Partial<DailyRow>): DailyRow => ({
@@ -94,6 +121,9 @@ describe('console shell', () => {
       reasons: [],
       categories: [],
       queue: [],
+      catalog: [],
+      evalRuns: [],
+      evalCases: [],
     })
   })
   afterEach(cleanup)
@@ -155,6 +185,54 @@ describe('console shell', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Meal Reviews' }))
     expect(await screen.findByText('Yogurt sauce')).toBeInTheDocument()
     expect(screen.getByText('White rice')).toBeInTheDocument()
+  })
+
+  it('browses production foods and opens read-only catalog details', async () => {
+    scenario.catalog = [{
+      food_id: 'food-1', canonical_name: 'Süzme Yoğurt', locale: 'tr-TR',
+      category: 'Dairy', brand: 'Örnek Marka', barcode: '8690000000001',
+      tier: 'tr_branded', dataset_version: '2026-08', calories_per_100g: 120,
+      protein_per_100g: 8, carbs_per_100g: 4, fat_per_100g: 8, total_count: 1,
+    }]
+    renderApp()
+    await userEvent.click(await screen.findByRole('button', { name: 'Food Catalog' }))
+    expect(await screen.findByRole('heading', { name: 'Food Catalog' })).toBeInTheDocument()
+    expect(screen.getAllByText('60,000')).toHaveLength(2)
+    await userEvent.click(await screen.findByText('Süzme Yoğurt'))
+    expect(await screen.findByRole('dialog', { name: 'Süzme Yoğurt' })).toBeInTheDocument()
+    expect(screen.getByText('1 porsiyon')).toBeInTheDocument()
+    expect(screen.getAllByText('8690000000001')).toHaveLength(2)
+  })
+
+  it('tells the operator how to publish eval results when none are stored', async () => {
+    renderApp()
+    await userEvent.click(await screen.findByRole('button', { name: 'AI Evals' }))
+    expect(await screen.findByText('No eval results stored yet')).toBeInTheDocument()
+    expect(screen.getByText(/deno task eval -- --persist/)).toBeInTheDocument()
+  })
+
+  it('lists stored eval runs and opens the failed cases of one', async () => {
+    scenario.evalRuns = [{
+      id: 'run-1', kind: 'deterministic', suite: 'turkish_meals_v1', git_ref: 'abc1234',
+      model: null, prompt_version: 'deterministic-tr-v1',
+      started_at: '2026-08-24T12:00:00Z', finished_at: '2026-08-24T12:00:01Z',
+      case_count: 60, passed_count: 59,
+      metrics: { foodIdentityF1: 0.99, portionMape: 0.02, noMatchSpecificity: 1 },
+      cost_micros: null, notes: null, created_at: '2026-08-24T12:00:01Z',
+    }]
+    scenario.evalCases = [{
+      id: 1, eval_run_id: 'run-1', case_id: 'tr-041', passed: false,
+      expected: { items: [{ foodId: 'food-rice', grams: 150 }] },
+      actual: { items: [] }, failure_kind: 'missing', latency_ms: null,
+    }]
+    renderApp()
+    await userEvent.click(await screen.findByRole('button', { name: 'AI Evals' }))
+    expect(await screen.findByText('turkish_meals_v1')).toBeInTheDocument()
+    expect(screen.getByText('59/60')).toBeInTheDocument()
+    await userEvent.click(screen.getByText('turkish_meals_v1'))
+    expect(await screen.findByRole('dialog', { name: 'deterministic · turkish_meals_v1' })).toBeInTheDocument()
+    expect(await screen.findByText('tr-041')).toBeInTheDocument()
+    expect(screen.getByText(/food-rice/)).toBeInTheDocument()
   })
 
   it('opens a queue item by id and keeps the id in the URL', async () => {

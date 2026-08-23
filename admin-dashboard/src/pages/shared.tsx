@@ -4,8 +4,8 @@ import type { Tone } from '../ui'
 
 export type Page =
   | 'overview' | 'analytics' | 'quality' | 'reviews' | 'traces'
-  | 'reliability' | 'users' | 'mobile' | 'audit' | 'settings'
-  | 'live' | 'lab' | 'versions'
+  | 'reliability' | 'users' | 'catalog' | 'mobile' | 'audit' | 'settings'
+  | 'live' | 'lab' | 'versions' | 'evals'
 
 /** Records are addressed by id, not by object, so a URL always survives a reload. */
 export type Route = {

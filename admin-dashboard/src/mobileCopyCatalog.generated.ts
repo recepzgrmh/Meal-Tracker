@@ -415,10 +415,16 @@ export const mobileCopyCatalog = [
     "source": "lib/src/features/profile_screen.dart"
   },
   {
+    "key": "commonDelete",
+    "tr": "Sil",
+    "en": "Delete",
+    "source": "lib/src/widgets/meal_list_tile.dart"
+  },
+  {
     "key": "commonRetry",
     "tr": "Tekrar dene",
     "en": "Try again",
-    "source": "lib/src/onboarding/presentation/profile_completion_screen.dart"
+    "source": "lib/src/widgets/sync_status_banner.dart"
   },
   {
     "key": "commonUndo",
@@ -721,6 +727,12 @@ export const mobileCopyCatalog = [
     "source": "lib/src/features/history_screen.dart"
   },
   {
+    "key": "historyLoading",
+    "tr": "Geçmişin yükleniyor",
+    "en": "Loading your history",
+    "source": "lib/src/features/history_screen.dart"
+  },
+  {
     "key": "historySummary",
     "tr": "{count} öğün · {protein} g protein",
     "en": "{count} meals · {protein} g protein",
@@ -901,6 +913,12 @@ export const mobileCopyCatalog = [
     "source": "lib/src/features/today_screen.dart"
   },
   {
+    "key": "mealDeletedMessage",
+    "tr": "{meal} silindi",
+    "en": "{meal} deleted",
+    "source": "lib/src/app.dart"
+  },
+  {
     "key": "mealDetailTitle",
     "tr": "Öğün detayı",
     "en": "Meal details",
@@ -1001,6 +1019,12 @@ export const mobileCopyCatalog = [
     "tr": "Atıştırma",
     "en": "Snack",
     "source": "lib/src/features/meal_flow.dart"
+  },
+  {
+    "key": "mealPendingSync",
+    "tr": "kaydedildi, gönderilmeyi bekliyor",
+    "en": "saved, waiting to upload",
+    "source": "lib/src/widgets/meal_list_tile.dart"
   },
   {
     "key": "mealPhotoError",
@@ -1141,10 +1165,34 @@ export const mobileCopyCatalog = [
     "source": "lib/src/features/meal_flow.dart"
   },
   {
+    "key": "mealTimeBreakfast",
+    "tr": "Kahvaltı",
+    "en": "Breakfast",
+    "source": "lib/src/features/today_screen.dart"
+  },
+  {
+    "key": "mealTimeDinner",
+    "tr": "Akşam",
+    "en": "Dinner",
+    "source": "lib/src/features/today_screen.dart"
+  },
+  {
+    "key": "mealTimeLunch",
+    "tr": "Öğle",
+    "en": "Lunch",
+    "source": "lib/src/features/today_screen.dart"
+  },
+  {
     "key": "mealTimeOnDate",
     "tr": "{date} · {time}",
     "en": "{date} · {time}",
     "source": "lib/src/features/meal_detail_screen.dart"
+  },
+  {
+    "key": "mealTimeSnack",
+    "tr": "Ara öğün",
+    "en": "Snack",
+    "source": "lib/src/features/today_screen.dart"
   },
   {
     "key": "mealTimeToday",
@@ -1573,6 +1621,24 @@ export const mobileCopyCatalog = [
     "source": "lib/src/features/profile_screen.dart"
   },
   {
+    "key": "syncFailedMessage",
+    "tr": "Bazı öğünler gönderilemedi.",
+    "en": "Some meals could not be uploaded.",
+    "source": "lib/src/widgets/sync_status_banner.dart"
+  },
+  {
+    "key": "syncingMessage",
+    "tr": "Öğünlerin gönderiliyor…",
+    "en": "Uploading your meals…",
+    "source": "lib/src/widgets/sync_status_banner.dart"
+  },
+  {
+    "key": "syncWaitingMessage",
+    "tr": "{count} öğün gönderilmeyi bekliyor.",
+    "en": "{count} meals waiting to upload.",
+    "source": "lib/src/widgets/sync_status_banner.dart"
+  },
+  {
     "key": "takePhoto",
     "tr": "Fotoğraf çek",
     "en": "Take photo",
@@ -1603,15 +1669,9 @@ export const mobileCopyCatalog = [
     "source": "lib/src/onboarding/presentation/onboarding_screen.dart"
   },
   {
-    "key": "todayEmptyAction",
-    "tr": "İlk öğünü ekle",
-    "en": "Add your first meal",
-    "source": "lib/src/features/today_screen.dart"
-  },
-  {
     "key": "todayEmptyBody",
-    "tr": "İlk kaydınla günlük özetin oluşmaya başlayacak.",
-    "en": "Your daily summary will appear after your first entry.",
+    "tr": "Yukarıdan bir fotoğraf çek; günlük özetin ",
+    "en": "Take a photo above and your daily summary will ",
     "source": "lib/src/features/today_screen.dart"
   },
   {
@@ -1625,6 +1685,12 @@ export const mobileCopyCatalog = [
     "tr": "Bugünkü kayıt",
     "en": "Today's entry",
     "source": "lib/src/features/analysis_screen.dart"
+  },
+  {
+    "key": "todayLoading",
+    "tr": "Günün yükleniyor",
+    "en": "Loading your day",
+    "source": "lib/src/features/today_screen.dart"
   },
   {
     "key": "todayMealsTitle",

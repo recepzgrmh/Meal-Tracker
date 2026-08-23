@@ -47,6 +47,90 @@ export async function signOut() {
   await requireClient().auth.signOut()
 }
 
+export type ProductionCatalogStatus = {
+  catalog_version: string
+  food_records: number
+  macro_complete_records: number
+  alias_records: number
+  portion_records: number
+}
+
+export async function fetchProductionCatalogStatus(): Promise<ProductionCatalogStatus> {
+  const { data, error } = await requireClient().from('admin_production_catalog_status').select('*').single()
+  if (error) throw error
+  return data as ProductionCatalogStatus
+}
+
+export type CatalogFoodRow = {
+  food_id: string
+  canonical_name: string
+  locale: string
+  category: string | null
+  brand: string | null
+  barcode: string | null
+  tier: string | null
+  dataset_version: string | null
+  calories_per_100g: number
+  protein_per_100g: number
+  carbs_per_100g: number
+  fat_per_100g: number
+  total_count: number
+}
+
+export type CatalogFoodPage = { rows: CatalogFoodRow[]; total: number }
+
+export async function fetchProductionCatalogFoods(input: {
+  query: string
+  kind: 'all' | 'generic' | 'branded'
+  tier: string
+  page: number
+  pageSize: number
+}): Promise<CatalogFoodPage> {
+  const { data, error } = await requireClient().rpc('admin_search_production_foods', {
+    p_query: input.query,
+    p_kind: input.kind,
+    p_tier: input.tier,
+    p_page: input.page,
+    p_page_size: input.pageSize,
+  })
+  if (error) throw error
+  const rows = (data ?? []) as CatalogFoodRow[]
+  return { rows, total: Number(rows[0]?.total_count ?? 0) }
+}
+
+export type CatalogFoodAlias = { id: number; alias: string; locale: string; priority: number }
+export type CatalogFoodPortion = { id: number; label: string; grams: number; locale: string; is_default: boolean }
+export type CatalogFoodDetail = {
+  id: string
+  canonical_name: string
+  locale: string
+  source: string
+  source_food_id: string
+  calories_per_100g: number
+  protein_per_100g: number
+  carbs_per_100g: number
+  fat_per_100g: number
+  metadata: Record<string, unknown>
+  food_aliases: CatalogFoodAlias[]
+  food_portions: CatalogFoodPortion[]
+}
+
+export async function fetchProductionCatalogFood(foodId: string): Promise<CatalogFoodDetail> {
+  const { data, error } = await requireClient()
+    .from('foods')
+    .select(`
+      id, canonical_name, locale, source, source_food_id,
+      calories_per_100g, protein_per_100g, carbs_per_100g, fat_per_100g, metadata,
+      food_aliases(id, alias, locale, priority),
+      food_portions(id, label, grams, locale, is_default)
+    `)
+    .eq('id', foodId)
+    .eq('source', 'canonical_v2_lean')
+    .single()
+  if (error) throw error
+  return data as unknown as CatalogFoodDetail
+}
+
 /** Fails loudly rather than silently returning empty tables to a non-admin. */
 export async function assertConsoleAdmin() {
   const { data, error } = await requireClient().rpc('is_console_admin')
@@ -399,6 +483,52 @@ export type CandidateMarginRow = {
 export async function fetchCandidateMargins(limit = 500): Promise<CandidateMarginRow[]> {
   return unwrap<CandidateMarginRow[]>(
     await requireClient().from('admin_candidate_margin').select('*').order('margin', { ascending: true, nullsFirst: false }).limit(limit),
+  )
+}
+
+/* ============================================================================
+   AI eval results. Sources are the tables added in
+   supabase/migrations/20260824120000_eval_result_storage.sql; the eval
+   runners write them only when invoked with --persist.
+   ========================================================================= */
+
+export type EvalRunRow = {
+  id: string
+  kind: 'deterministic' | 'live'
+  suite: string
+  git_ref: string | null
+  model: string | null
+  prompt_version: string | null
+  started_at: string
+  finished_at: string
+  case_count: number
+  passed_count: number
+  metrics: Record<string, number | null>
+  cost_micros: number | null
+  notes: string | null
+  created_at: string
+}
+
+export async function fetchEvalRuns(limit = 100): Promise<EvalRunRow[]> {
+  return unwrap<EvalRunRow[]>(
+    await requireClient().from('eval_runs').select('*').order('created_at', { ascending: false }).limit(limit),
+  )
+}
+
+export type EvalCaseRow = {
+  id: number
+  eval_run_id: string
+  case_id: string
+  passed: boolean
+  expected: unknown
+  actual: unknown
+  failure_kind: string | null
+  latency_ms: number | null
+}
+
+export async function fetchEvalCases(evalRunId: string): Promise<EvalCaseRow[]> {
+  return unwrap<EvalCaseRow[]>(
+    await requireClient().from('eval_cases').select('*').eq('eval_run_id', evalRunId).order('case_id', { ascending: true }),
   )
 }
 
