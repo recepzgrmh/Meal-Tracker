@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0.0",
+  "valid": true,
+  "sources": [
+    {
+      "source": "usda-foundation",
+      "rows": 363,
+      "valid": true,
+      "errors": {}
+    },
+    {
+      "source": "usda-fndds",
+      "rows": 5432,
+      "valid": true,
+      "errors": {}
+    },
+    {
+      "source": "usda-sr-legacy",
+      "rows": 7793,
+      "valid": true,
+      "errors": {}
+    },
+    {
+      "source": "usda-branded",
+      "rows": 455458,
+      "valid": true,
+      "errors": {}
+    },
+    {
+      "source": "turkomp",
+      "rows": 645,
+      "valid": true,
+      "errors": {}
+    },
+    {
+      "source": "openfoodfacts",
+      "rows": 930895,
+      "valid": true,
+      "errors": {}
+    }
+  ]
+}

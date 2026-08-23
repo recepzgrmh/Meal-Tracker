@@ -1,0 +1,30 @@
+{
+  "valid": true,
+  "sources": {
+    "usda-foundation": {
+      "rows": 363,
+      "errors": 0
+    },
+    "usda-fndds": {
+      "rows": 5432,
+      "errors": 0
+    },
+    "usda-sr-legacy": {
+      "rows": 7793,
+      "errors": 0
+    },
+    "usda-branded": {
+      "rows": 455458,
+      "errors": 0
+    },
+    "turkomp": {
+      "rows": 645,
+      "errors": 0
+    },
+    "openfoodfacts": {
+      "rows": 772837,
+      "errors": 0
+    }
+  },
+  "errors": []
+}

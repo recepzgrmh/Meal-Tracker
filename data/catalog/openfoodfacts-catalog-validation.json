@@ -1,0 +1,18 @@
+{
+  "scoring_version": "off-catalog-v1",
+  "threshold": 80,
+  "valid": true,
+  "scored": {
+    "rows": 930895,
+    "eligible": 772837,
+    "errors": {},
+    "valid": true
+  },
+  "production": {
+    "rows": 772837,
+    "eligible": 772837,
+    "errors": {},
+    "valid": true
+  },
+  "summary_errors": []
+}

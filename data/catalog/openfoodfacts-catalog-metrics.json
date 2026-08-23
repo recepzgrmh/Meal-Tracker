@@ -1,0 +1,4631 @@
+{
+  "scoring_version": "off-catalog-v1",
+  "input_file": "data/normalized/openfoodfacts.jsonl.gz",
+  "total_products": 930895,
+  "production_quality_threshold": 80,
+  "production_eligible_products": 772837,
+  "production_excluded_low_quality_products": 158058,
+  "thresholds": {
+    "40": {
+      "count": 930890,
+      "coverage": 0.999995
+    },
+    "50": {
+      "count": 930844,
+      "coverage": 0.999945
+    },
+    "60": {
+      "count": 929963,
+      "coverage": 0.998999
+    },
+    "70": {
+      "count": 908945,
+      "coverage": 0.976421
+    },
+    "80": {
+      "count": 772837,
+      "coverage": 0.830209
+    },
+    "90": {
+      "count": 609193,
+      "coverage": 0.654416
+    }
+  },
+  "average_scores": {
+    "data_quality": 89.07,
+    "turkey_relevance": 0.43,
+    "english_relevance": 69.92
+  },
+  "signal_coverage": {
+    "name": {
+      "count": 930408,
+      "coverage": 0.999477
+    },
+    "gtin": {
+      "count": 907187,
+      "coverage": 0.974532
+    },
+    "englishMarket": {
+      "count": 664276,
+      "coverage": 0.713589
+    },
+    "serving": {
+      "count": 641870,
+      "coverage": 0.689519
+    },
+    "brand": {
+      "count": 608553,
+      "coverage": 0.653729
+    },
+    "category": {
+      "count": 385463,
+      "coverage": 0.414078
+    },
+    "metadataEn": {
+      "count": 289221,
+      "coverage": 0.310691
+    },
+    "metadataTr": {
+      "count": 11608,
+      "coverage": 0.01247
+    },
+    "barcodeTurkey": {
+      "count": 2993,
+      "coverage": 0.003215
+    },
+    "countryTurkey": {
+      "count": 2601,
+      "coverage": 0.002794
+    },
+    "turkeyBrand": {
+      "count": 1772,
+      "coverage": 0.001904
+    }
+  },
+  "detected_language_counts": [
+    {
+      "key": "en",
+      "count": 794235
+    },
+    {
+      "key": "fr",
+      "count": 39890
+    },
+    {
+      "key": "ja",
+      "count": 21248
+    },
+    {
+      "key": "nl",
+      "count": 17842
+    },
+    {
+      "key": "ru",
+      "count": 14333
+    },
+    {
+      "key": "tr",
+      "count": 12196
+    },
+    {
+      "key": "es",
+      "count": 12136
+    },
+    {
+      "key": "fi",
+      "count": 8044
+    },
+    {
+      "key": "da",
+      "count": 7491
+    },
+    {
+      "key": "it",
+      "count": 5879
+    },
+    {
+      "key": "nb",
+      "count": 5498
+    },
+    {
+      "key": "cs",
+      "count": 5220
+    },
+    {
+      "key": "ro",
+      "count": 4654
+    },
+    {
+      "key": "de",
+      "count": 3865
+    },
+    {
+      "key": "bg",
+      "count": 3521
+    },
+    {
+      "key": "th",
+      "count": 3288
+    },
+    {
+      "key": "no",
+      "count": 3193
+    },
+    {
+      "key": "zh",
+      "count": 3112
+    },
+    {
+      "key": "hu",
+      "count": 2896
+    },
+    {
+      "key": "sv",
+      "count": 2676
+    },
+    {
+      "key": "hr",
+      "count": 2591
+    },
+    {
+      "key": "he",
+      "count": 2437
+    },
+    {
+      "key": "lt",
+      "count": 2291
+    },
+    {
+      "key": "et",
+      "count": 2232
+    },
+    {
+      "key": "ar",
+      "count": 1921
+    },
+    {
+      "key": "el",
+      "count": 1909
+    },
+    {
+      "key": "uk",
+      "count": 1646
+    },
+    {
+      "key": "sk",
+      "count": 1373
+    },
+    {
+      "key": "lv",
+      "count": 1344
+    },
+    {
+      "key": "pl",
+      "count": 1049
+    },
+    {
+      "key": "pt",
+      "count": 1031
+    },
+    {
+      "key": "is",
+      "count": 1008
+    },
+    {
+      "key": "sr",
+      "count": 808
+    },
+    {
+      "key": "sl",
+      "count": 744
+    },
+    {
+      "key": "ko",
+      "count": 666
+    },
+    {
+      "key": "af",
+      "count": 654
+    },
+    {
+      "key": "fy",
+      "count": 558
+    },
+    {
+      "key": "id",
+      "count": 510
+    },
+    {
+      "key": "vi",
+      "count": 326
+    },
+    {
+      "key": "la",
+      "count": 304
+    },
+    {
+      "key": "xx",
+      "count": 287
+    },
+    {
+      "key": "ca",
+      "count": 232
+    },
+    {
+      "key": "lb",
+      "count": 160
+    },
+    {
+      "key": "ms",
+      "count": 160
+    },
+    {
+      "key": "ka",
+      "count": 131
+    },
+    {
+      "key": "gl",
+      "count": 117
+    },
+    {
+      "key": "cy",
+      "count": 99
+    },
+    {
+      "key": "eu",
+      "count": 97
+    },
+    {
+      "key": "bs",
+      "count": 90
+    },
+    {
+      "key": "sq",
+      "count": 89
+    },
+    {
+      "key": "mk",
+      "count": 87
+    },
+    {
+      "key": "uz",
+      "count": 82
+    },
+    {
+      "key": "mt",
+      "count": 78
+    },
+    {
+      "key": "kk",
+      "count": 77
+    },
+    {
+      "key": "ky",
+      "count": 73
+    },
+    {
+      "key": "yi",
+      "count": 71
+    },
+    {
+      "key": "fa",
+      "count": 66
+    },
+    {
+      "key": "jv",
+      "count": 65
+    },
+    {
+      "key": "co",
+      "count": 56
+    },
+    {
+      "key": "in",
+      "count": 55
+    },
+    {
+      "key": "am",
+      "count": 47
+    },
+    {
+      "key": "az",
+      "count": 47
+    },
+    {
+      "key": "so",
+      "count": 43
+    },
+    {
+      "key": "mi",
+      "count": 40
+    },
+    {
+      "key": "gd",
+      "count": 38
+    },
+    {
+      "key": "mg",
+      "count": 38
+    },
+    {
+      "key": "ha",
+      "count": 35
+    },
+    {
+      "key": "sw",
+      "count": 35
+    },
+    {
+      "key": "bn",
+      "count": 34
+    },
+    {
+      "key": "eo",
+      "count": 34
+    },
+    {
+      "key": "aa",
+      "count": 30
+    },
+    {
+      "key": "hi",
+      "count": 30
+    },
+    {
+      "key": "ht",
+      "count": 28
+    },
+    {
+      "key": "iw",
+      "count": 24
+    },
+    {
+      "key": "sn",
+      "count": 24
+    },
+    {
+      "key": "be",
+      "count": 23
+    },
+    {
+      "key": "tg",
+      "count": 23
+    },
+    {
+      "key": "ga",
+      "count": 22
+    },
+    {
+      "key": "ny",
+      "count": 22
+    },
+    {
+      "key": "mn",
+      "count": 18
+    },
+    {
+      "key": "su",
+      "count": 18
+    },
+    {
+      "key": "hy",
+      "count": 17
+    },
+    {
+      "key": "lc",
+      "count": 14
+    },
+    {
+      "key": "km",
+      "count": 11
+    },
+    {
+      "key": "zu",
+      "count": 11
+    },
+    {
+      "key": "st",
+      "count": 8
+    },
+    {
+      "key": "mo",
+      "count": 6
+    },
+    {
+      "key": "nn",
+      "count": 6
+    },
+    {
+      "key": "ta",
+      "count": 6
+    },
+    {
+      "key": "ps",
+      "count": 5
+    },
+    {
+      "key": "oc",
+      "count": 4
+    },
+    {
+      "key": "ku",
+      "count": 3
+    },
+    {
+      "key": "mr",
+      "count": 3
+    },
+    {
+      "key": "my",
+      "count": 3
+    },
+    {
+      "key": "ne",
+      "count": 3
+    },
+    {
+      "key": "te",
+      "count": 3
+    },
+    {
+      "key": "ug",
+      "count": 3
+    },
+    {
+      "key": "ur",
+      "count": 3
+    },
+    {
+      "key": "xh",
+      "count": 3
+    },
+    {
+      "key": "kn",
+      "count": 2
+    }
+  ],
+  "top_market_country_tags": [
+    {
+      "key": "en:united-states",
+      "count": 606724
+    },
+    {
+      "key": "en:australia",
+      "count": 45794
+    },
+    {
+      "key": "en:japan",
+      "count": 30544
+    },
+    {
+      "key": "en:netherlands",
+      "count": 27944
+    },
+    {
+      "key": "en:world",
+      "count": 22818
+    },
+    {
+      "key": "en:finland",
+      "count": 13005
+    },
+    {
+      "key": "en:russia",
+      "count": 12602
+    },
+    {
+      "key": "en:norway",
+      "count": 12599
+    },
+    {
+      "key": "en:denmark",
+      "count": 11430
+    },
+    {
+      "key": "en:new-zealand",
+      "count": 8324
+    },
+    {
+      "key": "en:czech-republic",
+      "count": 8159
+    },
+    {
+      "key": "en:luxembourg",
+      "count": 6793
+    },
+    {
+      "key": "en:romania",
+      "count": 6168
+    },
+    {
+      "key": "en:hungary",
+      "count": 5397
+    },
+    {
+      "key": "en:india",
+      "count": 5133
+    },
+    {
+      "key": "en:bulgaria",
+      "count": 5093
+    },
+    {
+      "key": "en:israel",
+      "count": 4738
+    },
+    {
+      "key": "en:greece",
+      "count": 4549
+    },
+    {
+      "key": "en:thailand",
+      "count": 4517
+    },
+    {
+      "key": "en:south-africa",
+      "count": 4245
+    },
+    {
+      "key": "en:argentina",
+      "count": 4151
+    },
+    {
+      "key": "en:singapore",
+      "count": 3826
+    },
+    {
+      "key": "en:lithuania",
+      "count": 3817
+    },
+    {
+      "key": "en:estonia",
+      "count": 3491
+    },
+    {
+      "key": "en:morocco",
+      "count": 3388
+    },
+    {
+      "key": "en:colombia",
+      "count": 3145
+    },
+    {
+      "key": "en:united-arab-emirates",
+      "count": 3100
+    },
+    {
+      "key": "en:saudi-arabia",
+      "count": 2807
+    },
+    {
+      "key": "en:croatia",
+      "count": 2751
+    },
+    {
+      "key": "en:ukraine",
+      "count": 2614
+    }
+  ],
+  "exclusion_reason_counts": [
+    {
+      "key": "data_quality_score_below_80",
+      "count": 158058
+    },
+    {
+      "key": "category_missing",
+      "count": 153849
+    },
+    {
+      "key": "serving_missing",
+      "count": 149405
+    },
+    {
+      "key": "brand_missing",
+      "count": 149168
+    },
+    {
+      "key": "source_quality_errors",
+      "count": 21872
+    },
+    {
+      "key": "barcode_nonstandard_length_or_checksum",
+      "count": 9246
+    },
+    {
+      "key": "fat_100g_missing",
+      "count": 4477
+    },
+    {
+      "key": "protein_100g_missing",
+      "count": 3514
+    },
+    {
+      "key": "carbs_100g_missing",
+      "count": 2073
+    },
+    {
+      "key": "weak_product_name",
+      "count": 349
+    },
+    {
+      "key": "serving_partial",
+      "count": 160
+    }
+  ],
+  "turkey_associated_brand_tokens": 194,
+  "top_turkey_associated_brands": [
+    {
+      "brand": "migros",
+      "seed_products": 54,
+      "total_products": 150
+    },
+    {
+      "brand": "ulker",
+      "seed_products": 53,
+      "total_products": 73
+    },
+    {
+      "brand": "eti",
+      "seed_products": 51,
+      "total_products": 58
+    },
+    {
+      "brand": "pinar",
+      "seed_products": 48,
+      "total_products": 53
+    },
+    {
+      "brand": "harras",
+      "seed_products": 47,
+      "total_products": 48
+    },
+    {
+      "brand": "dardanel",
+      "seed_products": 33,
+      "total_products": 33
+    },
+    {
+      "brand": "yayla",
+      "seed_products": 27,
+      "total_products": 33
+    },
+    {
+      "brand": "icim",
+      "seed_products": 25,
+      "total_products": 26
+    },
+    {
+      "brand": "superfresh",
+      "seed_products": 25,
+      "total_products": 26
+    },
+    {
+      "brand": "tat",
+      "seed_products": 24,
+      "total_products": 24
+    },
+    {
+      "brand": "mis",
+      "seed_products": 23,
+      "total_products": 24
+    },
+    {
+      "brand": "sutas",
+      "seed_products": 22,
+      "total_products": 23
+    },
+    {
+      "brand": "nimet",
+      "seed_products": 20,
+      "total_products": 20
+    },
+    {
+      "brand": "protein ocean",
+      "seed_products": 19,
+      "total_products": 20
+    },
+    {
+      "brand": "torku",
+      "seed_products": 19,
+      "total_products": 20
+    },
+    {
+      "brand": "grizzone",
+      "seed_products": 18,
+      "total_products": 18
+    },
+    {
+      "brand": "uno",
+      "seed_products": 18,
+      "total_products": 32
+    },
+    {
+      "brand": "dost",
+      "seed_products": 17,
+      "total_products": 18
+    },
+    {
+      "brand": "tarim kredi",
+      "seed_products": 17,
+      "total_products": 18
+    },
+    {
+      "brand": "tadim",
+      "seed_products": 15,
+      "total_products": 19
+    },
+    {
+      "brand": "toren",
+      "seed_products": 15,
+      "total_products": 15
+    },
+    {
+      "brand": "elvan",
+      "seed_products": 14,
+      "total_products": 16
+    },
+    {
+      "brand": "kahve dunyasi",
+      "seed_products": 14,
+      "total_products": 14
+    },
+    {
+      "brand": "supplementler",
+      "seed_products": 14,
+      "total_products": 15
+    },
+    {
+      "brand": "lezita",
+      "seed_products": 13,
+      "total_products": 13
+    },
+    {
+      "brand": "namet",
+      "seed_products": 13,
+      "total_products": 13
+    },
+    {
+      "brand": "sek",
+      "seed_products": 13,
+      "total_products": 13
+    },
+    {
+      "brand": "chocovia",
+      "seed_products": 12,
+      "total_products": 17
+    },
+    {
+      "brand": "tada",
+      "seed_products": 12,
+      "total_products": 12
+    },
+    {
+      "brand": "birsah",
+      "seed_products": 11,
+      "total_products": 11
+    }
+  ],
+  "high_quality_tr_examples": [
+    {
+      "name": "Süzeme peynir",
+      "brand": "Tek süt",
+      "barcode": "8690158124295",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Banvit piliç yaprak döner",
+      "brand": "Banvit",
+      "barcode": "8690451704477",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 70,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language",
+        "english_metadata_detected"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "O'lala Bar Cake koek",
+      "brand": "ÜLKER",
+      "barcode": "8690504059424",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Cake fruits",
+      "brand": "Ülker",
+      "barcode": "8690504063421",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Altınbaşak Grissini",
+      "brand": "Ülker",
+      "barcode": "8690504074380",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 0,
+      "detected_languages": [
+        "fr",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Pastamia",
+      "brand": "Eti",
+      "barcode": "8690526029733",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 40,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_declared_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Eti Burçak Fıstık Ezmeli Kremalı",
+      "brand": "ETİ",
+      "barcode": "8690526062983",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 40,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_declared_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Lifalif Kuru Meyveli",
+      "brand": "Eti",
+      "barcode": "8690526064680",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Maximus küçük",
+      "brand": "eti",
+      "barcode": "8690526087351",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 0,
+      "detected_languages": [
+        "la",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Lifalif Puffed Granola",
+      "brand": "Eti",
+      "barcode": "8690526267937",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 0,
+      "detected_languages": [
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Hindi Göğüs Füme",
+      "brand": "Pınar",
+      "barcode": "8690527200285",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Kakao",
+      "brand": "Migros",
+      "barcode": "8690547188341",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 40,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_declared_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Makarnalı Ton",
+      "brand": "Dardanel",
+      "barcode": "8690559019084",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Ekonomik Ton Balığı",
+      "brand": "Dardanel",
+      "barcode": "8690559026525",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 0,
+      "detected_languages": [
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Az Yağlı Peynir",
+      "brand": "Pınar",
+      "barcode": "8690565022849",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 40,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_declared_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Tuna Fish",
+      "brand": "SuperFresh, Ülker",
+      "barcode": "8690612314958",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 70,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language",
+        "english_metadata_detected"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Superton Ton Balığı",
+      "brand": "Superfresh",
+      "barcode": "8690612315689",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 70,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language",
+        "english_metadata_detected"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Nestle nesfit 400 kırmızı meyveli",
+      "brand": "Nesfit",
+      "barcode": "8690632760391",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 0,
+      "detected_languages": [
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "TAT - KETÇAP",
+      "brand": "tat",
+      "barcode": "8690635151554",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 40,
+      "detected_languages": [
+        "bg",
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:bulgaria",
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_declared_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Tost Ekmeği",
+      "brand": "Uno",
+      "barcode": "8690698511661",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 40,
+      "detected_languages": [
+        "en",
+        "fr",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_declared_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Tam buğdaylı ve ciya tohumlu ekmek",
+      "brand": "Uno",
+      "barcode": "8690698511692",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Sütaş ayran",
+      "brand": "Sütaş",
+      "barcode": "8690767671081",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 40,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_declared_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Cream Cheese",
+      "brand": "Sütaş",
+      "barcode": "8690767717000",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 70,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language",
+        "english_metadata_detected"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Sütaş çikolatalı süt",
+      "brand": "Sütaş",
+      "barcode": "8690767774874",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Coarse bulgur with vermicelli",
+      "brand": "Sera",
+      "barcode": "8690777432368",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Laktozsuz Dilimli Tost Peyniri",
+      "brand": "Bahçıvan",
+      "barcode": "8690843097194",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Doğal zengin mineralli maden suyu",
+      "brand": "Sırma",
+      "barcode": "8691058005752",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 0,
+      "detected_languages": [
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Walnut Summer Helva",
+      "brand": "Koska",
+      "barcode": "8691070634701",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Ayran",
+      "brand": "Eker",
+      "barcode": "8691316521512",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 60,
+      "detected_languages": [
+        "en",
+        "fr",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_declared_language",
+        "english_metadata_detected"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Ayran",
+      "brand": "Eker",
+      "barcode": "8691316521819",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 40,
+      "detected_languages": [
+        "en",
+        "fr",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_declared_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "tatli biber salçasi",
+      "brand": "Burcu",
+      "barcode": "8691573007194",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 40,
+      "detected_languages": [
+        "bg",
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_declared_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Lactose-free milk",
+      "brand": "Sek",
+      "barcode": "8692095342886",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Yarım Yağlı Süt",
+      "brand": "Migros",
+      "barcode": "8692971429359",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Sade Kefir",
+      "brand": "İçim",
+      "barcode": "8692971429564",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Içim Labne Cream Cheese, Olive and Thyme",
+      "brand": "İçim",
+      "barcode": "8692971431079",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 70,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language",
+        "english_metadata_detected"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "İçim Fit Kakaolu",
+      "brand": "İçim",
+      "barcode": "8692971434346",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Içim fit çilek",
+      "brand": "İçim",
+      "barcode": "8692971434513",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Tarım Kredi Yarım Yağlı UHT Süt",
+      "brand": "Tarım Kredi",
+      "barcode": "8694962011024",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 0,
+      "detected_languages": [
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Yağsız UHT Süt",
+      "brand": "Tarım Kredi",
+      "barcode": "8694962012496",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 0,
+      "detected_languages": [
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Krema",
+      "brand": "Dost",
+      "barcode": "8695077003843",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Çocuk Devam Sütü",
+      "brand": "Dost",
+      "barcode": "8695077005588",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 40,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_declared_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Dilimli Tost Peyniri",
+      "brand": "Aknaz",
+      "barcode": "8695077006301",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 40,
+      "detected_languages": [
+        "en",
+        "es",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_declared_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "suzme peynir",
+      "brand": "Dost",
+      "barcode": "8695077020512",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Milk",
+      "brand": "Harras, Harris",
+      "barcode": "8695077029423",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Enerji İçeceği",
+      "brand": "Performans",
+      "barcode": "8695077081131",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 40,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_declared_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Дюрюм чий кюфте",
+      "brand": "Bim",
+      "barcode": "8695077087126",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 40,
+      "detected_languages": [
+        "bg",
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:bulgaria",
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_declared_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Form Süzme Peynir",
+      "brand": "Dost,Dost Form",
+      "barcode": "8695077091741",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 40,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_declared_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Süt",
+      "brand": "Dost",
+      "barcode": "8695077092021",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 40,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_declared_language"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Dost Süt Yarım Yağlı",
+      "brand": "Dost,Yarım Yağlı Süt",
+      "barcode": "8695077100092",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 0,
+      "detected_languages": [
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Sut",
+      "brand": "Dost",
+      "barcode": "8695077102034",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 100,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:turkey"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkey_country_tag",
+        "turkey_869_barcode_prefix",
+        "turkish_metadata_detected",
+        "turkey_associated_brand",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": []
+    }
+  ],
+  "high_quality_en_global_examples": [
+    {
+      "name": "Canola harvest, buttery spread, with flaxseed oil",
+      "brand": "Canola Harvest",
+      "barcode": "0000111301263",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Mcvitie's, digestives cheesecake, lemon",
+      "brand": "Mcvitie's",
+      "barcode": "0000168175589",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 15,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkish_metadata_detected",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Mcvitie's, mini gingerbread men, milk chocolate",
+      "brand": "Mcvitie's",
+      "barcode": "0000168178238",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Piasten, Chocolate Assortment",
+      "brand": "Goode's Bakery & Co. Inc.",
+      "barcode": "0000281756504",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Mt. olive, sweet 'n' hot salad peppers",
+      "brand": "Mt. Olive",
+      "barcode": "0000309444901",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Big Papa's, Southern Sauce",
+      "brand": "Walton's Flies",
+      "barcode": "0000309512075",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Isagenix",
+      "brand": "ISAGENIX",
+      "barcode": "0000390204071",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Funsch, High Quality Marzipan",
+      "brand": "Petpro Products Inc.",
+      "barcode": "0000433070274",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Best Sweet-Potato Cookies",
+      "brand": "Petpro Products Inc.",
+      "barcode": "0000433906023",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Lactaid, ice cream, vanilla",
+      "brand": "Lactaid",
+      "barcode": "0000450193000",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Lactaid, ice cream, butter pecan",
+      "brand": "Lactaid",
+      "barcode": "0000450193031",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Lindt williams, liquor chocolate with williams pear",
+      "brand": "Lindt, Polo Leathergoods",
+      "barcode": "0000539003206",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Madelaine Chocolate Company, Chocolate",
+      "brand": "Madelaine Chocolate Novelties",
+      "barcode": "0000609133703",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "The Madelaine Chocolate Company, Solid Milk Chocolate Cigars",
+      "brand": "Madelaine Chocolate Novelties",
+      "barcode": "0000609406104",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Madelaine Chocolate, It's A Girl! Solid Milk Chocolate Cigars, Milk Chocolate",
+      "brand": "Madelaine Chocolate Novelties",
+      "barcode": "0000609407101",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "The Madelaine Chocolate Company, Solid Milk Chocolate",
+      "brand": "Madelaine Chocolate Novelties",
+      "barcode": "0000609941001",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "The Madelaine Chocolate Company, Solid Dark Chocolate",
+      "brand": "Madelaine Chocolate Novelties",
+      "barcode": "0000609941049",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "The Madelaine Chocolate Company, Solid Milk Chocolate",
+      "brand": "Madelaine Chocolate Novelties",
+      "barcode": "0000609941766",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Solid Milk Chocolate",
+      "brand": "The Madelaine Chocolate Company",
+      "barcode": "0000609962037",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "The Madelaine Chocolate Company, Solid Dark Chocolate",
+      "brand": "Madelaine Chocolate Novelties",
+      "barcode": "0000609962044",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "The Madelaine Chocolate Company, Solid Milk Chocolate",
+      "brand": "Madelaine Chocolate Novelties",
+      "barcode": "0000609983001",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "The Madelaine Chocolate Company, Solid Dark Chocolate",
+      "brand": "Madelaine Chocolate Novelties",
+      "barcode": "0000609983032",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "The Madelaine Chocolate Company, Solid Milk Chocolate Bunnies",
+      "brand": "Madelaine Chocolate Novelties",
+      "barcode": "0000609989010",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "The Madelaine Chocolate Company, Solid Milk Chocolate Chicks",
+      "brand": "Madelaine Chocolate Novelties",
+      "barcode": "0000609989027",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Feletti, Pralines Candy, Milk Chocolate",
+      "brand": "Better Ideas",
+      "barcode": "0000698309041",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Feletti, Milk Chocolate Pralines",
+      "brand": "Better Ideas",
+      "barcode": "0000698465815",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Ryan's, Lemonade",
+      "brand": "Ryan Orchards",
+      "barcode": "0000764001787",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Ryan's, Spiced Apple Cider",
+      "brand": "Ryan Orchards",
+      "barcode": "0000764003033",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Healthy Food Brands, A&W, Soda Bottles Gummy Candies With Real A&W Root Beer",
+      "brand": "Healthy Food Brands Llc",
+      "barcode": "0000790105282",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Emojeez, Gummies, Assorted Fruits",
+      "brand": "Healthy Food Brands Llc",
+      "barcode": "0000790110002",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Emojeez, Gummies Candy, Fruit",
+      "brand": "Healthy Food Brands Llc",
+      "barcode": "0000790110019",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Emojeez, Fruit Flavored Gummies, Green Apple, Orange, Fruit Punch, Lemon, Cherry Blue Raspberry",
+      "brand": "Healthy Food Brands Llc",
+      "barcode": "0000790110026",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Emojeez, Fruit Gummies, Assorted",
+      "brand": "Healthy Food Brands Llc",
+      "barcode": "0000790110040",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Emojeez, Gummies Candy, Fruit",
+      "brand": "Healthy Food Brands Llc",
+      "barcode": "0000790110057",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Fine Chocolate Candy Bar, Dark Chocolate",
+      "brand": "Simply, Simply Natural Foods Llc.",
+      "barcode": "0000790200123",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Hfb Candy, Candy Crush Color Bombs",
+      "brand": "Healthy Food Brands Llc",
+      "barcode": "0000790350040",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Hfb Candy, Jelly Fish Candy",
+      "brand": "Healthy Food Brands Llc",
+      "barcode": "0000790350187",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Angry Birds, Fruit Snack, Cherry, Lemon, Raspberry, Apple, Grape, Strawberry",
+      "brand": "Healthy Food Brands Llc",
+      "barcode": "0000790350385",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Welch's, triple fruit treat, mango, cranberries, blueberries",
+      "brand": "Welch's, Healthy Food Brands Llc",
+      "barcode": "0000790410553",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Welch's, pb&j trail mix, grape",
+      "brand": "Welch's, Healthy Food Brands Llc",
+      "barcode": "0000790430018",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 15,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkish_metadata_detected",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Welch's, pb & j trail mix, strawberry",
+      "brand": "Welch's, Healthy Food Brands Llc",
+      "barcode": "0000790430063",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 15,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkish_metadata_detected",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Welch's, pb&j trail mix, grape",
+      "brand": "Welch's, Healthy Food Brands Llc",
+      "barcode": "0000790430070",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 15,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en",
+        "tr"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "turkish_metadata_detected",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Fruit gummies",
+      "brand": "Angry Birds",
+      "barcode": "0000790500186",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Angry birds, fruit snacks, cherry, lemon, raspberry, apple, grape, strawberry",
+      "brand": "Angry Birds",
+      "barcode": "0000790520603",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Creamed honey with cinnamon",
+      "brand": "Vintage, Vintage Bee",
+      "barcode": "0000835766331",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Guiltless Gourmet, Organic Unsweetened Coconut Water",
+      "brand": "Guiltless Gourmet Inc.",
+      "barcode": "0000901005005",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "La Eur, 3 Milk Soft Ripened Cheese",
+      "brand": "Caseificio Dell'Alta Langa",
+      "barcode": "0000996284712",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Beef Bologna",
+      "brand": "Private Selections,Kroger",
+      "barcode": "0001111052230",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Diet Soda, Cola",
+      "brand": "Roundy's",
+      "barcode": "0001115016429",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    },
+    {
+      "name": "Instant mashed potatoes, butter & herb",
+      "brand": "Roundy's",
+      "barcode": "0001115018195",
+      "data_quality_score": 100,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": []
+    }
+  ],
+  "suspicious_examples": [
+    {
+      "name": "hejejje",
+      "brand": "jzjje",
+      "barcode": "00111101",
+      "data_quality_score": 54,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 0,
+      "detected_languages": [
+        "fr"
+      ],
+      "market_country_tags": [
+        "en:benin"
+      ],
+      "inclusion_reasons": [
+        "structural_barcode",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "category_present"
+      ],
+      "exclusion_reasons": [
+        "data_quality_score_below_80",
+        "barcode_nonstandard_length_or_checksum",
+        "serving_missing",
+        "source_quality_errors"
+      ],
+      "suspicion_score": 146,
+      "suspicion_reasons": [
+        "en:energy-value-in-kcal-does-not-match-value-in-kj",
+        "en:nutrition-value-total-over-105",
+        "en:energy-value-in-kj-does-not-match-value-computed-from-other-nutrients",
+        "macro_sum_over_105g",
+        "gtin_checksum_or_length_invalid"
+      ]
+    },
+    {
+      "name": "Oikos Pro 19g protein",
+      "brand": null,
+      "barcode": "10515995",
+      "data_quality_score": 37,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 80,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "structural_barcode",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "english_primary_language",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": [
+        "data_quality_score_below_80",
+        "barcode_nonstandard_length_or_checksum",
+        "brand_missing",
+        "serving_missing",
+        "category_missing",
+        "source_quality_errors"
+      ],
+      "suspicion_score": 143,
+      "suspicion_reasons": [
+        "en:nutrition-value-over-105-calcium",
+        "en:nutrition-value-over-105-potassium",
+        "en:nutrition-value-over-105-salt",
+        "gtin_checksum_or_length_invalid"
+      ]
+    },
+    {
+      "name": "Activia Expert Cherry flavour",
+      "brand": null,
+      "barcode": "10531039",
+      "data_quality_score": 37,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 80,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "structural_barcode",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "english_primary_language",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": [
+        "data_quality_score_below_80",
+        "barcode_nonstandard_length_or_checksum",
+        "brand_missing",
+        "serving_missing",
+        "category_missing",
+        "source_quality_errors"
+      ],
+      "suspicion_score": 143,
+      "suspicion_reasons": [
+        "en:nutrition-value-over-105-calcium",
+        "en:nutrition-value-over-105-potassium",
+        "en:nutrition-value-over-105-salt",
+        "gtin_checksum_or_length_invalid"
+      ]
+    },
+    {
+      "name": "Chrome book",
+      "brand": null,
+      "barcode": "20001080",
+      "data_quality_score": 37,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 80,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "structural_barcode",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "english_primary_language",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": [
+        "data_quality_score_below_80",
+        "barcode_nonstandard_length_or_checksum",
+        "brand_missing",
+        "serving_missing",
+        "category_missing",
+        "source_quality_errors"
+      ],
+      "suspicion_score": 143,
+      "suspicion_reasons": [
+        "en:nutrition-value-total-over-105",
+        "en:nutrition-value-over-3800-energy",
+        "en:energy-value-in-kcal-does-not-match-value-computed-from-other-nutrients",
+        "gtin_checksum_or_length_invalid"
+      ]
+    },
+    {
+      "name": "gg",
+      "brand": "uu",
+      "barcode": "6009836900113",
+      "data_quality_score": 60,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 0,
+      "detected_languages": [
+        "es"
+      ],
+      "market_country_tags": [
+        "en:vietnam"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "weak_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present"
+      ],
+      "exclusion_reasons": [
+        "data_quality_score_below_80",
+        "weak_product_name",
+        "source_quality_errors"
+      ],
+      "suspicion_score": 140,
+      "suspicion_reasons": [
+        "en:nutrition-value-total-over-105",
+        "en:nutrition-saturated-fat-greater-than-fat",
+        "en:energy-value-in-kcal-does-not-match-value-computed-from-other-nutrients",
+        "macro_sum_over_105g",
+        "weak_or_placeholder_name"
+      ]
+    },
+    {
+      "name": "gg",
+      "brand": "hh",
+      "barcode": "9786045978634",
+      "data_quality_score": 60,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 0,
+      "detected_languages": [
+        "es",
+        "et"
+      ],
+      "market_country_tags": [
+        "en:vietnam"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "weak_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "serving_amount_and_text_present",
+        "category_present"
+      ],
+      "exclusion_reasons": [
+        "data_quality_score_below_80",
+        "weak_product_name",
+        "source_quality_errors"
+      ],
+      "suspicion_score": 140,
+      "suspicion_reasons": [
+        "en:nutrition-value-total-over-105",
+        "en:nutrition-saturated-fat-greater-than-fat",
+        "en:energy-value-in-kcal-does-not-match-value-computed-from-other-nutrients",
+        "macro_sum_over_105g",
+        "weak_or_placeholder_name"
+      ]
+    },
+    {
+      "name": "7days",
+      "brand": null,
+      "barcode": "2000000046690",
+      "data_quality_score": 44,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:saudi-arabia"
+      ],
+      "inclusion_reasons": [
+        "structural_barcode",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "category_present",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": [
+        "data_quality_score_below_80",
+        "barcode_nonstandard_length_or_checksum",
+        "brand_missing",
+        "serving_missing",
+        "source_quality_errors"
+      ],
+      "suspicion_score": 136,
+      "suspicion_reasons": [
+        "en:nutrition-value-over-105-salt",
+        "en:nutrition-value-total-over-105",
+        "en:energy-value-in-kj-does-not-match-value-computed-from-other-nutrients",
+        "gtin_checksum_or_length_invalid"
+      ]
+    },
+    {
+      "name": "almarai double chocolate milk",
+      "brand": null,
+      "barcode": "2000000046691",
+      "data_quality_score": 44,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 70,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:saudi-arabia"
+      ],
+      "inclusion_reasons": [
+        "structural_barcode",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected"
+      ],
+      "exclusion_reasons": [
+        "data_quality_score_below_80",
+        "barcode_nonstandard_length_or_checksum",
+        "brand_missing",
+        "serving_missing",
+        "source_quality_errors"
+      ],
+      "suspicion_score": 136,
+      "suspicion_reasons": [
+        "en:nutrition-value-over-105-salt",
+        "en:nutrition-value-total-over-105",
+        "en:energy-value-in-kj-does-not-match-value-computed-from-other-nutrients",
+        "gtin_checksum_or_length_invalid"
+      ]
+    },
+    {
+      "name": "Superfood greens",
+      "brand": null,
+      "barcode": "80002807",
+      "data_quality_score": 44,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 100,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "structural_barcode",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "category_present",
+        "english_primary_language",
+        "english_metadata_detected",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": [
+        "data_quality_score_below_80",
+        "barcode_nonstandard_length_or_checksum",
+        "brand_missing",
+        "serving_missing",
+        "source_quality_errors"
+      ],
+      "suspicion_score": 136,
+      "suspicion_reasons": [
+        "en:energy-value-in-kcal-does-not-match-value-computed-from-other-nutrients",
+        "en:vegan-label-but-non-vegan-ingredient",
+        "en:vegetarian-label-but-non-vegetarian-ingredient",
+        "gtin_checksum_or_length_invalid"
+      ]
+    },
+    {
+      "name": "pasta",
+      "brand": null,
+      "barcode": "8901560090284",
+      "data_quality_score": 45,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:india"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": [
+        "data_quality_score_below_80",
+        "brand_missing",
+        "serving_missing",
+        "category_missing",
+        "source_quality_errors"
+      ],
+      "suspicion_score": 135,
+      "suspicion_reasons": [
+        "en:nutrition-value-total-over-105",
+        "en:nutrition-sugars-plus-starch-greater-than-carbohydrates",
+        "en:energy-value-in-kcal-does-not-match-value-computed-from-other-nutrients",
+        "macro_sum_over_105g"
+      ]
+    },
+    {
+      "name": "MuscleBlaze Multivitamin",
+      "brand": "MuscleBlaze",
+      "barcode": "0001245192425",
+      "data_quality_score": 47,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 80,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:united-states"
+      ],
+      "inclusion_reasons": [
+        "structural_barcode",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "english_primary_language",
+        "english_market_tag"
+      ],
+      "exclusion_reasons": [
+        "data_quality_score_below_80",
+        "barcode_nonstandard_length_or_checksum",
+        "serving_missing",
+        "category_missing",
+        "source_quality_errors"
+      ],
+      "suspicion_score": 133,
+      "suspicion_reasons": [
+        "en:nutrition-value-over-105-calcium",
+        "en:nutrition-value-over-1000-calcium",
+        "en:nutrition-value-over-105-copper",
+        "gtin_checksum_or_length_invalid"
+      ]
+    },
+    {
+      "name": "Изделие сдобное Улитка с маком",
+      "brand": null,
+      "barcode": "2953245003047",
+      "data_quality_score": 52,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 0,
+      "detected_languages": [
+        "ru"
+      ],
+      "market_country_tags": [
+        "en:russia"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "category_present"
+      ],
+      "exclusion_reasons": [
+        "data_quality_score_below_80",
+        "brand_missing",
+        "serving_missing",
+        "source_quality_errors"
+      ],
+      "suspicion_score": 128,
+      "suspicion_reasons": [
+        "en:nutrition-value-total-over-105",
+        "en:energy-value-in-kj-does-not-match-value-computed-from-other-nutrients",
+        "en:energy-value-in-kcal-does-not-match-value-computed-from-other-nutrients",
+        "macro_sum_over_105g"
+      ]
+    },
+    {
+      "name": "Croco",
+      "brand": null,
+      "barcode": "5041194440000",
+      "data_quality_score": 52,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:romania"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "category_present",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": [
+        "data_quality_score_below_80",
+        "brand_missing",
+        "serving_missing",
+        "source_quality_errors"
+      ],
+      "suspicion_score": 128,
+      "suspicion_reasons": [
+        "en:nutrition-value-total-over-105",
+        "en:energy-value-in-kj-does-not-match-value-computed-from-other-nutrients",
+        "en:product-quantity-over-30kg",
+        "macro_sum_over_105g"
+      ]
+    },
+    {
+      "name": "Arcal8a",
+      "brand": null,
+      "barcode": "5942325003623",
+      "data_quality_score": 52,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:romania"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "category_present",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": [
+        "data_quality_score_below_80",
+        "brand_missing",
+        "serving_missing",
+        "source_quality_errors"
+      ],
+      "suspicion_score": 128,
+      "suspicion_reasons": [
+        "en:nutrition-value-total-over-105",
+        "en:energy-value-in-kj-does-not-match-value-computed-from-other-nutrients",
+        "en:product-quantity-over-30kg",
+        "macro_sum_over_105g"
+      ]
+    },
+    {
+      "name": "préparation pour flanc",
+      "brand": null,
+      "barcode": "6132066300139",
+      "data_quality_score": 52,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 0,
+      "detected_languages": [
+        "ar",
+        "fr"
+      ],
+      "market_country_tags": [
+        "en:algeria"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "category_present"
+      ],
+      "exclusion_reasons": [
+        "data_quality_score_below_80",
+        "brand_missing",
+        "serving_missing",
+        "source_quality_errors"
+      ],
+      "suspicion_score": 128,
+      "suspicion_reasons": [
+        "en:nutrition-value-total-over-105",
+        "en:energy-value-in-kj-does-not-match-value-computed-from-other-nutrients",
+        "en:energy-value-in-kcal-does-not-match-value-computed-from-other-nutrients",
+        "macro_sum_over_105g"
+      ]
+    },
+    {
+      "name": "Mars",
+      "brand": null,
+      "barcode": "6294001813415",
+      "data_quality_score": 52,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 0,
+      "detected_languages": [
+        "fr"
+      ],
+      "market_country_tags": [
+        "en:united-arab-emirates"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "category_present"
+      ],
+      "exclusion_reasons": [
+        "data_quality_score_below_80",
+        "brand_missing",
+        "serving_missing",
+        "source_quality_errors"
+      ],
+      "suspicion_score": 128,
+      "suspicion_reasons": [
+        "en:energy-value-in-kcal-does-not-match-value-in-kj",
+        "en:nutrition-value-total-over-105",
+        "en:nutrition-value-over-3800-energy",
+        "macro_sum_over_105g"
+      ]
+    },
+    {
+      "name": "Oblitas Chocolate",
+      "brand": null,
+      "barcode": "7793123000356",
+      "data_quality_score": 52,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 0,
+      "detected_languages": [
+        "es"
+      ],
+      "market_country_tags": [
+        "en:argentina"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "category_present"
+      ],
+      "exclusion_reasons": [
+        "data_quality_score_below_80",
+        "brand_missing",
+        "serving_missing",
+        "source_quality_errors"
+      ],
+      "suspicion_score": 128,
+      "suspicion_reasons": [
+        "en:nutrition-value-total-over-105",
+        "en:nutrition-saturated-fat-greater-than-fat",
+        "en:energy-value-in-kj-does-not-match-value-computed-from-other-nutrients",
+        "macro_sum_over_105g"
+      ]
+    },
+    {
+      "name": "RAW CHIA SEED",
+      "brand": null,
+      "barcode": "8906151000031",
+      "data_quality_score": 52,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:india"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "category_present",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": [
+        "data_quality_score_below_80",
+        "brand_missing",
+        "serving_missing",
+        "source_quality_errors"
+      ],
+      "suspicion_score": 128,
+      "suspicion_reasons": [
+        "en:energy-value-in-kcal-greater-than-in-kj",
+        "en:energy-value-in-kcal-does-not-match-value-in-kj",
+        "en:nutrition-value-total-over-105",
+        "macro_sum_over_105g"
+      ]
+    },
+    {
+      "name": "Magdalena Cookie",
+      "brand": null,
+      "barcode": "0850027746418",
+      "data_quality_score": 53,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:cuba"
+      ],
+      "inclusion_reasons": [
+        "valid_gtin_checksum",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "serving_amount_and_text_present",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": [
+        "data_quality_score_below_80",
+        "brand_missing",
+        "category_missing",
+        "source_quality_errors"
+      ],
+      "suspicion_score": 127,
+      "suspicion_reasons": [
+        "en:nutrition-value-total-over-105",
+        "en:nutrition-sugars-plus-starch-greater-than-carbohydrates",
+        "en:nutrition-saturated-fat-greater-than-fat",
+        "macro_sum_over_105g"
+      ]
+    },
+    {
+      "name": "Clover Chips Cheese",
+      "brand": "Leslie’s",
+      "barcode": "0480021611004",
+      "data_quality_score": 54,
+      "turkey_relevance_score": 0,
+      "english_relevance_score": 50,
+      "detected_languages": [
+        "en"
+      ],
+      "market_country_tags": [
+        "en:philippines"
+      ],
+      "inclusion_reasons": [
+        "structural_barcode",
+        "meaningful_product_name",
+        "kcal_100g_present",
+        "protein_100g_present",
+        "carbs_100g_present",
+        "fat_100g_present",
+        "brand_present",
+        "category_present",
+        "english_primary_language"
+      ],
+      "exclusion_reasons": [
+        "data_quality_score_below_80",
+        "barcode_nonstandard_length_or_checksum",
+        "serving_missing",
+        "source_quality_errors"
+      ],
+      "suspicion_score": 126,
+      "suspicion_reasons": [
+        "en:energy-value-in-kcal-greater-than-in-kj",
+        "en:energy-value-in-kcal-does-not-match-value-in-kj",
+        "en:energy-value-in-kj-does-not-match-value-computed-from-other-nutrients",
+        "gtin_checksum_or_length_invalid"
+      ]
+    }
+  ],
+  "output_files": {
+    "scored_all": "data/catalog/openfoodfacts-scored.jsonl.gz",
+    "production_candidates": "data/catalog/openfoodfacts-production.jsonl.gz"
+  }
+}
