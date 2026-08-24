@@ -152,9 +152,18 @@ export function normalizeQuery(value: string, locale: 'tr-TR' | 'en-US'): string
   return value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase(locale)
 }
 
+/**
+ * A vector index always returns its k nearest neighbours, however far away they
+ * are, so "is there a result?" is never evidence of a match. At 0.35 unrelated
+ * Turkish words routinely cleared the bar, which is how non-food tokens reached
+ * the selector with a straight face. Vector-only rows now need a genuinely
+ * close neighbour; anything weaker must be corroborated by the lexical side.
+ */
+export const MIN_SEMANTIC_SIMILARITY = 0.62
+
 export function filterGroundedRows(
   rows: Array<Record<string, unknown>>,
-  minimumSemanticSimilarity = 0.35,
+  minimumSemanticSimilarity = MIN_SEMANTIC_SIMILARITY,
 ): Array<Record<string, unknown>> {
   return rows.filter((row) => {
     if (row.lexical_rank != null) return true

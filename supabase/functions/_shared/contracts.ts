@@ -1,5 +1,6 @@
 export const ANALYSIS_CONTRACT_VERSION = 'analysis.v1' as const
 export const DETERMINISTIC_PIPELINE_VERSION = 'deterministic-tr-v1' as const
+export const TEXT_EXTRACTION_PIPELINE_VERSION = 'text-extraction-grounded-v1' as const
 export const VISION_PIPELINE_VERSION = 'vision-grounded-hybrid-v2' as const
 
 export type InputKind = 'text' | 'voice' | 'photo' | 'mixed'
@@ -69,7 +70,10 @@ export interface AnalyzeMealResponse {
   /** Per-item view of unmatchedText so the client can say "we couldn't match: ayran". */
   unmatchedItems: UnmatchedItem[]
   pipeline: {
-    extraction: typeof DETERMINISTIC_PIPELINE_VERSION | typeof VISION_PIPELINE_VERSION
+    extraction:
+      | typeof DETERMINISTIC_PIPELINE_VERSION
+      | typeof TEXT_EXTRACTION_PIPELINE_VERSION
+      | typeof VISION_PIPELINE_VERSION
     retrieval: 'exact-alias-v1' | 'hybrid-rrf-v1'
     model: string | null
     promptVersion?: string

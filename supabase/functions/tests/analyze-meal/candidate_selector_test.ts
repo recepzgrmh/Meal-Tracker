@@ -1,5 +1,6 @@
-import { assertEquals, assertRejects } from 'jsr:@std/assert@1'
+import { assertEquals, assertRejects, assertStringIncludes } from 'jsr:@std/assert@1'
 import {
+  providerErrorDetail,
   ProviderRefusalError,
   type RetrievalCandidate,
   selectCatalogCandidates,
@@ -82,6 +83,40 @@ Deno.test('selector surfaces model refusal for deterministic fallback', async ()
       }),
     ProviderRefusalError,
   )
+})
+
+// A bare status told us nothing when the provider retired a parameter value:
+// every rejection read as "failed with 400" until the body reached telemetry.
+Deno.test('a rejected request carries the provider explanation', async () => {
+  const error = await assertRejects(() =>
+    selectCatalogCandidates({
+      apiKey: 'test',
+      locale: 'tr-TR',
+      input: 'beyaz peynir',
+      candidates: [candidate],
+      model: 'test-model',
+      maxAttempts: 1,
+      fetcher: (() =>
+        Promise.resolve(
+          Response.json({
+            error: { message: "Unsupported value: 'minimal' is not supported with this model." },
+          }, { status: 400 }),
+        )) as typeof fetch,
+    })
+  )
+  assertStringIncludes((error as Error).message, '400')
+  assertStringIncludes((error as Error).message, 'Unsupported value')
+})
+
+Deno.test('provider error detail prefers the message and stays bounded', () => {
+  assertEquals(providerErrorDetail(''), '')
+  assertEquals(
+    providerErrorDetail(JSON.stringify({ error: { message: 'model_not_found' } })),
+    'model_not_found',
+  )
+  // Non-JSON gateway bodies still help once collapsed and truncated.
+  assertEquals(providerErrorDetail('<html>\n  bad gateway\n</html>'), '<html> bad gateway </html>')
+  assertEquals(providerErrorDetail('x'.repeat(400)).length, 300)
 })
 
 function providerResponse(value: unknown): Response {

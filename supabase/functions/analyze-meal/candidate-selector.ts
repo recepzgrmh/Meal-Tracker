@@ -64,6 +64,11 @@ export async function selectCatalogCandidates(
   const timeoutMs = options.timeoutMs ?? 12_000
   const allowedIds = new Set(options.candidates.map((candidate) => candidate.foodId))
   let lastStatus = 0
+  // Provider rejections are otherwise indistinguishable from each other: a
+  // retired model, an unsupported parameter, and a schema the account cannot
+  // use all arrive as a bare 400. Keep a bounded slice of the body so the
+  // failure is diagnosable from telemetry instead of only from a local repro.
+  let lastDetail = ''
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const controller = new AbortController()
@@ -95,6 +100,7 @@ export async function selectCatalogCandidates(
           cacheHit: false,
         }
       }
+      lastDetail = providerErrorDetail(await response.text().catch(() => ''))
       if (![408, 409, 429].includes(response.status) && response.status < 500) break
     } catch (error) {
       if (error instanceof ProviderRefusalError) throw error
@@ -104,7 +110,24 @@ export async function selectCatalogCandidates(
     }
     await delay(150 * 2 ** (attempt - 1))
   }
-  throw new Error(`Candidate selector failed with ${lastStatus || 'network_error'}`)
+  throw new Error(
+    `Candidate selector failed with ${lastStatus || 'network_error'}` +
+      (lastDetail ? `: ${lastDetail}` : ''),
+  )
+}
+
+/** Provider error bodies carry the actionable message; keep it short and drop
+ * anything that is not the message so request echoes cannot reach telemetry. */
+export function providerErrorDetail(body: string): string {
+  if (!body) return ''
+  try {
+    const parsed = JSON.parse(body) as { error?: { message?: unknown; code?: unknown } }
+    const message = parsed.error?.message
+    if (typeof message === 'string' && message.length > 0) return message.slice(0, 300)
+  } catch {
+    // Non-JSON bodies (gateway HTML, plain text) still help when truncated.
+  }
+  return body.replace(/\s+/gu, ' ').trim().slice(0, 300)
 }
 
 function buildRequest(options: SelectorOptions, model: string): Record<string, unknown> {
@@ -117,7 +140,7 @@ function buildRequest(options: SelectorOptions, model: string): Record<string, u
     // then carried no output_text at all — which surfaced to the user as
     // "no catalog match" rather than a provider failure.
     max_output_tokens: 4000,
-    reasoning: { effort: 'minimal' },
+    reasoning: { effort: 'none' },
     input: [
       {
         role: 'system',

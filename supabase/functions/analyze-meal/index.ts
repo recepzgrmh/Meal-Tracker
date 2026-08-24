@@ -5,6 +5,7 @@ import {
   type AnalysisItem,
   type AnalyzeMealResponse,
   DETERMINISTIC_PIPELINE_VERSION,
+  TEXT_EXTRACTION_PIPELINE_VERSION,
   VISION_PIPELINE_VERSION,
 } from '../_shared/contracts.ts'
 import { errorResponse, jsonHeaders, jsonResponse, redactedLog } from '../_shared/http.ts'
@@ -14,7 +15,15 @@ import {
   type CatalogAlias,
   type CatalogFood,
   type CatalogPortion,
+  type DeterministicAnalysis,
 } from './deterministic.ts'
+import {
+  extractFoodsFromText,
+  extractionPhrases,
+  type TextExtraction,
+  TextExtractionError,
+  type TextExtractionFailureReason,
+} from './text-extraction.ts'
 import { parseAnalyzeMealRequest, RequestValidationError } from './request.ts'
 import { applyVisionEvidence, reconcileModalities, remainingUnmatchedText } from './reconcile.ts'
 import { estimateUnmatchedFoods, type MacroEstimateResult } from './estimate.ts'
@@ -158,19 +167,23 @@ export default {
         body.input,
         ...(vision ? [vision.normalizedDescription] : []),
       ])
-      const textAnalysis = analyzeDeterministically(body.input, catalog)
+      const textOutcome = await resolveTextAnalysis(context, {
+        input: body.input,
+        locale: body.locale ?? 'tr-TR',
+        catalog,
+      })
       const visionAnalysis = vision
         ? applyVisionEvidence(
           analyzeDeterministically(vision.normalizedDescription, catalog),
           vision.foods,
         )
         : null
-      const analysis = reconcileModalities(textAnalysis, visionAnalysis)
-      let grounding: GroundingResult | null = null
+      const analysis = reconcileModalities(textOutcome.analysis, visionAnalysis)
+      let grounding: GroundingOutcome | null = null
       let groundingFailure: GroundingUnavailableError | null = null
       try {
-        grounding = await groundUnmatchedText(context, {
-          query: analysis.unmatchedText.join(' '),
+        grounding = await groundUnmatchedItems(context, {
+          queries: analysis.unmatchedText,
           locale: body.locale ?? 'tr-TR',
           existingFoodIds: new Set(
             analysis.items.map((item) => item.foodId).filter((id): id is string => id !== null),
@@ -183,7 +196,7 @@ export default {
         groundingFailure = error
       }
       if (grounding) {
-        const groundedItems = toAnalysisItems(grounding.selection, grounding.candidates)
+        const groundedItems = grounding.items
         analysis.items.push(...groundedItems)
         // Partial grounding no longer clears the whole unmatched list: with
         // "menemen ve ayran" and only menemen grounded, ayran must stay
@@ -191,9 +204,13 @@ export default {
         analysis.unmatchedText = remainingUnmatchedText(analysis.unmatchedText, groundedItems)
       }
       // AI estimate fallback: unmatched foods get a server-recorded,
-      // bounds-checked estimate instead of nothing. A grounding outage skips
-      // this on purpose — that case must stay a 503, never an estimate.
-      const estimation = analysis.unmatchedText.length > 0 && !groundingFailure
+      // bounds-checked estimate instead of nothing. A *provider* outage still
+      // skips this — the estimator calls the same provider, so it would only
+      // add latency before the same 503. A *retrieval* failure does not: the
+      // catalog side broke while the provider is healthy, and letting a
+      // labelled estimate rescue the request beats failing the whole meal.
+      const estimation = analysis.unmatchedText.length > 0 &&
+          groundingFailure?.kind !== 'provider'
         ? await tryEstimateFallback(context, userId, {
           locale: body.locale ?? 'tr-TR',
           texts: analysis.unmatchedText,
@@ -210,18 +227,24 @@ export default {
       }))
       if (analysis.items.length === 0) {
         if (groundingFailure) {
+          // A broken catalog/retrieval step is our bug, not a provider outage
+          // and not the user's connection. Reporting both as 503 hid real
+          // server faults behind a "check your connection" message.
+          const retrievalFault = groundingFailure.kind === 'retrieval'
           await markRunFailed(
             context,
             run.id,
-            'PROVIDER_UNAVAILABLE',
+            retrievalFault ? 'INTERNAL_ERROR' : 'PROVIDER_UNAVAILABLE',
             groundingFailure.message,
             visionAttempt.fallbackReason,
           )
           return errorResponse(
-            'PROVIDER_UNAVAILABLE',
-            'Analiz servisi şu anda yanıt vermiyor, lütfen tekrar deneyin',
+            retrievalFault ? 'INTERNAL_ERROR' : 'PROVIDER_UNAVAILABLE',
+            retrievalFault
+              ? 'Analiz şu anda tamamlanamadı, lütfen tekrar deneyin'
+              : 'Analiz servisi şu anda yanıt vermiyor, lütfen tekrar deneyin',
             run.trace_id,
-            503,
+            retrievalFault ? 500 : 503,
           )
         }
         await markRunFailed(
@@ -257,13 +280,20 @@ export default {
         unmatchedText: analysis.unmatchedText,
         unmatchedItems,
         pipeline: {
-          extraction: vision ? VISION_PIPELINE_VERSION : DETERMINISTIC_PIPELINE_VERSION,
+          extraction: vision
+            ? VISION_PIPELINE_VERSION
+            : textOutcome.extraction
+            ? TEXT_EXTRACTION_PIPELINE_VERSION
+            : DETERMINISTIC_PIPELINE_VERSION,
           retrieval: 'hybrid-rrf-v1',
-          model: grounding?.selection.model ?? vision?.model ?? estimation?.result.model ?? null,
+          model: grounding?.selection.model ?? vision?.model ??
+            textOutcome.extraction?.model ?? estimation?.result.model ?? null,
           ...(grounding
             ? { promptVersion: grounding.selection.promptVersion }
             : vision
             ? { promptVersion: vision.promptVersion }
+            : textOutcome.extraction
+            ? { promptVersion: textOutcome.extraction.promptVersion }
             : estimation
             ? { promptVersion: estimation.result.promptVersion }
             : {}),
@@ -279,6 +309,7 @@ export default {
         vision,
         visionAttempt.fallbackReason,
         estimation,
+        textOutcome.extraction,
       )
 
       redactedLog('info', 'analysis_completed', {
@@ -453,15 +484,128 @@ async function loadCatalog(
   })).filter((food: CatalogFood) => food.aliases.length > 0 && food.portions.length > 0)
 }
 
+interface TextAnalysisOutcome {
+  analysis: DeterministicAnalysis
+  extraction: TextExtraction | null
+  extractionFailureReason: TextExtractionFailureReason | null
+}
+
+/**
+ * Resolves free text into catalog-matched items.
+ *
+ * The deterministic matcher runs first and, when it already explains the whole
+ * sentence, nothing else runs: that path stays free, fast, and is what the
+ * deterministic regression suite covers.
+ *
+ * Anything left over used to be treated as food, one token at a time. That is
+ * the bug behind "2 yumurta yedim kanka" producing `yedim` and `kanka` as
+ * unmatched foods — an open-ended set of Turkish verbs, fillers and time words
+ * can never be closed by a stopword list. So leftovers now mean "this sentence
+ * needs a language model", and the model returns identity and amount only. The
+ * extracted names are re-rendered into clean phrases and pushed back through
+ * the same matcher, which keeps portion handling in exactly one place.
+ */
+async function resolveTextAnalysis(
+  context: SupabaseContext,
+  input: {
+    input: string
+    locale: 'tr-TR' | 'en-US'
+    catalog: CatalogFood[]
+  },
+): Promise<TextAnalysisOutcome> {
+  const direct = analyzeDeterministically(input.input, input.catalog)
+  const apiKey = Deno.env.get('OPENAI_API_KEY')?.trim()
+  if (!input.input.trim() || direct.unmatchedText.length === 0 || !apiKey) {
+    return { analysis: direct, extraction: null, extractionFailureReason: null }
+  }
+
+  let extraction: TextExtraction
+  try {
+    const userId = userIdFromClaims(context.userClaims)
+    if (!userId) throw new Error('Authenticated user is unavailable')
+    // The text path now spends provider tokens, so it has to answer to the
+    // same budget the photo path does.
+    await enforceAnalysisBudget(context, userId)
+    extraction = await extractFoodsFromText({
+      apiKey,
+      locale: input.locale,
+      input: input.input,
+    })
+  } catch (error) {
+    if (error instanceof AnalysisBudgetExceededError) throw error
+    const detail = providerErrorDetail(error)
+    redactedLog('info', 'text_extraction_fallback', {
+      errorType: detail.type,
+      errorCode: detail.code,
+      errorMessage: detail.message,
+    })
+    // Degrade to the deterministic result rather than failing the request: a
+    // partially understood meal still beats an error screen.
+    return {
+      analysis: direct,
+      extraction: null,
+      extractionFailureReason: error instanceof TextExtractionError
+        ? error.reason
+        : 'provider_error',
+    }
+  }
+
+  if (extraction.foods.length === 0) {
+    // The model read the sentence and found nothing edible in it. That is an
+    // answer, not a failure, and it must not leave stray tokens behind.
+    return {
+      analysis: { normalizedInput: direct.normalizedInput, items: [], unmatchedText: [] },
+      extraction,
+      extractionFailureReason: null,
+    }
+  }
+
+  const phrases = extraction.foods.flatMap(extractionPhrases)
+  // The first catalog load was scoped to the raw sentence, so it cannot contain
+  // aliases for names the model produced instead — a decomposed dish brings in
+  // "tavuk göğsü" that "kaşarlı tavuklu makarna" never looked up.
+  const extractedCatalog = await loadCatalog(
+    context,
+    input.locale,
+    phrases.map((phrase) => phrase.matchPhrase),
+  )
+  const catalog = mergeCatalogs(input.catalog, extractedCatalog)
+
+  const items: AnalysisItem[] = []
+  const unmatchedText: string[] = []
+  for (const phrase of phrases) {
+    const matched = analyzeDeterministically(phrase.matchPhrase, catalog)
+    if (matched.items.length > 0) items.push(...matched.items)
+    else if (!unmatchedText.includes(phrase.name)) unmatchedText.push(phrase.name)
+  }
+
+  return {
+    analysis: {
+      normalizedInput: direct.normalizedInput,
+      items: items.map((item, index) => ({ ...item, itemKey: `item-${index + 1}` })),
+      unmatchedText,
+    },
+    extraction,
+    extractionFailureReason: null,
+  }
+}
+
+function mergeCatalogs(left: CatalogFood[], right: CatalogFood[]): CatalogFood[] {
+  const byId = new Map(left.map((food) => [food.id, food]))
+  for (const food of right) byId.set(food.id, food)
+  return [...byId.values()]
+}
+
 async function persistResult(
   context: SupabaseContext,
   runId: string,
   output: AnalyzeMealResponse,
   latencyMs: number,
-  grounding: GroundingResult | null,
+  grounding: GroundingOutcome | null,
   vision: { inputTokens: number; outputTokens: number; attempts: number } | null,
   visionFallbackReason: string | null,
   estimation: EstimationOutcome | null,
+  textExtraction: TextExtraction | null,
 ): Promise<void> {
   // Estimate items live in analysis_estimates, not in the catalog-grounded
   // candidate set the commit RPC re-validates food ids against.
@@ -494,6 +638,16 @@ async function persistResult(
     if (candidateError) throw candidateError
   }
 
+  // Text extraction is a paid provider call on the text path, so it has to be
+  // counted here or the cost dashboard under-reports every text-only analysis.
+  const inputTokens = (grounding?.selection.inputTokens ?? 0) + (vision?.inputTokens ?? 0) +
+    (estimation?.result.inputTokens ?? 0) + (textExtraction?.inputTokens ?? 0)
+  const outputTokens = (grounding?.selection.outputTokens ?? 0) + (vision?.outputTokens ?? 0) +
+    (estimation?.result.outputTokens ?? 0) + (textExtraction?.outputTokens ?? 0)
+  const embeddingTokens = grounding?.embeddingPromptTokens ?? 0
+  const attempts = (grounding?.selection.attempts ?? 0) + (vision?.attempts ?? 0) +
+    (estimation?.result.attempts ?? 0) + (textExtraction?.attempts ?? 0)
+
   const { error: runError } = await context.supabaseAdmin
     .from('analysis_runs')
     .update({
@@ -503,24 +657,15 @@ async function persistResult(
       prompt_version: grounding?.selection.promptVersion ?? output.pipeline.promptVersion ?? null,
       retrieval_version: 'hybrid-rrf-v1',
       latency_ms: latencyMs,
-      provider_input_tokens: (grounding?.selection.inputTokens ?? 0) +
-        (vision?.inputTokens ?? 0) + (estimation?.result.inputTokens ?? 0),
-      provider_output_tokens: (grounding?.selection.outputTokens ?? 0) +
-        (vision?.outputTokens ?? 0) + (estimation?.result.outputTokens ?? 0),
-      embedding_input_tokens: grounding?.embeddingPromptTokens ?? 0,
-      provider_attempts: (grounding?.selection.attempts ?? 0) + (vision?.attempts ?? 0) +
-          (estimation?.result.attempts ?? 0) || null,
+      provider_input_tokens: inputTokens,
+      provider_output_tokens: outputTokens,
+      embedding_input_tokens: embeddingTokens,
+      provider_attempts: attempts || null,
       vision_fallback_reason: visionFallbackReason,
       retrieval_cache_hit: grounding?.cacheHit ?? null,
       response_cache_hit: grounding?.selection.cacheHit ?? null,
       estimate_item_count: estimation?.items.length ?? 0,
-      estimated_cost_micros: estimateCostMicros({
-        inputTokens: (grounding?.selection.inputTokens ?? 0) + (vision?.inputTokens ?? 0) +
-          (estimation?.result.inputTokens ?? 0),
-        outputTokens: (grounding?.selection.outputTokens ?? 0) + (vision?.outputTokens ?? 0) +
-          (estimation?.result.outputTokens ?? 0),
-        embeddingTokens: grounding?.embeddingPromptTokens ?? 0,
-      }),
+      estimated_cost_micros: estimateCostMicros({ inputTokens, outputTokens, embeddingTokens }),
       completed_at: new Date().toISOString(),
       error_code: null,
       error_detail: null,
@@ -536,6 +681,76 @@ interface GroundingResult {
   embeddingPromptTokens: number
 }
 
+interface GroundingOutcome {
+  items: AnalysisItem[]
+  selection: CandidateSelectionResult
+  cacheHit: boolean
+  embeddingPromptTokens: number
+}
+
+/**
+ * Grounds each unmatched food separately.
+ *
+ * These used to be joined into one query string, so "ayran" and "pilav" became
+ * the single search "ayran pilav" and retrieval had to rank one blended query
+ * against two different foods. One search per food is what the retrieval and
+ * the allow-listed selector were both designed for.
+ *
+ * Items are built per query and only the telemetry is merged. Pooling the
+ * candidates first would let one food's runner-ups become another food's
+ * identity alternatives, and the "are the top two nearly tied?" ambiguity check
+ * would compare scores across unrelated searches.
+ */
+async function groundUnmatchedItems(
+  context: SupabaseContext,
+  input: {
+    queries: string[]
+    locale: 'tr-TR' | 'en-US'
+    existingFoodIds: Set<string>
+  },
+): Promise<GroundingOutcome | null> {
+  const claimedFoodIds = new Set(input.existingFoodIds)
+  const merged: GroundingOutcome = {
+    items: [],
+    selection: {
+      selections: [],
+      noMatch: true,
+      model: '',
+      promptVersion: CANDIDATE_SELECTION_PROMPT_VERSION,
+      inputTokens: 0,
+      outputTokens: 0,
+      attempts: 0,
+      cacheHit: true,
+    },
+    cacheHit: true,
+    embeddingPromptTokens: 0,
+  }
+  let grounded = false
+
+  for (const query of input.queries) {
+    const result = await groundUnmatchedText(context, {
+      query,
+      locale: input.locale,
+      existingFoodIds: claimedFoodIds,
+    })
+    if (!result) continue
+    grounded = true
+    for (const selection of result.selection.selections) claimedFoodIds.add(selection.candidateId)
+    merged.items.push(...toAnalysisItems(result.selection, result.candidates))
+    merged.selection.selections.push(...result.selection.selections)
+    merged.selection.noMatch = merged.selection.noMatch && result.selection.noMatch
+    merged.selection.model = merged.selection.model || result.selection.model
+    merged.selection.inputTokens += result.selection.inputTokens
+    merged.selection.outputTokens += result.selection.outputTokens
+    merged.selection.attempts += result.selection.attempts
+    merged.selection.cacheHit = merged.selection.cacheHit && result.selection.cacheHit
+    merged.cacheHit = merged.cacheHit && result.cacheHit
+    merged.embeddingPromptTokens += result.embeddingPromptTokens
+  }
+
+  return grounded ? merged : null
+}
+
 async function groundUnmatchedText(
   context: SupabaseContext,
   input: {
@@ -547,36 +762,55 @@ async function groundUnmatchedText(
   if (input.query.trim().length < 2) return null
   const apiKey = Deno.env.get('OPENAI_API_KEY')?.trim()
   if (!apiKey) return null
+  const userId = userIdFromClaims(context.userClaims)
+  if (!userId) throw new Error('Authenticated user is unavailable')
+  await enforceAnalysisBudget(context, userId)
+
+  // Retrieval and selection fail for different reasons and must not collapse
+  // into one error class: retrieval is our Postgres/embedding side, selection
+  // is the model provider. Reporting a broken RPC as "provider unavailable"
+  // sent users a retry message for a fault retrying could never clear.
+  let candidates: RetrievalCandidate[]
+  let retrievalCacheHit: boolean
+  let embeddingPromptTokens: number
   try {
-    const userId = userIdFromClaims(context.userClaims)
-    if (!userId) throw new Error('Authenticated user is unavailable')
-    await enforceAnalysisBudget(context, userId)
     const retrieval = await hybridSearch(context.supabase, context.supabaseAdmin, {
       query: input.query,
       locale: input.locale,
       limit: 10,
       openAiApiKey: apiKey,
     })
-    const candidates = retrieval.rows.map(toRetrievalCandidate).filter((candidate) =>
+    candidates = retrieval.rows.map(toRetrievalCandidate).filter((candidate) =>
       candidate !== null && !input.existingFoodIds.has(candidate.foodId)
     ) as RetrievalCandidate[]
-    if (candidates.length === 0) return null
+    retrievalCacheHit = retrieval.cacheHit
+    embeddingPromptTokens = retrieval.embeddingPromptTokens
+  } catch (error) {
+    const detail = providerErrorDetail(error)
+    redactedLog('error', 'candidate_retrieval_failed', {
+      errorType: detail.type,
+      errorCode: detail.code,
+      errorMessage: detail.message,
+    })
+    throw new GroundingUnavailableError(detail.message, 'retrieval')
+  }
+
+  // No acceptable candidate is a product outcome ("not in the catalog"), not a
+  // failure. It falls through to the estimate path and then to NO_MATCH.
+  if (candidates.length === 0) return null
+
+  try {
     const selection = await cachedCandidateSelection(context.supabaseAdmin, {
       apiKey,
       locale: input.locale,
       input: input.query,
       candidates,
     })
-    return {
-      candidates,
-      selection,
-      cacheHit: retrieval.cacheHit,
-      embeddingPromptTokens: retrieval.embeddingPromptTokens,
-    }
+    return { candidates, selection, cacheHit: retrievalCacheHit, embeddingPromptTokens }
   } catch (error) {
     if (error instanceof AnalysisBudgetExceededError) throw error
     const detail = providerErrorDetail(error)
-    redactedLog('info', 'candidate_grounding_fallback', {
+    redactedLog('info', 'candidate_selection_fallback', {
       errorType: detail.type,
       errorCode: detail.code,
       errorMessage: detail.message,
@@ -584,13 +818,15 @@ async function groundUnmatchedText(
     // A provider outage is not the same as "this food is not in the catalog".
     // Telling them apart keeps a broken grounding step from being reported to
     // the user as their own vague description.
-    throw new GroundingUnavailableError(detail.message)
+    throw new GroundingUnavailableError(detail.message, 'provider')
   }
 }
 
+export type GroundingFailureKind = 'provider' | 'retrieval'
+
 export class GroundingUnavailableError extends Error {
-  constructor(detail: string) {
-    super(`Candidate grounding is unavailable: ${detail}`)
+  constructor(detail: string, readonly kind: GroundingFailureKind = 'provider') {
+    super(`Candidate grounding is unavailable (${kind}): ${detail}`)
     this.name = 'GroundingUnavailableError'
   }
 }

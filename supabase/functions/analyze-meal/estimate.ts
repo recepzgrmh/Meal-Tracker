@@ -107,7 +107,7 @@ function buildRequest(options: EstimatorOptions, model: string): Record<string, 
     model,
     store: false,
     max_output_tokens: 4000,
-    reasoning: { effort: 'minimal' },
+    reasoning: { effort: 'none' },
     input: [
       {
         role: 'system',
