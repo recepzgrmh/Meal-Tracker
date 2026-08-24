@@ -9,6 +9,8 @@ import 'package:meal_clarity/src/features/meal_detail_screen.dart';
 import 'package:meal_clarity/src/features/meal_flow.dart';
 import 'package:meal_clarity/src/theme/app_theme.dart';
 
+import '../support/clarification.dart';
+
 /// The review and detail affordances for server-side AI estimates: the item
 /// exists, is clearly marked as a model guess rather than a catalog match,
 /// stays replaceable through the manual search, and keeps its marker after
@@ -91,6 +93,10 @@ void main() {
     await tester.ensureVisible(find.byKey(const Key('analyze-button')));
     await tester.tap(find.byKey(const Key('analyze-button')));
     await tester.pumpAndSettle();
+    // The flow now asks its portion question before the review screen is
+    // reachable. These tests are about the review screen, so the question is
+    // answered elsewhere and skipped here.
+    await dismissClarificationSheets(tester);
   }
 
   testWidgets(

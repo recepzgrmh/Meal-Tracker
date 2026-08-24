@@ -145,7 +145,8 @@ class SupabaseMealAnalysisRepository implements MealRepository {
       'RATE_LIMITED' => MealAnalysisFailureKind.rateLimited,
       'NETWORK_UNAVAILABLE' ||
       'FUNCTION_UNAVAILABLE' ||
-      'INTERNAL_ERROR' => MealAnalysisFailureKind.unavailable,
+      'PROVIDER_UNAVAILABLE' => MealAnalysisFailureKind.unavailable,
+      'INTERNAL_ERROR' => MealAnalysisFailureKind.serverError,
       'INVALID_RESPONSE' => MealAnalysisFailureKind.invalidResponse,
       _ => MealAnalysisFailureKind.unknown,
     };

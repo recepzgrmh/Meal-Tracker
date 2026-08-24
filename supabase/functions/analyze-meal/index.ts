@@ -484,6 +484,44 @@ async function loadCatalog(
   })).filter((food: CatalogFood) => food.aliases.length > 0 && food.portions.length > 0)
 }
 
+/**
+ * Catalog portions for foods we already know the id of.
+ *
+ * Retrieval only carries the single default portion, so a grounded item used to
+ * reach the client with one option — and the portion sheet then synthesised
+ * "small/regular/large" as ×0.5/×1/×1.5 around the model's own gram guess. The
+ * catalog has real household portions (FNDDS gram weights survived the import),
+ * and a measured "1 kase / 1 tabak" beats a multiple of a guess, especially for
+ * the amorphous foods where portion error is worst.
+ */
+async function loadPortionsForFoods(
+  context: SupabaseContext,
+  locale: 'tr-TR' | 'en-US',
+  foodIds: string[],
+): Promise<Map<string, CatalogPortion[]>> {
+  if (foodIds.length === 0) return new Map()
+  const { data, error } = await context.supabaseAdmin.from('food_portions').select(
+    'food_id,label,grams,is_default,size_class,reference_image_path',
+  ).eq('locale', locale).in('food_id', [...new Set(foodIds)])
+  if (error) throw error
+  return groupByFood<CatalogPortion>(data, (row) => {
+    const imagePath = String(row.reference_image_path ?? '').trim()
+    return {
+      label: String(row.label),
+      grams: Number(row.grams),
+      isDefault: Boolean(row.is_default),
+      sizeClass: normalizeSizeClass(row.size_class),
+      ...(imagePath
+        ? {
+          imageUrl: context.supabaseAdmin.storage
+            .from('food-portion-references')
+            .getPublicUrl(imagePath).data.publicUrl,
+        }
+        : {}),
+    }
+  })
+}
+
 interface TextAnalysisOutcome {
   analysis: DeterministicAnalysis
   extraction: TextExtraction | null
@@ -710,6 +748,8 @@ async function groundUnmatchedItems(
   },
 ): Promise<GroundingOutcome | null> {
   const claimedFoodIds = new Set(input.existingFoodIds)
+  const resolved: Array<{ selection: CandidateSelectionResult; candidates: RetrievalCandidate[] }> =
+    []
   const merged: GroundingOutcome = {
     items: [],
     selection: {
@@ -736,7 +776,7 @@ async function groundUnmatchedItems(
     if (!result) continue
     grounded = true
     for (const selection of result.selection.selections) claimedFoodIds.add(selection.candidateId)
-    merged.items.push(...toAnalysisItems(result.selection, result.candidates))
+    resolved.push({ selection: result.selection, candidates: result.candidates })
     merged.selection.selections.push(...result.selection.selections)
     merged.selection.noMatch = merged.selection.noMatch && result.selection.noMatch
     merged.selection.model = merged.selection.model || result.selection.model
@@ -748,7 +788,21 @@ async function groundUnmatchedItems(
     merged.embeddingPromptTokens += result.embeddingPromptTokens
   }
 
-  return grounded ? merged : null
+  if (!grounded) return null
+
+  // One query for every grounded food, after all selections are known, so the
+  // portion sheet can offer real catalog portions instead of multiples of the
+  // model's gram guess.
+  const portionsByFood = await loadPortionsForFoods(
+    context,
+    input.locale,
+    merged.selection.selections.map((selection) => selection.candidateId),
+  )
+  for (const entry of resolved) {
+    merged.items.push(...toAnalysisItems(entry.selection, entry.candidates, portionsByFood))
+  }
+
+  return merged
 }
 
 async function groundUnmatchedText(
@@ -993,9 +1047,38 @@ function toRetrievalCandidate(row: Record<string, unknown>): RetrievalCandidate 
   }
 }
 
+/**
+ * Real catalog portions when the food has them, falling back to the single
+ * default carried by retrieval. Two or more options is what lets the client
+ * show a genuine size choice rather than synthesising one.
+ */
+function portionOptionsFor(
+  candidate: RetrievalCandidate,
+  portionsByFood: Map<string, CatalogPortion[]>,
+): AnalysisItem['portionOptions'] {
+  const portions = portionsByFood.get(candidate.foodId) ?? []
+  if (portions.length === 0) {
+    return [{
+      label: candidate.defaultPortionLabel,
+      grams: candidate.defaultGrams,
+      sizeClass: 'regular' as const,
+    }]
+  }
+  return portions
+    .slice()
+    .sort((left, right) => left.grams - right.grams)
+    .map((portion) => ({
+      label: portion.label,
+      grams: portion.grams,
+      ...(portion.sizeClass ? { sizeClass: portion.sizeClass } : {}),
+      ...(portion.imageUrl ? { imageUrl: portion.imageUrl } : {}),
+    }))
+}
+
 function toAnalysisItems(
   selection: CandidateSelectionResult,
   candidates: RetrievalCandidate[],
+  portionsByFood: Map<string, CatalogPortion[]>,
 ): AnalysisItem[] {
   if (selection.noMatch) return []
   const byId = new Map(candidates.map((candidate) => [candidate.foodId, candidate]))
@@ -1027,11 +1110,7 @@ function toAnalysisItems(
       needsClarification: true,
       clarificationReason: identityAmbiguous ? 'identity' as const : 'portion' as const,
       ...(identityAmbiguous && alternativeFoodIds.length > 0 ? { alternativeFoodIds } : {}),
-      portionOptions: [{
-        label: candidate.defaultPortionLabel,
-        grams: candidate.defaultGrams,
-        sizeClass: 'regular' as const,
-      }],
+      portionOptions: portionOptionsFor(candidate, portionsByFood),
       nutritionPer100g: candidate.nutritionPer100g,
     }]
   })

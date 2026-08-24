@@ -10,7 +10,16 @@ enum MealAnalysisFailureKind {
   unauthenticated,
   invalidRequest,
   rateLimited,
+
+  /// The request could not reach a healthy service: no network, the function is
+  /// down, or the model provider is failing. Retrying can genuinely help, and
+  /// checking the connection is honest advice.
   unavailable,
+
+  /// The server reached us and faulted on its own. Telling the user to check
+  /// their connection here blames them for our bug and makes them retry
+  /// something that will fail the same way.
+  serverError,
   invalidResponse,
   unknown,
 }

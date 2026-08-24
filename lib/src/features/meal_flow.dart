@@ -75,6 +75,14 @@ class _MealFlowState extends State<MealFlow> {
         tr: 'Çok hızlı deneme yaptın. Biraz bekleyip tekrar dene.',
         en: 'You tried too quickly. Wait a moment and retry.',
       ),
+      // Only a transport or provider failure justifies pointing at the user's
+      // connection. A server fault is ours, and saying otherwise sends them to
+      // debug their wifi over our bug.
+      MealAnalysisFailureKind.serverError => context.ota(
+        'mealErrorServer',
+        tr: 'Bizim tarafımızda bir sorun çıktı. Birazdan tekrar deneyebilirsin.',
+        en: 'Something went wrong on our side. You can try again shortly.',
+      ),
       _ => context.ota(
         'mealErrorUnavailable',
         tr: 'Öğünü analiz edemedik. Bağlantını kontrol edip tekrar dene.',
@@ -131,6 +139,46 @@ class _MealFlowState extends State<MealFlow> {
     // response the view model discarded as stale stays silent.
     if (!mounted || _viewModel.step != MealFlowStep.review) return;
     AppHaptics.arrived();
+    await _runClarificationQueue();
+  }
+
+  /// Asks the questions the analysis could not answer on its own, one sheet at
+  /// a time, before the review screen is read.
+  ///
+  /// These sheets existed before but only opened when the user thought to tap
+  /// the flagged row, so the most consequential number in the meal — how much
+  /// of an amorphous food was on the plate — was left at a default that the
+  /// user never saw a prompt to correct. Portion is the dominant error source
+  /// in dietary self-report, so it is asked, not offered.
+  ///
+  /// Dismissing a sheet skips that item and moves on: this walks the user
+  /// through the questions, it does not trap them behind one.
+  Future<void> _runClarificationQueue() async {
+    final queued = _viewModel.draft?.items
+        .where(
+          (item) =>
+              item.matchState == MatchState.checkType ||
+              item.matchState == MatchState.checkAmount,
+        )
+        .map((item) => item.id)
+        .toList(growable: false);
+    if (queued == null || queued.isEmpty) return;
+
+    for (final id in queued) {
+      if (!mounted) return;
+      // Answering one question rebuilds the draft, so each item is re-read by
+      // id rather than held across the await: an earlier answer (or a manual
+      // edit inside a sheet) may already have resolved this one.
+      final items = _viewModel.draft?.items ?? const <MealItem>[];
+      final index = items.indexWhere((item) => item.id == id);
+      if (index < 0) continue;
+      final current = items[index];
+      if (current.matchState == MatchState.matched ||
+          current.matchState == MatchState.notFound) {
+        continue;
+      }
+      await _reviewItem(current);
+    }
   }
 
   Future<void> _recoverLostPhoto() async {
