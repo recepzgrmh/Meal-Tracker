@@ -65,8 +65,15 @@ class SupabaseMealAnalysisRepository implements MealRepository {
                 analysisItemKey: item.itemKey,
                 foodId: item.foodId,
                 estimateId: item.estimateId,
-                name: naturalFoodDisplayName(item.canonicalName),
+                // The catalog name can be English for a Turkish meal, so the
+                // server's localized title wins when it sent one.
+                name: naturalFoodDisplayName(
+                  item.displayName ?? item.canonicalName,
+                ),
                 canonicalName: item.canonicalName,
+                displayName: naturalFoodDisplayName(
+                  item.displayName ?? item.canonicalName,
+                ),
                 sourceText: item.sourceText,
                 portionLabel: item.portionLabel,
                 grams: item.grams,
@@ -79,9 +86,14 @@ class SupabaseMealAnalysisRepository implements MealRepository {
                 matchState: _matchState(item),
                 // An estimate has no catalog provenance to claim; the empty
                 // string is what lets the UI skip the source label for it.
-                sourceName: item.estimated
-                    ? ''
-                    : 'Curated food catalog · exact-alias-v1',
+                //
+                // Otherwise the provenance is the catalog row itself. It used
+                // to be the retrieval pipeline's version string, which told the
+                // user nothing and leaked an internal label; the row's name
+                // answers "where did this number come from" — and it is also
+                // where the English catalog name belongs now that the title
+                // shows the user's own words.
+                sourceName: item.estimated ? '' : item.canonicalName,
                 confidence: item.confidence,
                 matchMethod: item.matchMethod,
                 alternativeFoodIds: item.alternativeFoodIds,

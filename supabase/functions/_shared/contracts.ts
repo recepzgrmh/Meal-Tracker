@@ -32,6 +32,16 @@ export interface AnalysisItem {
   /** Null only for `matchMethod: 'ai_estimate'` items, which carry an `estimateId` instead. */
   foodId: string | null
   canonicalName: string
+  /**
+   * What to call this food in the user's language.
+   *
+   * Roughly 14k catalog rows are USDA generic foods whose canonical name only
+   * exists in English, so grounding a Turkish sentence could put "Restaurant
+   * pasta with cream sauce and poultry" in front of someone who typed "kremalı
+   * tavuklu makarna". The catalog name stays as provenance; the title is the
+   * user's own words.
+   */
+  displayName?: string
   portionLabel: string
   grams: number
   quantity: number

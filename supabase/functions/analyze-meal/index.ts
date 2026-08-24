@@ -38,7 +38,7 @@ import {
   type RetrievalCandidate,
   selectCatalogCandidates,
 } from './candidate-selector.ts'
-import { hybridSearch } from '../search-food-catalog/hybrid.ts'
+import { ANALYSIS_LOCALE_RELEVANCE_FLOOR, hybridSearch } from '../search-food-catalog/hybrid.ts'
 import { sha256 } from '../_shared/embeddings.ts'
 
 const MAX_CATALOG_ALIAS_ROWS = 500
@@ -184,6 +184,7 @@ export default {
       try {
         grounding = await groundUnmatchedItems(context, {
           queries: analysis.unmatchedText,
+          englishNames: textOutcome.englishNames,
           locale: body.locale ?? 'tr-TR',
           existingFoodIds: new Set(
             analysis.items.map((item) => item.foodId).filter((id): id is string => id !== null),
@@ -201,7 +202,14 @@ export default {
         // Partial grounding no longer clears the whole unmatched list: with
         // "menemen ve ayran" and only menemen grounded, ayran must stay
         // visible to the client instead of being silently dropped.
-        analysis.unmatchedText = remainingUnmatchedText(analysis.unmatchedText, groundedItems)
+        //
+        // An entry grounding explicitly answered is removed by name, not by
+        // token coverage. Token coverage still runs for the token-shaped
+        // entries the deterministic and vision paths produce.
+        analysis.unmatchedText = remainingUnmatchedText(
+          analysis.unmatchedText.filter((text) => !grounding!.resolvedQueries.has(text)),
+          groundedItems,
+        )
       }
       // AI estimate fallback: unmatched foods get a server-recorded,
       // bounds-checked estimate instead of nothing. A *provider* outage still
@@ -218,7 +226,14 @@ export default {
         : null
       if (estimation && estimation.items.length > 0) {
         analysis.items.push(...estimation.items)
-        analysis.unmatchedText = remainingUnmatchedText(analysis.unmatchedText, estimation.items)
+        // An estimate's sourceText is schema-constrained to the exact texts it
+        // was asked about, so the entry it answered can be removed by name for
+        // the same reason grounding's can.
+        const estimated = new Set(estimation.items.map((item) => item.sourceText))
+        analysis.unmatchedText = remainingUnmatchedText(
+          analysis.unmatchedText.filter((text) => !estimated.has(text)),
+          estimation.items,
+        )
       }
       analysis.items.forEach((item, index) => item.itemKey = `item-${index + 1}`)
       const unmatchedItems = analysis.unmatchedText.map((text, index) => ({
@@ -439,7 +454,7 @@ async function loadCatalog(
 
   const [foodsResult, portionsResult] = await Promise.all([
     context.supabaseAdmin.from('foods').select(
-      'id,canonical_name,calories_per_100g,protein_per_100g,carbs_per_100g,fat_per_100g',
+      'id,canonical_name,metadata,calories_per_100g,protein_per_100g,carbs_per_100g,fat_per_100g',
     ).eq('is_active', true).in('id', foodIds),
     context.supabaseAdmin.from('food_portions').select(
       'food_id,label,grams,is_default,size_class,reference_image_path',
@@ -472,7 +487,7 @@ async function loadCatalog(
 
   return (foodsResult.data ?? []).map((row: Record<string, unknown>) => ({
     id: String(row.id),
-    canonicalName: String(row.canonical_name),
+    canonicalName: localizedCatalogName(row, locale),
     nutritionPer100g: {
       calories: Number(row.calories_per_100g),
       protein: Number(row.protein_per_100g),
@@ -482,6 +497,24 @@ async function loadCatalog(
     aliases: aliasesByFood.get(String(row.id)) ?? [],
     portions: portionsByFood.get(String(row.id)) ?? [],
   })).filter((food: CatalogFood) => food.aliases.length > 0 && food.portions.length > 0)
+}
+
+/**
+ * The catalog name in the request's language.
+ *
+ * ~13,300 rows are USDA generic foods whose only name is English;
+ * `translate-catalog-names-postgres.ts` fills `metadata.canonical_name_tr` for
+ * them. Falling back to the canonical name keeps this correct before, during,
+ * and after that run.
+ */
+function localizedCatalogName(row: Record<string, unknown>, locale: 'tr-TR' | 'en-US'): string {
+  const canonical = String(row.canonical_name)
+  if (locale !== 'tr-TR') return canonical
+  const metadata = row.metadata as Record<string, unknown> | null
+  const translated = typeof metadata?.canonical_name_tr === 'string'
+    ? metadata.canonical_name_tr.trim()
+    : ''
+  return translated || canonical
 }
 
 /**
@@ -526,6 +559,8 @@ interface TextAnalysisOutcome {
   analysis: DeterministicAnalysis
   extraction: TextExtraction | null
   extractionFailureReason: TextExtractionFailureReason | null
+  /** Unmatched food name to its English name, for the retrieval second pass. */
+  englishNames: Map<string, string>
 }
 
 /**
@@ -554,7 +589,12 @@ async function resolveTextAnalysis(
   const direct = analyzeDeterministically(input.input, input.catalog)
   const apiKey = Deno.env.get('OPENAI_API_KEY')?.trim()
   if (!input.input.trim() || direct.unmatchedText.length === 0 || !apiKey) {
-    return { analysis: direct, extraction: null, extractionFailureReason: null }
+    return {
+      analysis: direct,
+      extraction: null,
+      extractionFailureReason: null,
+      englishNames: new Map(),
+    }
   }
 
   let extraction: TextExtraction
@@ -585,6 +625,7 @@ async function resolveTextAnalysis(
       extractionFailureReason: error instanceof TextExtractionError
         ? error.reason
         : 'provider_error',
+      englishNames: new Map(),
     }
   }
 
@@ -595,6 +636,7 @@ async function resolveTextAnalysis(
       analysis: { normalizedInput: direct.normalizedInput, items: [], unmatchedText: [] },
       extraction,
       extractionFailureReason: null,
+      englishNames: new Map(),
     }
   }
 
@@ -611,10 +653,24 @@ async function resolveTextAnalysis(
 
   const items: AnalysisItem[] = []
   const unmatchedText: string[] = []
+  const englishNames = new Map<string, string>()
   for (const phrase of phrases) {
     const matched = analyzeDeterministically(phrase.matchPhrase, catalog)
-    if (matched.items.length > 0) items.push(...matched.items)
-    else if (!unmatchedText.includes(phrase.name)) unmatchedText.push(phrase.name)
+    // The alias matcher may only claim a *fragment* of what the model
+    // extracted, and a fragment match is worse than no match: on "kremalı
+    // tavuklu makarna" it claimed "kremalı" against a single-word Open Food
+    // Facts brand row ("Kremal", Romanian barcode, Turkey relevance 30), called
+    // that an exact match at 0.98 confidence, and the dish never reached
+    // retrieval at all. Accepting only a match that explains the whole phrase
+    // sends anything partial to hybrid search instead, which is where a model
+    // -extracted name was always supposed to be resolved.
+    const fullyExplained = matched.items.length > 0 && matched.unmatchedText.length === 0
+    if (fullyExplained) {
+      items.push(...matched.items)
+    } else if (!unmatchedText.includes(phrase.name)) {
+      unmatchedText.push(phrase.name)
+      if (phrase.nameEn) englishNames.set(phrase.name, phrase.nameEn)
+    }
   }
 
   return {
@@ -625,6 +681,7 @@ async function resolveTextAnalysis(
     },
     extraction,
     extractionFailureReason: null,
+    englishNames,
   }
 }
 
@@ -713,6 +770,8 @@ async function persistResult(
 }
 
 interface GroundingResult {
+  /** The user's own wording for this food, used as the display title. */
+  query: string
   candidates: RetrievalCandidate[]
   selection: CandidateSelectionResult
   cacheHit: boolean
@@ -721,6 +780,17 @@ interface GroundingResult {
 
 interface GroundingOutcome {
   items: AnalysisItem[]
+  /**
+   * The unmatched entries this stage answered.
+   *
+   * Coverage used to be inferred by comparing tokens of `sourceText`, which
+   * silently stopped working once unmatched entries became whole food names
+   * rather than single tokens: "kremalı tavuklu makarna" never equalled any one
+   * token, so a dish that retrieval had *already* resolved stayed on the
+   * unmatched list, went to the estimator, and came back a second time. The
+   * meal then showed the same plate twice and summed both.
+   */
+  resolvedQueries: Set<string>
   selection: CandidateSelectionResult
   cacheHit: boolean
   embeddingPromptTokens: number
@@ -743,15 +813,19 @@ async function groundUnmatchedItems(
   context: SupabaseContext,
   input: {
     queries: string[]
+    /** Turkish food name to its English name, when the extractor supplied one. */
+    englishNames?: Map<string, string>
     locale: 'tr-TR' | 'en-US'
     existingFoodIds: Set<string>
   },
 ): Promise<GroundingOutcome | null> {
   const claimedFoodIds = new Set(input.existingFoodIds)
-  const resolved: Array<{ selection: CandidateSelectionResult; candidates: RetrievalCandidate[] }> =
-    []
+  const resolved: Array<
+    { query: string; selection: CandidateSelectionResult; candidates: RetrievalCandidate[] }
+  > = []
   const merged: GroundingOutcome = {
     items: [],
+    resolvedQueries: new Set<string>(),
     selection: {
       selections: [],
       noMatch: true,
@@ -767,17 +841,36 @@ async function groundUnmatchedItems(
   }
   let grounded = false
 
-  for (const query of input.queries) {
-    const result = await groundUnmatchedText(context, {
+  // Concurrently, not one after another. Each grounding is a full round trip —
+  // embedding backfill, catalog fingerprint, query embedding, the retrieval RPC
+  // and a selection call — so running a three-component dish in sequence stacked
+  // three of them end to end and put the user on a spinner for ~25 s. They do
+  // not depend on each other, so wall-clock is now one round trip rather than N.
+  // The embedding backfill self-deduplicates under concurrency: it takes an
+  // advisory lock and the losers return immediately instead of repeating it.
+  const settled: Array<[string, GroundingResult | null]> = await Promise.all(
+    input.queries.map(async (
       query,
-      locale: input.locale,
-      existingFoodIds: claimedFoodIds,
-    })
+    ): Promise<[string, GroundingResult | null]> => [
+      query,
+      await groundUnmatchedText(context, {
+        query,
+        ...(input.englishNames?.get(query) ? { altQuery: input.englishNames.get(query) } : {}),
+        locale: input.locale,
+        existingFoodIds: input.existingFoodIds,
+      }),
+    ]),
+  )
+
+  // Claiming has to happen after the fact now, in query order, so two foods that
+  // independently retrieved the same catalog row still produce one item — and
+  // produce the same one on every replay.
+  for (const [query, result] of settled) {
     if (!result) continue
-    grounded = true
-    for (const selection of result.selection.selections) claimedFoodIds.add(selection.candidateId)
-    resolved.push({ selection: result.selection, candidates: result.candidates })
-    merged.selection.selections.push(...result.selection.selections)
+    // Telemetry is accumulated for every call that ran, including one whose
+    // selections were all duplicates: those tokens were still spent, and
+    // dropping them would under-report the cost of exactly the requests that
+    // did the most retrieval work.
     merged.selection.noMatch = merged.selection.noMatch && result.selection.noMatch
     merged.selection.model = merged.selection.model || result.selection.model
     merged.selection.inputTokens += result.selection.inputTokens
@@ -786,6 +879,20 @@ async function groundUnmatchedItems(
     merged.selection.cacheHit = merged.selection.cacheHit && result.selection.cacheHit
     merged.cacheHit = merged.cacheHit && result.cacheHit
     merged.embeddingPromptTokens += result.embeddingPromptTokens
+
+    const selections = result.selection.selections.filter((selection) =>
+      !claimedFoodIds.has(selection.candidateId)
+    )
+    if (selections.length === 0) continue
+    grounded = true
+    merged.resolvedQueries.add(query)
+    for (const selection of selections) claimedFoodIds.add(selection.candidateId)
+    resolved.push({
+      query: result.query,
+      selection: { ...result.selection, selections },
+      candidates: result.candidates,
+    })
+    merged.selection.selections.push(...selections)
   }
 
   if (!grounded) return null
@@ -799,7 +906,9 @@ async function groundUnmatchedItems(
     merged.selection.selections.map((selection) => selection.candidateId),
   )
   for (const entry of resolved) {
-    merged.items.push(...toAnalysisItems(entry.selection, entry.candidates, portionsByFood))
+    merged.items.push(
+      ...toAnalysisItems(entry.selection, entry.candidates, portionsByFood, entry.query),
+    )
   }
 
   return merged
@@ -809,6 +918,8 @@ async function groundUnmatchedText(
   context: SupabaseContext,
   input: {
     query: string
+    /** Same food in English, when the extractor could name it. */
+    altQuery?: string
     locale: 'tr-TR' | 'en-US'
     existingFoodIds: Set<string>
   },
@@ -828,17 +939,44 @@ async function groundUnmatchedText(
   let retrievalCacheHit: boolean
   let embeddingPromptTokens: number
   try {
-    const retrieval = await hybridSearch(context.supabase, context.supabaseAdmin, {
-      query: input.query,
-      locale: input.locale,
-      limit: 10,
-      openAiApiKey: apiKey,
-    })
-    candidates = retrieval.rows.map(toRetrievalCandidate).filter((candidate) =>
-      candidate !== null && !input.existingFoodIds.has(candidate.foodId)
-    ) as RetrievalCandidate[]
-    retrievalCacheHit = retrieval.cacheHit
-    embeddingPromptTokens = retrieval.embeddingPromptTokens
+    // Half the catalog is USDA generic foods carrying English-only names, so a
+    // Turkish query cannot reach them by alias and reaches them poorly by
+    // embedding. When the extractor supplied an English name, retrieval runs on
+    // both and the union goes to one selection call — the model still chooses
+    // from allow-listed catalog ids, it just gets shown the rows that Turkish
+    // alone could not surface.
+    const queries = [input.query, ...(input.altQuery ? [input.altQuery] : [])]
+    const retrievals = await Promise.all(
+      queries.map((query) =>
+        hybridSearch(context.supabase, context.supabaseAdmin, {
+          query,
+          locale: input.locale,
+          limit: 10,
+          openAiApiKey: apiKey,
+          minLocaleRelevance: ANALYSIS_LOCALE_RELEVANCE_FLOOR,
+          skipBackfill: true,
+        })
+      ),
+    )
+    const byFoodId = new Map<string, RetrievalCandidate>()
+    for (const retrieval of retrievals) {
+      for (const row of retrieval.rows) {
+        const candidate = toRetrievalCandidate(row)
+        if (!candidate || input.existingFoodIds.has(candidate.foodId)) continue
+        // A row found by both queries keeps its better score rather than
+        // whichever query happened to be evaluated last.
+        const existing = byFoodId.get(candidate.foodId)
+        if (!existing || candidate.score > existing.score) byFoodId.set(candidate.foodId, candidate)
+      }
+    }
+    candidates = [...byFoodId.values()].sort((left, right) =>
+      right.score - left.score || left.foodId.localeCompare(right.foodId)
+    )
+    retrievalCacheHit = retrievals.every((retrieval) => retrieval.cacheHit)
+    embeddingPromptTokens = retrievals.reduce(
+      (total, retrieval) => total + retrieval.embeddingPromptTokens,
+      0,
+    )
   } catch (error) {
     const detail = providerErrorDetail(error)
     redactedLog('error', 'candidate_retrieval_failed', {
@@ -860,7 +998,13 @@ async function groundUnmatchedText(
       input: input.query,
       candidates,
     })
-    return { candidates, selection, cacheHit: retrievalCacheHit, embeddingPromptTokens }
+    return {
+      query: input.query,
+      candidates,
+      selection,
+      cacheHit: retrievalCacheHit,
+      embeddingPromptTokens,
+    }
   } catch (error) {
     if (error instanceof AnalysisBudgetExceededError) throw error
     const detail = providerErrorDetail(error)
@@ -1052,6 +1196,10 @@ function toRetrievalCandidate(row: Record<string, unknown>): RetrievalCandidate 
  * default carried by retrieval. Two or more options is what lets the client
  * show a genuine size choice rather than synthesising one.
  */
+function normalizeForDisplay(value: string): string {
+  return value.normalize('NFKC').toLocaleLowerCase('tr-TR').replace(/\s+/gu, ' ').trim()
+}
+
 function portionOptionsFor(
   candidate: RetrievalCandidate,
   portionsByFood: Map<string, CatalogPortion[]>,
@@ -1079,6 +1227,7 @@ function toAnalysisItems(
   selection: CandidateSelectionResult,
   candidates: RetrievalCandidate[],
   portionsByFood: Map<string, CatalogPortion[]>,
+  query: string,
 ): AnalysisItem[] {
   if (selection.noMatch) return []
   const byId = new Map(candidates.map((candidate) => [candidate.foodId, candidate]))
@@ -1102,6 +1251,12 @@ function toAnalysisItems(
       sourceText: selected.sourceText,
       foodId: candidate.foodId,
       canonicalName: candidate.canonicalName,
+      // Only when the catalog name is not already what the user said: an
+      // exact-alias hit means the catalog already speaks their language.
+      ...(selection.selections.length === 1 &&
+          normalizeForDisplay(candidate.canonicalName) !== normalizeForDisplay(query)
+        ? { displayName: query }
+        : {}),
       portionLabel: `${Math.round(selected.estimatedGrams)} g`,
       grams: selected.estimatedGrams,
       quantity: 1,

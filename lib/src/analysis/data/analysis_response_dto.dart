@@ -77,6 +77,7 @@ class AnalysisItemDto {
     required this.estimateId,
     required this.estimated,
     required this.canonicalName,
+    this.displayName,
     required this.portionLabel,
     required this.grams,
     required this.confidence,
@@ -111,6 +112,9 @@ class AnalysisItemDto {
       estimateId: estimateId,
       estimated: json['estimated'] == true || estimateId != null,
       canonicalName: _string(json, 'canonicalName'),
+      displayName: json['displayName'] is String
+          ? (json['displayName'] as String)
+          : null,
       portionLabel: _string(json, 'portionLabel'),
       grams: _number(json, 'grams'),
       confidence: _number(json, 'confidence'),
@@ -147,6 +151,10 @@ class AnalysisItemDto {
   /// True when the nutrition is a server-side AI estimate, not a catalog row.
   final bool estimated;
   final String canonicalName;
+
+  /// Server-supplied name in the user's language, when the catalog's canonical
+  /// name is in another one.
+  final String? displayName;
   final String portionLabel;
   final double grams;
   final double confidence;

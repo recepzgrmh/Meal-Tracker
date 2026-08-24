@@ -38,7 +38,13 @@ Deno.test('conversational filler never becomes a food', async () => {
 })
 
 Deno.test('an extracted food re-enters the deterministic matcher with its amount', () => {
-  const food: ExtractedFood = { name: 'yumurta', quantity: 2, unit: 'adet', components: [] }
+  const food: ExtractedFood = {
+    name: 'yumurta',
+    nameEn: 'egg',
+    quantity: 2,
+    unit: 'adet',
+    components: [],
+  }
   assertEquals(renderExtractedFood(food), '2 adet yumurta')
 
   // The whole point of rendering back into a clean phrase: the existing portion
@@ -68,6 +74,7 @@ Deno.test('a stated amount is never invented when the sentence omits it', async 
 Deno.test('a composite dish is matched through its components, not its adjectives', () => {
   const dish: ExtractedFood = {
     name: 'kaşarlı tavuklu makarna',
+    nameEn: 'pasta with cheese and chicken',
     quantity: 1,
     unit: 'porsiyon',
     components: [
@@ -78,17 +85,91 @@ Deno.test('a composite dish is matched through its components, not its adjective
   }
 
   assertEquals(extractionPhrases(dish), [
-    { matchPhrase: '100 g makarna', name: 'makarna' },
-    { matchPhrase: '80 g tavuk göğsü', name: 'tavuk göğsü' },
-    { matchPhrase: '30 g kaşar peyniri', name: 'kaşar peyniri' },
+    { matchPhrase: '100 g makarna', name: 'makarna', nameEn: null },
+    { matchPhrase: '80 g tavuk göğsü', name: 'tavuk göğsü', nameEn: null },
+    { matchPhrase: '30 g kaşar peyniri', name: 'kaşar peyniri', nameEn: null },
   ])
 })
 
 Deno.test('a plain food carries the amount for matching but the bare name for search', () => {
-  const food: ExtractedFood = { name: 'yumurta', quantity: 2, unit: 'adet', components: [] }
+  const food: ExtractedFood = {
+    name: 'yumurta',
+    nameEn: 'egg',
+    quantity: 2,
+    unit: 'adet',
+    components: [],
+  }
   // The amount helps the portion resolver and hurts retrieval, so the two
   // consumers get different strings.
-  assertEquals(extractionPhrases(food), [{ matchPhrase: '2 adet yumurta', name: 'yumurta' }])
+  assertEquals(extractionPhrases(food), [
+    { matchPhrase: '2 adet yumurta', name: 'yumurta', nameEn: 'egg' },
+  ])
+})
+
+Deno.test('a fragment match leaves the rest of the phrase unexplained', () => {
+  // The real failure this guards: a single-word Open Food Facts brand row
+  // ("Kremal", Romanian barcode, Turkey relevance 30) is an exact alias, so the
+  // matcher claimed "kremalı" out of "kremalı tavuklu makarna" and reported
+  // 0.98 confidence on a Romanian package. `resolveTextAnalysis` only accepts a
+  // deterministic match when it explains the whole phrase, so what this asserts
+  // is that a fragment match is *detectable* — non-empty items alongside
+  // non-empty unmatchedText — and therefore routed to hybrid search instead.
+  const junkCatalog: CatalogFood[] = [{
+    id: 'food-kremal',
+    canonicalName: 'Kremal',
+    nutritionPer100g: { calories: 485, protein: 3, carbs: 40, fat: 34 },
+    aliases: [{ value: 'kremal', priority: 100 }],
+    portions: [{ label: '100 g', grams: 100, isDefault: true }],
+  }]
+
+  const analysis = analyzeDeterministically(
+    '1 porsiyon kremalı tavuklu makarna',
+    junkCatalog,
+  )
+
+  assertEquals(analysis.items.length, 1)
+  assertEquals(analysis.items[0].foodId, 'food-kremal')
+  // The tokens the brand row could not account for are exactly what makes this
+  // a fragment rather than an answer.
+  assertEquals(analysis.unmatchedText, ['tavuklu', 'makarna'])
+})
+
+Deno.test('a whole-phrase match is accepted as explained', () => {
+  const analysis = analyzeDeterministically('2 adet yumurta', eggCatalog)
+  assertEquals(analysis.items.length, 1)
+  assertEquals(analysis.unmatchedText, [])
+})
+
+Deno.test('an English name is kept as a second retrieval handle', async () => {
+  // ~14k catalog rows are USDA generic foods with English-only names, so the
+  // right row for "kremalı tavuklu makarna" is unreachable from Turkish. The
+  // English name is what gets it in front of the selector.
+  const result = await extractFoodsFromText({
+    ...baseOptions,
+    input: 'kremalı tavuklu makarna',
+    fetcher: (() =>
+      Promise.resolve(providerResponse([
+        foodPayload('kremalı tavuklu makarna', 1, 'porsiyon', 'pasta with cream sauce and chicken'),
+      ]))) as typeof fetch,
+  })
+
+  assertEquals(result.foods[0].nameEn, 'pasta with cream sauce and chicken')
+  assertEquals(extractionPhrases(result.foods[0])[0].nameEn, 'pasta with cream sauce and chicken')
+})
+
+Deno.test('a transliteration is not accepted as an English name', async () => {
+  // Echoing the Turkish name back retrieves the same nothing, so it is dropped
+  // rather than paid for as a second embedding and search.
+  const result = await extractFoodsFromText({
+    ...baseOptions,
+    input: 'menemen',
+    fetcher: (() =>
+      Promise.resolve(providerResponse([
+        foodPayload('menemen', null, null, 'Menemen'),
+      ]))) as typeof fetch,
+  })
+
+  assertEquals(result.foods[0].nameEn, null)
 })
 
 Deno.test('a sentence with no food is an answer, not a failure', async () => {
@@ -194,8 +275,13 @@ Deno.test('text extraction surfaces a typed timeout failure', async () => {
   assertEquals(calls, 2)
 })
 
-function foodPayload(name: string, quantity: number | null, unit: string | null) {
-  return { name, quantity, unit, components: [] }
+function foodPayload(
+  name: string,
+  quantity: number | null,
+  unit: string | null,
+  nameEn: string | null = null,
+) {
+  return { name, nameEn, quantity, unit, components: [] }
 }
 
 function providerResponse(foods: unknown[]): Response {

@@ -10,6 +10,18 @@ export interface ExtractedComponent {
 
 export interface ExtractedFood {
   name: string
+  /**
+   * The same food named in English.
+   *
+   * Roughly 14,000 catalog rows are USDA generic foods with English-only names,
+   * and the import registers their English name as the alias under *both*
+   * locales. So "Pasta, whole grain, with cream sauce and poultry" — the right
+   * answer for "kremalı tavuklu makarna" — is in the catalog but unreachable
+   * from Turkish: it matches neither lexically nor well enough across languages
+   * by embedding. The model already knows the English name, so it hands
+   * retrieval a second handle rather than us translating 14k rows.
+   */
+  nameEn: string | null
   quantity: number | null
   unit: string | null
   components: ExtractedComponent[]
@@ -146,6 +158,8 @@ export interface ExtractionPhrase {
   matchPhrase: string
   /** Bare food name, used for retrieval queries and for display when unmatched. */
   name: string
+  /** Second retrieval handle for the English-named half of the catalog. */
+  nameEn: string | null
 }
 
 /**
@@ -160,13 +174,16 @@ export interface ExtractionPhrase {
  */
 export function extractionPhrases(food: ExtractedFood): ExtractionPhrase[] {
   if (food.components.length > 0) {
+    // A component is a plain ingredient the model named in the user's language;
+    // the English handle belongs to the dish, not to each of its parts.
     return food.components.map((component) => ({
       matchPhrase: renderExtractedComponent(component),
       name: component.name,
+      nameEn: null,
     }))
   }
   const matchPhrase = renderExtractedFood(food)
-  return matchPhrase ? [{ matchPhrase, name: food.name }] : []
+  return matchPhrase ? [{ matchPhrase, name: food.name, nameEn: food.nameEn }] : []
 }
 
 function trimNumber(value: number): string {
@@ -189,6 +206,7 @@ function buildRequest(options: TextExtractionOptions, model: string): Record<str
             'Return only edible or drinkable items.',
             'Ignore everything else: verbs ("yedim", "içtim", "atıştırdım", "ate", "had"), greetings and slang ("kanka", "abi", "ya", "işte", "bro"), pronouns, time references ("sabah", "akşam", "kahvaltıda", "this morning"), and any other filler. These are never foods.',
             'Use the singular, canonical name of the food without the sentence around it. Strip inflection: "yumurtayı" is "yumurta", "eggs" is "egg".',
+            'Also give nameEn: the same food named the way a food composition database would name it in English, e.g. "kremalı tavuklu makarna" is "pasta with cream sauce and chicken", "mercimek çorbası" is "lentil soup". Describe the dish, never transliterate. Use null only if the food has no English description at all.',
             'Set quantity and unit only when the person actually stated an amount. Otherwise use null for both. Never guess an amount.',
             'Treat a described dish as one item under its own full name. "kaşarlı tavuklu makarna" is one dish, not three foods.',
             'Only when a dish is a combination that a food catalog would not list as a single row, also fill components with its main ingredients and a typical cooked gram amount for each. Leave components empty for plain single foods.',
@@ -222,6 +240,7 @@ function buildRequest(options: TextExtractionOptions, model: string): Record<str
                 additionalProperties: false,
                 properties: {
                   name: { type: 'string', minLength: 1, maxLength: 100 },
+                  nameEn: { type: ['string', 'null'], maxLength: 100 },
                   quantity: {
                     type: ['number', 'null'],
                     minimum: 0,
@@ -246,7 +265,7 @@ function buildRequest(options: TextExtractionOptions, model: string): Record<str
                     },
                   },
                 },
-                required: ['name', 'quantity', 'unit', 'components'],
+                required: ['name', 'nameEn', 'quantity', 'unit', 'components'],
               },
             },
           },
@@ -293,9 +312,17 @@ function parseFoods(value: unknown): ExtractedFood[] {
       : rawQuantity
     const rawUnit = typeof row.unit === 'string' ? row.unit.trim() : ''
     const unit = rawUnit && rawUnit.length <= 32 ? rawUnit : null
+    const rawNameEn = typeof row.nameEn === 'string' ? row.nameEn.trim() : ''
+    // A transliteration is not a second handle — it retrieves the same nothing
+    // the Turkish name does, so an English name equal to the Turkish one is
+    // dropped rather than paid for.
+    const nameEn = rawNameEn && rawNameEn.length <= 100 &&
+        rawNameEn.toLocaleLowerCase('tr-TR') !== key
+      ? rawNameEn
+      : null
 
     seen.add(key)
-    return [{ name, quantity, unit, components: parseComponents(row.components) }]
+    return [{ name, nameEn, quantity, unit, components: parseComponents(row.components) }]
   })
 }
 

@@ -602,7 +602,11 @@ class _MealFlowState extends State<MealFlow> {
         foodId: candidate.foodId,
         canonicalName: candidate.name,
         displayName: naturalFoodDisplayName(candidate.name),
-        sourceName: candidate.nutritionSource,
+        // `nutritionSource` is a database identity ("canonical_v2_lean:cf2_9a15…")
+        // and was being shown to the user verbatim. The catalog row's own name
+        // is the provenance that actually answers "where did this number come
+        // from".
+        sourceName: candidate.name,
         nutritionPer100g: Nutrition(
           calories: candidate.caloriesPer100g,
           protein: candidate.proteinPer100g,
