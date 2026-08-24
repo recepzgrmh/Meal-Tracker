@@ -106,9 +106,17 @@ class MealFlowViewModel extends ChangeNotifier {
   Future<void> searchItemVariants(MealItem item, String locale) async {
     final repository = _catalogRepository;
     if (repository == null || _isSearchingVariants) return;
-    final query = item.canonicalName.trim().isNotEmpty
-        ? item.canonicalName.trim()
-        : item.sourceText.trim();
+    // The user's own words, not the match we are asking them to correct.
+    //
+    // Seeding from `canonicalName` meant the sheet searched for whatever the
+    // pipeline had already picked, so a wrong match produced alternatives that
+    // were wrong in the same direction — matching "makarna" to a low-protein
+    // gluten-free PKU row returned PKU flour and PKU biscuits as the things it
+    // "could have been". The one question this sheet exists to answer is what
+    // the user actually ate, so it searches what they actually wrote.
+    final query = item.sourceText.trim().isNotEmpty
+        ? item.sourceText.trim()
+        : item.canonicalName.trim();
     _isSearchingVariants = true;
     _variantSearchError = null;
     _variantResults = const [];
