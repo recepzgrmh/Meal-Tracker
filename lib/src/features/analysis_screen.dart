@@ -8,6 +8,7 @@ import '../domain/models.dart';
 import '../domain/nutrition_goals.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_surfaces.dart';
+import '../widgets/empty_state_view.dart';
 import '../widgets/liquid_glass_bottom_bar.dart';
 import '../widgets/meal_list_tile.dart';
 
@@ -505,22 +506,32 @@ class _ActiveDaysProgress extends StatelessWidget {
       ),
       style: Theme.of(context).textTheme.labelLarge,
     );
-    if (stacked) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(width: double.infinity, child: bar),
-          const SizedBox(height: AppSpacing.sm),
-          label,
-        ],
-      );
-    }
-    return Row(
+    final column = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(child: bar),
-        const SizedBox(width: AppSpacing.sm),
+        SizedBox(width: double.infinity, child: bar),
+        const SizedBox(height: AppSpacing.sm),
         label,
       ],
+    );
+    if (stacked) return column;
+
+    // Stacking was decided by text scale alone, but the label is laid out at
+    // its natural width next to an Expanded bar — so a narrow screen, or a
+    // locale whose phrasing is longer than Turkish, leaves the bar negative
+    // space and the row paints an overflow stripe. Width decides too, the same
+    // way DailySummaryCard already does it.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 260) return column;
+        return Row(
+          children: [
+            Expanded(child: bar),
+            const SizedBox(width: AppSpacing.sm),
+            label,
+          ],
+        );
+      },
     );
   }
 }
@@ -1038,47 +1049,25 @@ class _EmptyAnalysis extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.feature),
+    return EmptyStateView(
+      icon: Icons.show_chart_rounded,
+      title: context.ota(
+        'analysisEmptyTitle',
+        tr: 'Bu dönemde kayıt yok',
+        en: 'No entries in this period',
       ),
-      child: Column(
-        children: [
-          const Icon(Icons.show_chart_rounded, size: 38),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            context.ota(
-              'analysisEmptyTitle',
-              tr: 'Bu dönemde kayıt yok',
-              en: 'No entries in this period',
-            ),
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: AppSpacing.tiny),
-          Text(
-            context.ota(
-              'analysisEmptyBody',
-              tr: 'Öğün ekledikçe kalori trendin ve dönem karşılaştırman burada oluşacak.',
-              en: 'Your calorie trend and period comparison will appear here as you add meals.',
-            ),
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          TextButton(
-            onPressed: onAddMeal,
-            child: Text(
-              context.ota(
-                'analysisEmptyAction',
-                tr: 'Öğün ekle',
-                en: 'Add a meal',
-              ),
-            ),
-          ),
-        ],
+      body: context.ota(
+        'analysisEmptyBody',
+        tr: 'Öğün ekledikçe kalori trendin ve dönem karşılaştırman burada oluşacak.',
+        en: 'Your calorie trend and period comparison will appear here as you add meals.',
       ),
+      actionKey: const Key('analysis-empty-action'),
+      actionLabel: context.ota(
+        'analysisEmptyAction',
+        tr: 'Öğün ekle',
+        en: 'Add a meal',
+      ),
+      onAction: onAddMeal,
     );
   }
 }

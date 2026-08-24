@@ -1,5 +1,9 @@
 import type { DeterministicAnalysis } from '../../analyze-meal/deterministic.ts'
-import { applyVisionEvidence, reconcileModalities } from '../../analyze-meal/reconcile.ts'
+import {
+  applyVisionEvidence,
+  reconcileModalities,
+  remainingUnmatchedText,
+} from '../../analyze-meal/reconcile.ts'
 import type { AnalysisItem } from '../../_shared/contracts.ts'
 
 Deno.test('explicit text wins when vision detects the same catalog food', () => {
@@ -33,7 +37,7 @@ Deno.test('vision contributes foods missing from explicit text', () => {
 
 Deno.test('vision cannot promote a catalog-default portion to high confidence', () => {
   const result = applyVisionEvidence(
-    analysis([item('rice', 180)]),
+    analysis([item('pilav', 180)]),
     [{
       description: 'pilav',
       estimatedGrams: 180,
@@ -46,6 +50,37 @@ Deno.test('vision cannot promote a catalog-default portion to high confidence', 
   assertEquals(result.items[0].needsClarification, true)
   assertEquals(result.items[0].clarificationReason, 'portion')
   assertEquals(result.items[0].confidence, 0.48)
+})
+
+Deno.test('vision evidence attaches by name, not by array position', () => {
+  // Vision saw two foods but only the second one parsed into an item. The
+  // surviving item must carry ITS OWN low confidence, not the first food's.
+  const result = applyVisionEvidence(
+    analysis([item('ayran', 200)]),
+    [{
+      description: 'menemen',
+      estimatedGrams: 250,
+      identityConfidence: 0.95,
+      portionConfidence: 0.9,
+      portionBasis: 'visible_scale',
+    }, {
+      description: 'ayran',
+      estimatedGrams: 200,
+      identityConfidence: 0.5,
+      portionConfidence: 0.5,
+      portionBasis: 'catalog_default',
+    }],
+  )
+
+  assertEquals(result.items[0].confidence, 0.5)
+  assertEquals(result.items[0].needsClarification, true)
+  assertEquals(result.items[0].clarificationReason, 'identity')
+})
+
+Deno.test('unmatched tokens survive when only a sibling item resolves', () => {
+  const grounded = { ...item('menemen', 250), sourceText: 'menemen' }
+  assertEquals(remainingUnmatchedText(['menemen', 'ayran'], [grounded]), ['ayran'])
+  assertEquals(remainingUnmatchedText(['ayran'], []), ['ayran'])
 })
 
 function analysis(items: AnalysisItem[]): DeterministicAnalysis {

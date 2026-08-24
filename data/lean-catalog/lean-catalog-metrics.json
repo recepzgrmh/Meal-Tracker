@@ -1,0 +1,34 @@
+{
+  "schema_version": "lean-catalog-selection-v1",
+  "policy": {
+    "target": 60000,
+    "tr_branded_target": 12000,
+    "off_global_target": 18000,
+    "usda_branded_target": 12000,
+    "branded_quality_threshold": 75
+  },
+  "input": {
+    "source_records": 1242528,
+    "generic_canonical_candidates": 13908,
+    "eligible_branded_canonical_candidates": 1191785
+  },
+  "output": {
+    "selected_canonical_foods": 60000,
+    "tiers": {
+      "generic_core": 13908,
+      "off_en_global": 18000,
+      "quality_global": 11503,
+      "tr_branded": 4589,
+      "usda_branded_quality": 12000
+    },
+    "projected_rows": {
+      "foods": 60000,
+      "nutrition": 60000,
+      "aliases": 60000,
+      "portions": 60000,
+      "branded_metadata": 46092
+    },
+    "projected_postgres_bytes_base": 215147469,
+    "projected_postgres_bytes_with_50_percent_safety": 322721203
+  }
+}

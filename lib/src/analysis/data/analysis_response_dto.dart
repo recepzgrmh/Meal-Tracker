@@ -5,6 +5,7 @@ class AnalysisResponseDto {
     required this.normalizedInput,
     required this.items,
     required this.unmatchedText,
+    required this.unmatchedItems,
     required this.replayed,
   });
 
@@ -28,6 +29,17 @@ class AnalysisResponseDto {
         json,
         'unmatchedText',
       ).map((value) => value as String).toList(growable: false),
+      // Absent on responses recorded before the estimate contract shipped, so
+      // the field is optional while `unmatchedText` stays required.
+      unmatchedItems: json['unmatchedItems'] is List
+          ? (json['unmatchedItems'] as List)
+                .map(
+                  (value) => AnalysisUnmatchedItemDto.fromJson(
+                    _map(value, 'unmatchedItems[]'),
+                  ),
+                )
+                .toList(growable: false)
+          : const [],
       replayed: json['replayed'] == true,
     );
   }
@@ -37,7 +49,24 @@ class AnalysisResponseDto {
   final String normalizedInput;
   final List<AnalysisItemDto> items;
   final List<String> unmatchedText;
+
+  /// Inputs the server could neither ground in the catalog nor estimate.
+  final List<AnalysisUnmatchedItemDto> unmatchedItems;
   final bool replayed;
+}
+
+class AnalysisUnmatchedItemDto {
+  const AnalysisUnmatchedItemDto({required this.itemKey, required this.text});
+
+  factory AnalysisUnmatchedItemDto.fromJson(Map<String, dynamic> json) {
+    return AnalysisUnmatchedItemDto(
+      itemKey: _string(json, 'itemKey'),
+      text: _string(json, 'text'),
+    );
+  }
+
+  final String itemKey;
+  final String text;
 }
 
 class AnalysisItemDto {
@@ -45,6 +74,8 @@ class AnalysisItemDto {
     required this.itemKey,
     required this.sourceText,
     required this.foodId,
+    required this.estimateId,
+    required this.estimated,
     required this.canonicalName,
     required this.portionLabel,
     required this.grams,
@@ -54,6 +85,7 @@ class AnalysisItemDto {
     required this.nutritionPer100g,
     this.portionOptions = const [],
     this.clarificationReason,
+    this.alternativeFoodIds = const [],
   });
 
   factory AnalysisItemDto.fromJson(Map<String, dynamic> json) {
@@ -63,10 +95,21 @@ class AnalysisItemDto {
         clarificationReason != 'portion') {
       throw const FormatException('Invalid clarification reason');
     }
+    // An item is either catalog-grounded or a server-recorded AI estimate,
+    // never both and never neither — the commit contract depends on it.
+    final foodId = _optionalString(json, 'foodId');
+    final estimateId = _optionalString(json, 'estimateId');
+    if ((foodId == null) == (estimateId == null)) {
+      throw const FormatException(
+        'Exactly one of foodId and estimateId is required',
+      );
+    }
     return AnalysisItemDto(
       itemKey: _string(json, 'itemKey'),
       sourceText: _string(json, 'sourceText'),
-      foodId: _string(json, 'foodId'),
+      foodId: foodId,
+      estimateId: estimateId,
+      estimated: json['estimated'] == true || estimateId != null,
       canonicalName: _string(json, 'canonicalName'),
       portionLabel: _string(json, 'portionLabel'),
       grams: _number(json, 'grams'),
@@ -74,6 +117,11 @@ class AnalysisItemDto {
       matchMethod: _string(json, 'matchMethod'),
       needsClarification: json['needsClarification'] == true,
       clarificationReason: clarificationReason as String?,
+      alternativeFoodIds: json['alternativeFoodIds'] is List
+          ? (json['alternativeFoodIds'] as List)
+                .map((value) => value as String)
+                .toList(growable: false)
+          : const [],
       nutritionPer100g: AnalysisNutritionDto.fromJson(
         _map(json['nutritionPer100g'], 'nutritionPer100g'),
       ),
@@ -91,7 +139,13 @@ class AnalysisItemDto {
 
   final String itemKey;
   final String sourceText;
-  final String foodId;
+
+  /// Null for AI-estimate items — those carry [estimateId] instead.
+  final String? foodId;
+  final String? estimateId;
+
+  /// True when the nutrition is a server-side AI estimate, not a catalog row.
+  final bool estimated;
   final String canonicalName;
   final String portionLabel;
   final double grams;
@@ -99,6 +153,7 @@ class AnalysisItemDto {
   final String matchMethod;
   final bool needsClarification;
   final String? clarificationReason;
+  final List<String> alternativeFoodIds;
   final AnalysisNutritionDto nutritionPer100g;
   final List<AnalysisPortionOptionDto> portionOptions;
 }
@@ -153,6 +208,17 @@ String _string(Map<String, dynamic> json, String key) {
   final value = json[key];
   if (value is! String || value.isEmpty) {
     throw FormatException('$key must be a non-empty string');
+  }
+  return value;
+}
+
+/// Accepts an absent or explicit-null value; a present value must still be a
+/// non-empty string. `foodId: null` on estimate items is the motivating case.
+String? _optionalString(Map<String, dynamic> json, String key) {
+  final value = json[key];
+  if (value == null) return null;
+  if (value is! String || value.isEmpty) {
+    throw FormatException('$key must be a non-empty string when present');
   }
   return value;
 }

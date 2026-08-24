@@ -2,11 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meal_clarity/src/app.dart';
 
+import 'support/clarification.dart';
+
 void main() {
+  // Today renders the real date in its header and seeds its demo meals off the
+  // clock, so these baselines used to stop matching the moment the day rolled
+  // over — three of them were already failing before anyone touched the UI.
+  // Freezing "now" makes the screenshots depend on the code alone.
+  DateTime frozenNow() => DateTime(2026, 8, 22, 18, 30);
+
   Future<void> pumpApp(WidgetTester tester) async {
     await tester.binding.setSurfaceSize(const Size(390, 844));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(const MealClarityApp());
+    await tester.pumpWidget(MealClarityApp(clock: frozenNow));
     await tester.pumpAndSettle();
   }
 
@@ -59,6 +67,9 @@ void main() {
     await tester.tap(find.byKey(const Key('analyze-button')));
     await tester.pump(const Duration(seconds: 1));
     await tester.pumpAndSettle();
+    // Analysis walks its open questions first now; this baseline is of the
+    // review screen behind them, which the next test covers directly.
+    await dismissClarificationSheets(tester);
 
     await expectLater(
       find.byType(MaterialApp),
@@ -82,9 +93,10 @@ void main() {
     await tester.tap(find.byKey(const Key('analyze-button')));
     await tester.pump(const Duration(seconds: 1));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.byKey(const Key('review-edit-button')));
-    await tester.tap(find.byKey(const Key('review-edit-button')));
-    await tester.pumpAndSettle();
+    // No tap needed any more: the portion question is what the user meets
+    // straight after analysis, so this baseline is now of the real flow rather
+    // than of a sheet reached by tapping a flagged row.
+    expect(find.byKey(const Key('portion-title')), findsOneWidget);
 
     await expectLater(
       find.byType(MaterialApp),

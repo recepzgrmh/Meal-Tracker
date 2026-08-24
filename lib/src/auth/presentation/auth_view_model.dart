@@ -32,9 +32,11 @@ class AuthViewModel extends ChangeNotifier {
   AuthFailureCode? get errorCode => _errorCode;
   int get resendSeconds => _resendSeconds;
   bool get canResend => !_isBusy && _resendSeconds == 0;
+  bool get canRequestOtp => !_isBusy && _resendSeconds == 0;
+  bool get isEmailRateLimited => _errorCode == AuthFailureCode.emailRateLimited;
 
   Future<bool> requestOtp(String email) async {
-    if (_isBusy) return false;
+    if (!canRequestOtp) return false;
     _email = email.trim();
     _setBusy(true);
     try {
@@ -45,6 +47,10 @@ class AuthViewModel extends ChangeNotifier {
     } on AuthFailure catch (error) {
       _errorMessage = error.message;
       _errorCode = error.code;
+      if (error.code == AuthFailureCode.emailRateLimited ||
+          error.code == AuthFailureCode.rateLimited) {
+        _startCooldown(error.retryAfter ?? resendCooldown);
+      }
       return false;
     } finally {
       _setBusy(false);
@@ -76,6 +82,17 @@ class AuthViewModel extends ChangeNotifier {
     return requestOtp(_email);
   }
 
+  /// A send limit does not invalidate a code that already reached the inbox.
+  /// This lets the user continue with that code instead of being trapped on
+  /// the email screen until the project-wide mail quota resets.
+  void useExistingCode() {
+    if (_email.isEmpty) return;
+    _step = AuthStep.otp;
+    _errorMessage = null;
+    _errorCode = null;
+    notifyListeners();
+  }
+
   void editEmail() {
     _timer?.cancel();
     _step = AuthStep.email;
@@ -98,12 +115,19 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _startCooldown() {
+  void _startCooldown([Duration? duration]) {
     _timer?.cancel();
-    _resendSeconds = resendCooldown.inSeconds;
+    _resendSeconds = (duration ?? resendCooldown).inSeconds;
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _resendSeconds--;
-      if (_resendSeconds <= 0) timer.cancel();
+      if (_resendSeconds <= 0) {
+        timer.cancel();
+        if (_errorCode == AuthFailureCode.emailRateLimited ||
+            _errorCode == AuthFailureCode.rateLimited) {
+          _errorMessage = null;
+          _errorCode = null;
+        }
+      }
       notifyListeners();
     });
   }

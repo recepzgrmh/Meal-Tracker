@@ -2,6 +2,7 @@ import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.112.3'
 
 export const DEFAULT_EMBEDDING_MODEL = 'text-embedding-3-small'
 export const EMBEDDING_DIMENSIONS = 1536
+const EMBEDDING_SCAN_WINDOW = 500
 
 interface FoodRow {
   id: string
@@ -38,6 +39,8 @@ export interface CatalogBackfillResult {
   updated: number
   promptTokens: number
   model: string
+  /** Cursor after this run. Null means a full pass finished with nothing stale. */
+  cursor: string | null
 }
 
 export function buildFoodEmbeddingDocument(food: FoodRow, aliases: AliasRow[]): string {
@@ -111,11 +114,7 @@ export async function createEmbeddings(
       }
       if (![408, 409, 429].includes(response.status) && response.status < 500) break
     } catch (error) {
-      if (
-        !(error instanceof DOMException && error.name === 'AbortError') || attempt === maxAttempts
-      ) {
-        if (attempt === maxAttempts) throw error
-      }
+      if (attempt === maxAttempts) throw error
     } finally {
       clearTimeout(timeout)
     }
@@ -133,15 +132,23 @@ export async function backfillCatalogEmbeddings(
     p_lease_seconds: 60,
   })
   if (lockError) throw lockError
-  if (!locked) return { locked: false, scanned: 0, updated: 0, promptTokens: 0, model }
+  if (!locked) {
+    return { locked: false, scanned: 0, updated: 0, promptTokens: 0, model, cursor: null }
+  }
   try {
-    const { data: foods, error: foodsError } = await client.from('foods').select(
-      'id,canonical_name,locale,embedding_model,embedding_source_hash',
-    ).eq('is_active', true).order('id').limit(500)
-    if (foodsError) throw foodsError
-    const typedFoods = (foods ?? []) as FoodRow[]
+    const { data: cursorValue, error: cursorError } = await client.rpc('catalog_embedding_cursor')
+    if (cursorError) throw cursorError
+    const cursor = typeof cursorValue === 'string' ? cursorValue : null
+
+    // A window that always started at the first food could never reach the rest
+    // of the catalog, so the scan resumes after the persisted cursor.
+    let typedFoods = await scanWindow(client, cursor)
+    if (typedFoods.length === 0 && cursor !== null) {
+      await client.rpc('advance_catalog_embedding_cursor', { p_food_id: null })
+      typedFoods = await scanWindow(client, null)
+    }
     if (typedFoods.length === 0) {
-      return { locked: true, scanned: 0, updated: 0, promptTokens: 0, model }
+      return { locked: true, scanned: 0, updated: 0, promptTokens: 0, model, cursor: null }
     }
 
     const ids = typedFoods.map((food) => food.id)
@@ -156,8 +163,20 @@ export async function backfillCatalogEmbeddings(
     const stale = documents.filter(({ food, hash }) =>
       food.embedding_model !== model || food.embedding_source_hash !== hash
     ).slice(0, Math.min(options.batchSize ?? 50, 100))
+    const windowExhausted = typedFoods.length < EMBEDDING_SCAN_WINDOW
     if (stale.length === 0) {
-      return { locked: true, scanned: typedFoods.length, updated: 0, promptTokens: 0, model }
+      // Nothing left to embed in this window: step past it, or wrap when the
+      // window was the tail of the catalog.
+      const nextCursor = windowExhausted ? null : typedFoods[typedFoods.length - 1].id
+      await client.rpc('advance_catalog_embedding_cursor', { p_food_id: nextCursor })
+      return {
+        locked: true,
+        scanned: typedFoods.length,
+        updated: 0,
+        promptTokens: 0,
+        model,
+        cursor: nextCursor,
+      }
     }
 
     const embedded = await createEmbeddings(stale.map((row) => row.document), options)
@@ -171,16 +190,31 @@ export async function backfillCatalogEmbeddings(
       }).eq('id', stale[index].food.id)
       if (error) throw error
     }
+    // Resume just past the last food actually embedded. Anything still stale
+    // behind that point stays in front of the cursor for the next run.
+    const nextCursor = stale[stale.length - 1].food.id
+    await client.rpc('advance_catalog_embedding_cursor', { p_food_id: nextCursor })
     return {
       locked: true,
       scanned: typedFoods.length,
       updated: stale.length,
       promptTokens: embedded.promptTokens,
       model: embedded.model,
+      cursor: nextCursor,
     }
   } finally {
     await client.rpc('finish_catalog_embedding_job')
   }
+}
+
+async function scanWindow(client: SupabaseClient, cursor: string | null): Promise<FoodRow[]> {
+  let query = client.from('foods').select(
+    'id,canonical_name,locale,embedding_model,embedding_source_hash',
+  ).eq('is_active', true).order('id').limit(EMBEDDING_SCAN_WINDOW)
+  if (cursor) query = query.gt('id', cursor)
+  const { data, error } = await query
+  if (error) throw error
+  return (data ?? []) as FoodRow[]
 }
 
 function validateVector(value: unknown): number[] {

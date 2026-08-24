@@ -1,0 +1,49 @@
+{
+  "canonicalization_version": "canonical-v2",
+  "valid": true,
+  "production_readiness": "READY",
+  "counts": {
+    "canonical_foods": 1228891,
+    "source_mappings": 1242528,
+    "review_candidates": 2469,
+    "blocked_candidates": 334
+  },
+  "safety": {
+    "automatic_mapping_errors": 0,
+    "preparation_state_conflicts_in_automatic_merges": 0,
+    "nutrition_conflicts_in_automatic_merges": 0,
+    "critical_automatic_false_merge_candidates": 0,
+    "high_automatic_false_merge_candidates": 0,
+    "preparation_state_conflict_rate_in_automatic_merges": 0,
+    "nutrition_conflict_rate_in_automatic_merges": 0,
+    "remaining_possible_missed_merge_candidates": 2469
+  },
+  "idempotence": {
+    "valid": true,
+    "primary_hashes": {
+      "canonical-foods.jsonl.gz": "a3bbba5f97c58c02d5c6f7f200e681f1afa3c8687789c061d8035960c8bf4a35",
+      "canonical-source-mappings.jsonl.gz": "f4b2992884d01e05c67cfd313fc6a88b062026ac1d8e6a1cc7f5f1ac151eaf64",
+      "canonical-review-candidates.jsonl.gz": "921b7227b426921b518d3acc5154d77ebc2495ea7940963f832e8557e4c01a13",
+      "canonical-blocked-merge-candidates.jsonl.gz": "8a4cb59b99e5ae02ff074f475ad56da31240dffa0d686cb6eaae4662a6fbf65c",
+      "canonicalization-metrics.json": "d4f310ef8227bde7f59ad23501c0943e4f37e0d0eeb0d1a68a26e708f50f4933"
+    },
+    "shadow_hashes": {
+      "canonical-foods.jsonl.gz": "a3bbba5f97c58c02d5c6f7f200e681f1afa3c8687789c061d8035960c8bf4a35",
+      "canonical-source-mappings.jsonl.gz": "f4b2992884d01e05c67cfd313fc6a88b062026ac1d8e6a1cc7f5f1ac151eaf64",
+      "canonical-review-candidates.jsonl.gz": "921b7227b426921b518d3acc5154d77ebc2495ea7940963f832e8557e4c01a13",
+      "canonical-blocked-merge-candidates.jsonl.gz": "8a4cb59b99e5ae02ff074f475ad56da31240dffa0d686cb6eaae4662a6fbf65c",
+      "canonicalization-metrics.json": "d4f310ef8227bde7f59ad23501c0943e4f37e0d0eeb0d1a68a26e708f50f4933"
+    },
+    "matches": {
+      "canonical-foods.jsonl.gz": true,
+      "canonical-source-mappings.jsonl.gz": true,
+      "canonical-review-candidates.jsonl.gz": true,
+      "canonical-blocked-merge-candidates.jsonl.gz": true,
+      "canonicalization-metrics.json": true
+    }
+  },
+  "warnings": [
+    "fewer_than_30_report_examples:tr_en_merges:18"
+  ],
+  "errors": []
+}

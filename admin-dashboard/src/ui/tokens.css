@@ -1,0 +1,238 @@
+/* ============================================================================
+   Console DS — design tokens
+   Neutral-first, one accent, semantic status. Light and dark are the same
+   system with a swapped ramp; component CSS never hardcodes a colour.
+   ========================================================================= */
+
+:root {
+  /* ── Neutral ramp (cool grey) ─────────────────────────────────────────── */
+  --n-0:   oklch(100%  0     0);
+  --n-25:  oklch(99.1% 0.001 265);
+  --n-50:  oklch(97.7% 0.002 265);
+  --n-100: oklch(96.1% 0.003 265);
+  --n-150: oklch(93.8% 0.004 265);
+  --n-200: oklch(91.4% 0.005 265);
+  --n-300: oklch(86.2% 0.007 265);
+  --n-400: oklch(74%   0.010 265);
+  /* 56% is the lightest this can be and still clear 4.5:1 on white — it backs
+     --text-faint, which carries placeholder and axis text. Measured, not eyeballed. */
+  --n-500: oklch(56%   0.012 265);
+  --n-600: oklch(52%   0.013 265);
+  --n-700: oklch(42%   0.013 265);
+  --n-800: oklch(30%   0.013 265);
+  --n-900: oklch(19%   0.012 265);
+  --n-950: oklch(13%   0.011 265);
+
+  /* ── Semantic surfaces ────────────────────────────────────────────────── */
+  --bg:            var(--n-50);   /* app canvas          */
+  --bg-rail:       var(--n-25);   /* navigation rail     */
+  --surface:       var(--n-0);    /* cards, tables, rows */
+  --surface-hover: var(--n-50);
+  --surface-sunk:  var(--n-100);  /* inset fields, tracks, code */
+  --surface-raised:var(--n-0);    /* popovers, dialogs   */
+  --overlay:       oklch(19% 0.012 265 / .34);
+
+  /* ── Text ─────────────────────────────────────────────────────────────── */
+  --text:      var(--n-900);
+  --text-2:    var(--n-700);
+  --text-muted:var(--n-600);
+  --text-faint:var(--n-500);
+  --text-on-accent: var(--n-0);
+
+  /* ── Lines ────────────────────────────────────────────────────────────── */
+  --border:        var(--n-200);
+  --border-strong: var(--n-300);
+  --border-focus:  var(--accent);
+
+  /* ── Accent (iris) — actions, active nav, selection, primary series ───── */
+  --accent:        oklch(53%   0.185 272);
+  --accent-hover:  oklch(47%   0.185 272);
+  --accent-text:   oklch(47%   0.185 272);
+  --accent-soft:   oklch(96.5% 0.026 272);
+  --accent-line:   oklch(88%   0.060 272);
+  --accent-ring:   oklch(53%   0.185 272 / .28);
+
+  /* ── Status ───────────────────────────────────────────────────────────── */
+  --ok:      oklch(50%   0.130 155);
+  --ok-soft: oklch(96%   0.032 155);
+  --ok-line: oklch(87%   0.070 155);
+  --warn:      oklch(53%   0.135 62);
+  --warn-soft: oklch(96.5% 0.038 62);
+  --warn-line: oklch(88%   0.080 62);
+  --danger:      oklch(54%   0.200 25);
+  --danger-soft: oklch(96.5% 0.030 25);
+  --danger-line: oklch(88%   0.070 25);
+  --info:      oklch(52%   0.160 250);
+  --info-soft: oklch(96.5% 0.028 250);
+  --info-line: oklch(88%   0.060 250);
+
+  /* ── Data visualisation ───────────────────────────────────────────────── */
+  --series-1: var(--accent);                 /* the measure that matters */
+  --series-2: oklch(72% 0.020 265);          /* neutral comparison       */
+  --series-3: oklch(58% 0.105 205);          /* third series, rare       */
+  --chart-grid: var(--n-150);
+  --chart-axis: var(--text-faint);
+  --chart-fill-from: oklch(53% 0.185 272 / .16);
+  --chart-fill-to:   oklch(53% 0.185 272 / 0);
+
+  /* ── Elevation — borders do the work; shadow is for floating layers ───── */
+  --shadow-none: none;
+  --shadow-xs: 0 1px 2px oklch(19% .012 265 / .05);
+  --shadow-sm: 0 1px 2px oklch(19% .012 265 / .06), 0 1px 3px oklch(19% .012 265 / .04);
+  --shadow-pop: 0 2px 4px oklch(19% .012 265 / .05), 0 8px 20px -6px oklch(19% .012 265 / .14), 0 0 0 1px oklch(19% .012 265 / .05);
+  --shadow-dialog: 0 8px 12px oklch(19% .012 265 / .06), 0 24px 56px -12px oklch(19% .012 265 / .24), 0 0 0 1px oklch(19% .012 265 / .05);
+
+  /* ── Spacing — 4/8 system ─────────────────────────────────────────────── */
+  --sp-1: .25rem;  --sp-2: .5rem;   --sp-3: .75rem;  --sp-4: 1rem;
+  --sp-5: 1.25rem; --sp-6: 1.5rem;  --sp-8: 2rem;    --sp-10: 2.5rem; --sp-12: 3rem;
+
+  /* ── Radius — modest; never pill-shaped panels ────────────────────────── */
+  --r-1: .375rem;  /* chips, small controls   */
+  --r-2: .5rem;    /* inputs, buttons         */
+  --r-3: .625rem;  /* cards, panels           */
+  --r-4: .75rem;   /* dialogs, drawers        */
+  --r-full: 999px;
+
+  /* ── Type ─────────────────────────────────────────────────────────────── */
+  --font: "Inter var", Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --fs-micro: .6875rem;  /* 11 — badges, table eyebrows      */
+  --fs-meta:  .75rem;    /* 12 — metadata, helper text       */
+  --fs-sm:    .8125rem;  /* 13 — tables, buttons, dense body */
+  --fs-body:  .875rem;   /* 14 — body                        */
+  --fs-lg:    1rem;      /* 16 — section title               */
+  --fs-xl:    1.125rem;  /* 18 — large section title         */
+  --fs-metric:1.5rem;    /* 24 — metric value                */
+  --fs-title: 1.5rem;    /* 24 — page title                  */
+
+  /* ── Motion ───────────────────────────────────────────────────────────── */
+  --dur-1: 110ms;  /* press, colour       */
+  --dur-2: 160ms;  /* hover, fade         */
+  --dur-3: 220ms;  /* layout, enter/exit  */
+  --ease: cubic-bezier(.2, 0, 0, 1);
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+
+  /* ── Layout ───────────────────────────────────────────────────────────── */
+  --rail-w: 15rem;          /* 240 */
+  --rail-w-collapsed: 3.5rem;
+  --topbar-h: 3.25rem;
+  --content-max: 87.5rem;   /* 1400 */
+  --content-max-wide: 100rem;
+  --control-h: 2.25rem;     /* 36 */
+  --control-h-sm: 1.75rem;  /* 28 */
+  --row-h: 2.75rem;         /* 44 — table row */
+
+  color-scheme: light;
+}
+
+/* ============================================================================
+   Dark — deep neutral, never pure black; surfaces lift, borders stay soft
+   ========================================================================= */
+:root[data-theme="dark"] {
+  --n-0:   oklch(16.5% 0.008 265);
+  --n-25:  oklch(15%   0.008 265);
+  --n-50:  oklch(13.2% 0.008 265);
+  --n-100: oklch(19.5% 0.009 265);
+  --n-150: oklch(23%   0.010 265);
+  --n-200: oklch(26%   0.011 265);
+  --n-300: oklch(32%   0.012 265);
+  --n-400: oklch(45%   0.013 265);
+  --n-500: oklch(60%   0.014 265);
+  --n-600: oklch(70%   0.013 265);
+  --n-700: oklch(80%   0.011 265);
+  --n-800: oklch(88%   0.008 265);
+  --n-900: oklch(95%   0.004 265);
+  --n-950: oklch(98%   0.002 265);
+
+  --bg:            var(--n-50);
+  --bg-rail:       var(--n-25);
+  --surface:       var(--n-0);
+  --surface-hover: var(--n-100);
+  --surface-sunk:  var(--n-100);
+  --surface-raised:var(--n-100);
+  --overlay:       oklch(8% 0.01 265 / .6);
+
+  --text:       var(--n-900);
+  --text-2:     var(--n-700);
+  --text-muted: var(--n-600);
+  --text-faint: var(--n-500);
+  --text-on-accent: oklch(99% 0.002 265);
+
+  --border:        var(--n-200);
+  --border-strong: var(--n-300);
+
+  /* Dark accent sits at 56%, not 64%: white button text needs 4.5:1 and the
+     fill itself only needs 3:1 against the surface. Text wins that trade. */
+  --accent:       oklch(56% 0.185 272);
+  --accent-hover: oklch(51% 0.190 272);
+  --accent-text:  oklch(76% 0.130 272);
+  --accent-soft:  oklch(30% 0.075 272);
+  --accent-line:  oklch(40% 0.110 272);
+  --accent-ring:  oklch(64% 0.170 272 / .4);
+
+  --ok:      oklch(72% 0.150 155);
+  --ok-soft: oklch(28% 0.060 155);
+  --ok-line: oklch(38% 0.085 155);
+  --warn:      oklch(78% 0.145 70);
+  --warn-soft: oklch(30% 0.055 62);
+  --warn-line: oklch(41% 0.080 62);
+  --danger:      oklch(70% 0.180 22);
+  --danger-soft: oklch(29% 0.070 25);
+  --danger-line: oklch(40% 0.105 25);
+  --info:      oklch(72% 0.135 250);
+  --info-soft: oklch(29% 0.060 250);
+  --info-line: oklch(40% 0.085 250);
+
+  --series-2: oklch(48% 0.016 265);
+  --series-3: oklch(70% 0.100 205);
+  --chart-grid: var(--n-150);
+  --chart-fill-from: oklch(64% 0.170 272 / .22);
+  --chart-fill-to:   oklch(64% 0.170 272 / 0);
+
+  --shadow-xs: 0 1px 2px oklch(0% 0 0 / .3);
+  --shadow-sm: 0 1px 2px oklch(0% 0 0 / .35), 0 1px 3px oklch(0% 0 0 / .25);
+  --shadow-pop: 0 2px 4px oklch(0% 0 0 / .3), 0 8px 20px -6px oklch(0% 0 0 / .5), 0 0 0 1px oklch(100% 0 0 / .06);
+  --shadow-dialog: 0 8px 12px oklch(0% 0 0 / .3), 0 24px 56px -12px oklch(0% 0 0 / .6), 0 0 0 1px oklch(100% 0 0 / .07);
+
+  color-scheme: dark;
+}
+
+/* Follow the OS when the user has not chosen explicitly. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --n-0:   oklch(16.5% 0.008 265);
+    --n-25:  oklch(15%   0.008 265);
+    --n-50:  oklch(13.2% 0.008 265);
+    --n-100: oklch(19.5% 0.009 265);
+    --n-150: oklch(23%   0.010 265);
+    --n-200: oklch(26%   0.011 265);
+    --n-300: oklch(32%   0.012 265);
+    --n-400: oklch(45%   0.013 265);
+    --n-500: oklch(60%   0.014 265);
+    --n-600: oklch(70%   0.013 265);
+    --n-700: oklch(80%   0.011 265);
+    --n-800: oklch(88%   0.008 265);
+    --n-900: oklch(95%   0.004 265);
+    --n-950: oklch(98%   0.002 265);
+
+    --bg: var(--n-50); --bg-rail: var(--n-25); --surface: var(--n-0);
+    --surface-hover: var(--n-100); --surface-sunk: var(--n-100); --surface-raised: var(--n-100);
+    --overlay: oklch(8% 0.01 265 / .6);
+    --text: var(--n-900); --text-2: var(--n-700); --text-muted: var(--n-600); --text-faint: var(--n-500);
+    --text-on-accent: oklch(99% 0.002 265);
+    --border: var(--n-200); --border-strong: var(--n-300);
+    --accent: oklch(64% 0.170 272); --accent-hover: oklch(70% 0.165 272); --accent-text: oklch(76% 0.130 272);
+    --accent-soft: oklch(30% 0.075 272); --accent-line: oklch(40% 0.110 272); --accent-ring: oklch(64% 0.170 272 / .4);
+    --ok: oklch(72% 0.150 155); --ok-soft: oklch(28% 0.060 155); --ok-line: oklch(38% 0.085 155);
+    --warn: oklch(78% 0.145 70); --warn-soft: oklch(30% 0.055 62); --warn-line: oklch(41% 0.080 62);
+    --danger: oklch(70% 0.180 22); --danger-soft: oklch(29% 0.070 25); --danger-line: oklch(40% 0.105 25);
+    --info: oklch(72% 0.135 250); --info-soft: oklch(29% 0.060 250); --info-line: oklch(40% 0.085 250);
+    --series-2: oklch(48% 0.016 265); --series-3: oklch(70% 0.100 205); --chart-grid: var(--n-150);
+    --chart-fill-from: oklch(64% 0.170 272 / .22); --chart-fill-to: oklch(64% 0.170 272 / 0);
+    --shadow-xs: 0 1px 2px oklch(0% 0 0 / .3);
+    --shadow-sm: 0 1px 2px oklch(0% 0 0 / .35), 0 1px 3px oklch(0% 0 0 / .25);
+    --shadow-pop: 0 2px 4px oklch(0% 0 0 / .3), 0 8px 20px -6px oklch(0% 0 0 / .5), 0 0 0 1px oklch(100% 0 0 / .06);
+    --shadow-dialog: 0 8px 12px oklch(0% 0 0 / .3), 0 24px 56px -12px oklch(0% 0 0 / .6), 0 0 0 1px oklch(100% 0 0 / .07);
+    color-scheme: dark;
+  }
+}

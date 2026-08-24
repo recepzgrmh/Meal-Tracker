@@ -8,6 +8,7 @@ import '../theme/app_theme.dart';
 import '../util/formatters.dart';
 import '../view_models/meal_detail_view_model.dart';
 import '../widgets/app_surfaces.dart';
+import '../widgets/meal_photo.dart';
 
 class MealDetailScreen extends StatefulWidget {
   const MealDetailScreen({
@@ -258,21 +259,16 @@ class _MealImage extends StatelessWidget {
                 children: [
                   // No Hero here: the list screens never declared a matching
                   // tag, so the flight was one-sided and never ran.
-                  if (meal.imageAsset != null)
-                    Image.asset(
-                      meal.imageAsset!,
-                      fit: BoxFit.cover,
-                      cacheWidth: 900,
-                    )
-                  else
-                    const ColoredBox(
-                      color: AppColors.surfaceMuted,
-                      child: Icon(
-                        Icons.restaurant_rounded,
-                        size: 42,
-                        color: AppColors.muted,
-                      ),
-                    ),
+                  //
+                  // Loading goes through MealPhoto so a meal synced down from
+                  // the server — which arrives with a Storage object path in
+                  // this field, not an asset path — degrades to the placeholder
+                  // instead of throwing out of build.
+                  MealPhoto(
+                    source: meal.imageAsset,
+                    placeholderIconSize: 42,
+                    cacheWidth: 900,
+                  ),
                   Positioned(
                     left: AppSpacing.md,
                     right: AppSpacing.md,
@@ -356,8 +352,10 @@ class _MealSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // AI-estimated nutrition stays approximate even after the user settles
+    // the portion, so the estimate marker outlives the review question.
     final hasEstimates = meal.items.any(
-      (item) => item.matchState != MatchState.matched,
+      (item) => item.matchState != MatchState.matched || item.isAiEstimate,
     );
     final calories = context.ota(
       'calorieAmount',
@@ -578,18 +576,27 @@ class _IngredientRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Logging a meal used to erase what the review step admitted it was unsure
-    // about; the estimate survives into the logged meal instead.
-    final isEstimate = item.matchState != MatchState.matched;
+    // about; the estimate survives into the logged meal instead. An AI
+    // estimate stays approximate for good — answering the portion question
+    // does not turn model nutrition into a catalog row.
+    final needsReview = item.matchState != MatchState.matched;
+    final isEstimate = needsReview || item.isAiEstimate;
     final portion = isEstimate ? '~${item.portionLabel}' : item.portionLabel;
-    final calories = context.ota(
+    final calorieAmount = context.ota(
       'calorieAmount',
       tr: '{amount} kcal',
       en: '{amount} kcal',
       replacements: {'amount': item.nutrition.calories.round()},
     );
+    final calories = item.isAiEstimate ? '~$calorieAmount' : calorieAmount;
     final estimateNote = item.matchState == MatchState.checkAmount
         ? context.l10n.mealCheckAmount
         : context.l10n.mealCheckType;
+    final aiEstimateNote = context.ota(
+      'aiEstimateChip',
+      tr: 'Yapay zekâ tahmini',
+      en: 'AI estimate',
+    );
     final largeText = MediaQuery.textScalerOf(context).scale(14) >= 20;
     final details = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -602,7 +609,11 @@ class _IngredientRow extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.xxs),
         Text(portion, style: Theme.of(context).textTheme.bodyMedium),
-        if (isEstimate) ...[
+        if (item.isAiEstimate) ...[
+          const SizedBox(height: AppSpacing.tiny),
+          _AiEstimateChip(label: aiEstimateNote),
+        ],
+        if (needsReview) ...[
           const SizedBox(height: AppSpacing.tiny),
           _EstimateChip(label: estimateNote),
         ],
@@ -624,7 +635,8 @@ class _IngredientRow extends StatelessWidget {
         item.name,
         portion,
         calories,
-        if (isEstimate) estimateNote,
+        if (item.isAiEstimate) aiEstimateNote,
+        if (needsReview) estimateNote,
       ].join(', '),
       child: ExcludeSemantics(
         child: Material(
@@ -666,6 +678,53 @@ class _IngredientRow extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The review step's AI-provenance chip, carried into the logged meal so the
+/// reader always knows this row's nutrition never came from the catalog.
+class _AiEstimateChip extends StatelessWidget {
+  const _AiEstimateChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const Key('detail-ai-estimate-chip'),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.micro,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.brandSoft,
+        borderRadius: BorderRadius.circular(AppRadius.small),
+        border: Border.all(color: AppColors.brand),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.auto_awesome_rounded,
+            size: 13,
+            color: AppColors.brandStrong,
+          ),
+          const SizedBox(width: AppSpacing.xxs),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.brandStrong,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

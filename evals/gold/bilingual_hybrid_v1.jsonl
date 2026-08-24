@@ -18,3 +18,9 @@
 {"id":"hybrid-en-008","locale":"en-US","input":"avocado toast","expectedItems":[],"expectNoMatch":true,"tags":["english","no_match"]}
 {"id":"hybrid-en-009","locale":"en-US","input":"lentil soup","expectedItems":[],"expectNoMatch":true,"tags":["english","no_match"]}
 {"id":"hybrid-en-010","locale":"en-US","input":"a healthy breakfast","expectedItems":[],"expectNoMatch":true,"tags":["english","no_match","non_specific"]}
+{"id":"hybrid-tr-011","locale":"tr-TR","input":"2 yumurta yedim kanka","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100}],"tags":["conversational","filler","count"]}
+{"id":"hybrid-tr-012","locale":"tr-TR","input":"sabah 3 yumurta yedim","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":150}],"tags":["conversational","time_reference","count"]}
+{"id":"hybrid-tr-013","locale":"tr-TR","input":"bi tane simit yedim abi ya","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000003","grams":100}],"tags":["conversational","filler","slang"]}
+{"id":"hybrid-tr-014","locale":"tr-TR","input":"kahvaltıda 30 gram beyaz peynir atıştırdım","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000002","grams":30}],"tags":["conversational","time_reference","verb"]}
+{"id":"hybrid-tr-015","locale":"tr-TR","input":"kanka naber","expectedItems":[],"expectNoMatch":true,"tags":["conversational","no_food","no_match"]}
+{"id":"hybrid-en-011","locale":"en-US","input":"had 2 eggs this morning bro","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":100}],"tags":["english","conversational","filler"]}

@@ -58,6 +58,7 @@ class MealItemRemoteDto {
     required this.reviewStatus,
     required this.nutritionSource,
     this.foodId,
+    this.matchMethod,
   });
 
   factory MealItemRemoteDto.fromJson(Map<String, dynamic> json) {
@@ -65,6 +66,7 @@ class MealItemRemoteDto {
     return MealItemRemoteDto(
       id: json['id'] as String,
       foodId: json['food_id'] as String?,
+      matchMethod: json['match_method'] as String?,
       position: json['position'] as int,
       sourceText: json['source_text'] as String,
       canonicalName: json['canonical_name'] as String,
@@ -81,6 +83,10 @@ class MealItemRemoteDto {
 
   final String id;
   final String? foodId;
+
+  /// `ai_estimate` marks a row whose nutrition was model-estimated; the flag
+  /// must survive the server round-trip or the meal detail loses its marker.
+  final String? matchMethod;
   final int position;
   final String sourceText;
   final String canonicalName;

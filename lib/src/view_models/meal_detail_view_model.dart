@@ -10,10 +10,12 @@ class MealDetailViewModel extends ChangeNotifier {
   LoggedMeal get meal => _meal;
   Nutrition get nutrition => _meal.nutrition;
 
-  /// True while any food in the meal is still an unreviewed estimate, so the
-  /// screen can keep admitting that the total is approximate.
-  bool get hasEstimates =>
-      _meal.items.any((item) => item.matchState != MatchState.matched);
+  /// True while any food in the meal is still an unreviewed estimate — or an
+  /// AI-estimated one, which stays approximate however carefully it was
+  /// reviewed — so the screen keeps admitting that the total is approximate.
+  bool get hasEstimates => _meal.items.any(
+    (item) => item.matchState != MatchState.matched || item.isAiEstimate,
+  );
 
   /// What [item] would contribute at [grams], without touching stored state.
   ///

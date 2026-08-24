@@ -18,27 +18,27 @@ void main() {
     expect(repository.draft.step, 2);
   });
 
-  test('switching away from calorie tracking clears calorie target', () async {
+  test('skipping the tour lands on the sign-in step without answers', () async {
     final repository = FakeOnboardingRepository();
     final viewModel = OnboardingViewModel(repository);
     await viewModel.initialize();
 
-    await viewModel.selectIntention(TrackingIntention.calories);
-    await viewModel.setCalorieTarget('2100');
-    await viewModel.selectIntention(TrackingIntention.protein);
+    await viewModel.skipToSignIn();
 
-    expect(viewModel.draft.dailyCalorieTarget, isNull);
-    expect(repository.draft.dailyCalorieTarget, isNull);
+    expect(repository.draft.step, 3);
+    expect(repository.draft.intention, isNull);
+    expect(repository.draft.body.sex, isNull);
   });
 
-  test('calorie target enforces the database range', () async {
-    final viewModel = OnboardingViewModel(FakeOnboardingRepository());
+  test('the step never escapes the flow it addresses', () async {
+    final repository = FakeOnboardingRepository();
+    final viewModel = OnboardingViewModel(repository);
     await viewModel.initialize();
-    await viewModel.selectIntention(TrackingIntention.calories);
 
-    expect(viewModel.validateCalorieTarget('499'), isNotNull);
-    expect(viewModel.validateCalorieTarget('10001'), isNotNull);
-    expect(viewModel.validateCalorieTarget('2100'), isNull);
-    expect(viewModel.validateCalorieTarget(''), isNull);
+    await viewModel.goToStep(-4);
+    expect(viewModel.draft.step, 0);
+
+    await viewModel.goToStep(99);
+    expect(viewModel.draft.step, 3);
   });
 }

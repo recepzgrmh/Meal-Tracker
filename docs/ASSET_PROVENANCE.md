@@ -40,3 +40,22 @@ Each asset used a separate subject-specific prompt while preserving the shared
 composition, lighting, palette and constraints above. The originally supplied
 PNG files remain outside the repository; optimized project copies are the
 files listed above.
+
+## Controlled portion references (`food-portion-references` bucket)
+
+The reviewed portion-reference programme is a separate, source-traced track and
+does **not** reuse any asset listed above. Its gram values come from published
+Turkish sources (TürKomp for composition, TÜBER 2022 for standard portions),
+its images are produced under a fixed capture standard, and no image is
+published without a named reviewer.
+
+Status as of 18 August 2026: prompts and metadata exist for the 10-food pilot;
+**no image has been produced yet**, so every `food_portions.visual_status`
+remains `missing` and `visual_source` / `visual_license` /
+`visual_attribution` are null. See
+[`docs/PORTION_REFERENCE_PILOT.md`](PORTION_REFERENCE_PILOT.md) for the source
+table, the blocked foods, the QA checklist and the rollout order.
+
+The `assets/images/portion_cheese_*.webp` files above are still the offline
+fallback drawing set and remain uncalibrated; they must not be presented as
+measurement evidence.

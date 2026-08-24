@@ -116,7 +116,10 @@ class MealFlowViewModel extends ChangeNotifier {
     try {
       _variantResults = query.length < 2
           ? const []
-          : await repository.search(query: query, locale: locale);
+          : _preferAlternatives(
+              await repository.search(query: query, locale: locale),
+              item.alternativeFoodIds,
+            );
     } catch (_) {
       _variantSearchError = 'CATALOG_SEARCH_FAILED';
     } finally {
@@ -147,6 +150,59 @@ class MealFlowViewModel extends ChangeNotifier {
     if (draft == null) return;
     _draft = draft.addItem(_manualItem(candidate, sourceText));
     notifyListeners();
+  }
+
+  /// Swaps [target] for a catalog food picked by hand.
+  ///
+  /// Built for AI-estimate rows: the estimate keeps the meal loggable, but a
+  /// real catalog match is strictly better, so the correction replaces the
+  /// guess instead of adding a duplicate beside it. The row keeps its id and
+  /// analyzer item key (the commit diffs corrections by that key) and drops
+  /// the estimate id — the item is catalog-grounded from here on.
+  void replaceWithManualFood(
+    MealItem target,
+    CatalogFoodCandidate candidate,
+    String sourceText,
+  ) {
+    final draft = _draft;
+    if (draft == null) return;
+    final manual = _manualItem(candidate, sourceText);
+    _draft = draft.updateItem(
+      MealItem(
+        id: target.id,
+        analysisItemKey: target.analysisItemKey,
+        foodId: manual.foodId,
+        name: manual.displayName,
+        canonicalName: manual.canonicalName,
+        sourceText: manual.sourceText,
+        portionLabel: manual.portionLabel,
+        grams: manual.grams,
+        nutritionPer100g: manual.nutritionPer100g,
+        matchState: manual.matchState,
+        sourceName: manual.sourceName,
+        confidence: manual.confidence,
+        matchMethod: manual.matchMethod,
+      ),
+    );
+    notifyListeners();
+  }
+
+  /// Server-suggested identity alternatives lead the variant list; everything
+  /// else keeps the retrieval order behind them.
+  List<CatalogFoodCandidate> _preferAlternatives(
+    List<CatalogFoodCandidate> results,
+    List<String> alternativeFoodIds,
+  ) {
+    if (alternativeFoodIds.isEmpty) return results;
+    final byId = {for (final candidate in results) candidate.foodId: candidate};
+    final leading = [
+      for (final foodId in alternativeFoodIds) ?byId[foodId],
+    ];
+    final leadingIds = {for (final candidate in leading) candidate.foodId};
+    return [
+      ...leading,
+      ...results.where((candidate) => !leadingIds.contains(candidate.foodId)),
+    ];
   }
 
   MealItem _manualItem(CatalogFoodCandidate candidate, String sourceText) =>

@@ -52,8 +52,10 @@ export default {
         p_name: body.name,
         p_occurred_at: body.occurredAt,
         p_items: body.items.map((item) => ({
+          item_id: item.itemId,
           item_key: item.itemKey,
-          food_id: item.foodId,
+          food_id: item.foodId ?? null,
+          estimate_id: item.estimateId ?? null,
           source_text: item.sourceText,
           portion_label: item.portionLabel,
           grams: item.grams,

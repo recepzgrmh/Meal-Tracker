@@ -128,9 +128,18 @@ class CachedMealRepository {
     required DateTime eatenAt,
   }) async {
     final analysisRunId = draft.analysisRunId;
+    // Each committed item references exactly one nutrition authority: a
+    // catalog food or a server-recorded AI estimate. The commit function
+    // rejects anything else, so the guard fails fast on the device instead.
     if (analysisRunId == null ||
-        draft.items.any((item) => item.foodId == null)) {
-      throw ArgumentError('A grounded analysis run and food IDs are required.');
+        draft.items.any(
+          (item) => (item.foodId == null) == (item.estimateId == null),
+        ) ||
+        draft.items.length != meal.items.length) {
+      throw ArgumentError(
+        'A grounded analysis run and exactly one of foodId or estimateId '
+        'per item are required.',
+      );
     }
     final operationId = _operationIdFactory();
     final now = _clock();
@@ -156,13 +165,22 @@ class CachedMealRepository {
           'name': meal.name,
           'occurredAt': eatenAt.toUtc().toIso8601String(),
           'items': [
-            for (final item in draft.items)
+            for (final entry in draft.items.asMap().entries)
               {
-                'itemKey': item.id,
-                'foodId': item.foodId,
-                'sourceText': item.sourceText,
-                'portionLabel': item.portionLabel,
-                'grams': item.grams,
+                // The logged meal owns the durable local UUID. The draft owns
+                // the analyzer item key used for proposal/correction diffing.
+                'itemId': meal.items[entry.key].id,
+                'itemKey':
+                    entry.value.analysisItemKey ?? meal.items[entry.key].id,
+                // The commit contract wants exactly one of the two keys
+                // present — a JSON `"foodId": null` still counts as sent.
+                if (entry.value.foodId case final foodId?)
+                  'foodId': foodId
+                else
+                  'estimateId': entry.value.estimateId,
+                'sourceText': entry.value.sourceText,
+                'portionLabel': entry.value.portionLabel,
+                'grams': entry.value.grams,
               },
           ],
         }),

@@ -1315,6 +1315,17 @@ class $LocalMealItemsTable extends LocalMealItems
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _matchMethodMeta = const VerificationMeta(
+    'matchMethod',
+  );
+  @override
+  late final GeneratedColumn<String> matchMethod = GeneratedColumn<String>(
+    'match_method',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _positionMeta = const VerificationMeta(
     'position',
   );
@@ -1342,6 +1353,7 @@ class $LocalMealItemsTable extends LocalMealItems
     fatPer100g,
     matchState,
     sourceName,
+    matchMethod,
     position,
   ];
   @override
@@ -1475,6 +1487,15 @@ class $LocalMealItemsTable extends LocalMealItems
     } else if (isInserting) {
       context.missing(_sourceNameMeta);
     }
+    if (data.containsKey('match_method')) {
+      context.handle(
+        _matchMethodMeta,
+        matchMethod.isAcceptableOrUnknown(
+          data['match_method']!,
+          _matchMethodMeta,
+        ),
+      );
+    }
     if (data.containsKey('position')) {
       context.handle(
         _positionMeta,
@@ -1548,6 +1569,10 @@ class $LocalMealItemsTable extends LocalMealItems
         DriftSqlType.string,
         data['${effectivePrefix}source_name'],
       )!,
+      matchMethod: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}match_method'],
+      ),
       position: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}position'],
@@ -1576,6 +1601,12 @@ class LocalMealItem extends DataClass implements Insertable<LocalMealItem> {
   final double fatPer100g;
   final String matchState;
   final String sourceName;
+
+  /// How the item's nutrition was matched (`exact`, `llm`, `manual`,
+  /// `ai_estimate`, ...). Nullable: rows written before schema v2 never
+  /// recorded it, and "unknown" must stay distinct from any real method —
+  /// `ai_estimate` in particular drives the persistent AI-estimate marker.
+  final String? matchMethod;
   final int position;
   const LocalMealItem({
     required this.id,
@@ -1592,6 +1623,7 @@ class LocalMealItem extends DataClass implements Insertable<LocalMealItem> {
     required this.fatPer100g,
     required this.matchState,
     required this.sourceName,
+    this.matchMethod,
     required this.position,
   });
   @override
@@ -1613,6 +1645,9 @@ class LocalMealItem extends DataClass implements Insertable<LocalMealItem> {
     map['fat_per100g'] = Variable<double>(fatPer100g);
     map['match_state'] = Variable<String>(matchState);
     map['source_name'] = Variable<String>(sourceName);
+    if (!nullToAbsent || matchMethod != null) {
+      map['match_method'] = Variable<String>(matchMethod);
+    }
     map['position'] = Variable<int>(position);
     return map;
   }
@@ -1635,6 +1670,9 @@ class LocalMealItem extends DataClass implements Insertable<LocalMealItem> {
       fatPer100g: Value(fatPer100g),
       matchState: Value(matchState),
       sourceName: Value(sourceName),
+      matchMethod: matchMethod == null && nullToAbsent
+          ? const Value.absent()
+          : Value(matchMethod),
       position: Value(position),
     );
   }
@@ -1659,6 +1697,7 @@ class LocalMealItem extends DataClass implements Insertable<LocalMealItem> {
       fatPer100g: serializer.fromJson<double>(json['fatPer100g']),
       matchState: serializer.fromJson<String>(json['matchState']),
       sourceName: serializer.fromJson<String>(json['sourceName']),
+      matchMethod: serializer.fromJson<String?>(json['matchMethod']),
       position: serializer.fromJson<int>(json['position']),
     );
   }
@@ -1680,6 +1719,7 @@ class LocalMealItem extends DataClass implements Insertable<LocalMealItem> {
       'fatPer100g': serializer.toJson<double>(fatPer100g),
       'matchState': serializer.toJson<String>(matchState),
       'sourceName': serializer.toJson<String>(sourceName),
+      'matchMethod': serializer.toJson<String?>(matchMethod),
       'position': serializer.toJson<int>(position),
     };
   }
@@ -1699,6 +1739,7 @@ class LocalMealItem extends DataClass implements Insertable<LocalMealItem> {
     double? fatPer100g,
     String? matchState,
     String? sourceName,
+    Value<String?> matchMethod = const Value.absent(),
     int? position,
   }) => LocalMealItem(
     id: id ?? this.id,
@@ -1715,6 +1756,7 @@ class LocalMealItem extends DataClass implements Insertable<LocalMealItem> {
     fatPer100g: fatPer100g ?? this.fatPer100g,
     matchState: matchState ?? this.matchState,
     sourceName: sourceName ?? this.sourceName,
+    matchMethod: matchMethod.present ? matchMethod.value : this.matchMethod,
     position: position ?? this.position,
   );
   LocalMealItem copyWithCompanion(LocalMealItemsCompanion data) {
@@ -1749,6 +1791,9 @@ class LocalMealItem extends DataClass implements Insertable<LocalMealItem> {
       sourceName: data.sourceName.present
           ? data.sourceName.value
           : this.sourceName,
+      matchMethod: data.matchMethod.present
+          ? data.matchMethod.value
+          : this.matchMethod,
       position: data.position.present ? data.position.value : this.position,
     );
   }
@@ -1770,6 +1815,7 @@ class LocalMealItem extends DataClass implements Insertable<LocalMealItem> {
           ..write('fatPer100g: $fatPer100g, ')
           ..write('matchState: $matchState, ')
           ..write('sourceName: $sourceName, ')
+          ..write('matchMethod: $matchMethod, ')
           ..write('position: $position')
           ..write(')'))
         .toString();
@@ -1791,6 +1837,7 @@ class LocalMealItem extends DataClass implements Insertable<LocalMealItem> {
     fatPer100g,
     matchState,
     sourceName,
+    matchMethod,
     position,
   );
   @override
@@ -1811,6 +1858,7 @@ class LocalMealItem extends DataClass implements Insertable<LocalMealItem> {
           other.fatPer100g == this.fatPer100g &&
           other.matchState == this.matchState &&
           other.sourceName == this.sourceName &&
+          other.matchMethod == this.matchMethod &&
           other.position == this.position);
 }
 
@@ -1829,6 +1877,7 @@ class LocalMealItemsCompanion extends UpdateCompanion<LocalMealItem> {
   final Value<double> fatPer100g;
   final Value<String> matchState;
   final Value<String> sourceName;
+  final Value<String?> matchMethod;
   final Value<int> position;
   final Value<int> rowid;
   const LocalMealItemsCompanion({
@@ -1846,6 +1895,7 @@ class LocalMealItemsCompanion extends UpdateCompanion<LocalMealItem> {
     this.fatPer100g = const Value.absent(),
     this.matchState = const Value.absent(),
     this.sourceName = const Value.absent(),
+    this.matchMethod = const Value.absent(),
     this.position = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -1864,6 +1914,7 @@ class LocalMealItemsCompanion extends UpdateCompanion<LocalMealItem> {
     required double fatPer100g,
     required String matchState,
     required String sourceName,
+    this.matchMethod = const Value.absent(),
     required int position,
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -1895,6 +1946,7 @@ class LocalMealItemsCompanion extends UpdateCompanion<LocalMealItem> {
     Expression<double>? fatPer100g,
     Expression<String>? matchState,
     Expression<String>? sourceName,
+    Expression<String>? matchMethod,
     Expression<int>? position,
     Expression<int>? rowid,
   }) {
@@ -1913,6 +1965,7 @@ class LocalMealItemsCompanion extends UpdateCompanion<LocalMealItem> {
       if (fatPer100g != null) 'fat_per100g': fatPer100g,
       if (matchState != null) 'match_state': matchState,
       if (sourceName != null) 'source_name': sourceName,
+      if (matchMethod != null) 'match_method': matchMethod,
       if (position != null) 'position': position,
       if (rowid != null) 'rowid': rowid,
     });
@@ -1933,6 +1986,7 @@ class LocalMealItemsCompanion extends UpdateCompanion<LocalMealItem> {
     Value<double>? fatPer100g,
     Value<String>? matchState,
     Value<String>? sourceName,
+    Value<String?>? matchMethod,
     Value<int>? position,
     Value<int>? rowid,
   }) {
@@ -1951,6 +2005,7 @@ class LocalMealItemsCompanion extends UpdateCompanion<LocalMealItem> {
       fatPer100g: fatPer100g ?? this.fatPer100g,
       matchState: matchState ?? this.matchState,
       sourceName: sourceName ?? this.sourceName,
+      matchMethod: matchMethod ?? this.matchMethod,
       position: position ?? this.position,
       rowid: rowid ?? this.rowid,
     );
@@ -2001,6 +2056,9 @@ class LocalMealItemsCompanion extends UpdateCompanion<LocalMealItem> {
     if (sourceName.present) {
       map['source_name'] = Variable<String>(sourceName.value);
     }
+    if (matchMethod.present) {
+      map['match_method'] = Variable<String>(matchMethod.value);
+    }
     if (position.present) {
       map['position'] = Variable<int>(position.value);
     }
@@ -2027,6 +2085,7 @@ class LocalMealItemsCompanion extends UpdateCompanion<LocalMealItem> {
           ..write('fatPer100g: $fatPer100g, ')
           ..write('matchState: $matchState, ')
           ..write('sourceName: $sourceName, ')
+          ..write('matchMethod: $matchMethod, ')
           ..write('position: $position, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -4109,6 +4168,7 @@ typedef $$LocalMealItemsTableCreateCompanionBuilder =
       required double fatPer100g,
       required String matchState,
       required String sourceName,
+      Value<String?> matchMethod,
       required int position,
       Value<int> rowid,
     });
@@ -4128,6 +4188,7 @@ typedef $$LocalMealItemsTableUpdateCompanionBuilder =
       Value<double> fatPer100g,
       Value<String> matchState,
       Value<String> sourceName,
+      Value<String?> matchMethod,
       Value<int> position,
       Value<int> rowid,
     });
@@ -4229,6 +4290,11 @@ class $$LocalMealItemsTableFilterComposer
 
   ColumnFilters<String> get sourceName => $composableBuilder(
     column: $table.sourceName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get matchMethod => $composableBuilder(
+    column: $table.matchMethod,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4335,6 +4401,11 @@ class $$LocalMealItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get matchMethod => $composableBuilder(
+    column: $table.matchMethod,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get position => $composableBuilder(
     column: $table.position,
     builder: (column) => ColumnOrderings(column),
@@ -4428,6 +4499,11 @@ class $$LocalMealItemsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get matchMethod => $composableBuilder(
+    column: $table.matchMethod,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get position =>
       $composableBuilder(column: $table.position, builder: (column) => column);
 
@@ -4499,6 +4575,7 @@ class $$LocalMealItemsTableTableManager
                 Value<double> fatPer100g = const Value.absent(),
                 Value<String> matchState = const Value.absent(),
                 Value<String> sourceName = const Value.absent(),
+                Value<String?> matchMethod = const Value.absent(),
                 Value<int> position = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => LocalMealItemsCompanion(
@@ -4516,6 +4593,7 @@ class $$LocalMealItemsTableTableManager
                 fatPer100g: fatPer100g,
                 matchState: matchState,
                 sourceName: sourceName,
+                matchMethod: matchMethod,
                 position: position,
                 rowid: rowid,
               ),
@@ -4535,6 +4613,7 @@ class $$LocalMealItemsTableTableManager
                 required double fatPer100g,
                 required String matchState,
                 required String sourceName,
+                Value<String?> matchMethod = const Value.absent(),
                 required int position,
                 Value<int> rowid = const Value.absent(),
               }) => LocalMealItemsCompanion.insert(
@@ -4552,6 +4631,7 @@ class $$LocalMealItemsTableTableManager
                 fatPer100g: fatPer100g,
                 matchState: matchState,
                 sourceName: sourceName,
+                matchMethod: matchMethod,
                 position: position,
                 rowid: rowid,
               ),

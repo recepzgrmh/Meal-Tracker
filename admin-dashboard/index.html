@@ -1,9 +1,18 @@
 <!doctype html>
-<html lang="en">
+<!-- Light is the default theme; dark is opt-in. Stamped here so the OS
+     preference cannot paint a dark frame before React mounts. -->
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#f5f6f3" />
+    <meta name="theme-color" content="#f8f8f9" />
+    <script>
+      try {
+        var stored = localStorage.getItem('console-theme')
+        if (stored === 'dark') document.documentElement.setAttribute('data-theme', 'dark')
+        else if (stored === 'system') document.documentElement.removeAttribute('data-theme')
+      } catch (error) { /* private mode — keep the light default */ }
+    </script>
     <title>Meal Clarity · AI Operations</title>
   </head>
   <body>

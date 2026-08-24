@@ -92,6 +92,10 @@ class FakeProfileRepository implements ProfileRepository {
   int completionCount = 0;
   bool shouldFail = false;
 
+  /// The last draft handed over, so tests can assert what would be written to
+  /// `profiles` rather than only that a write was attempted.
+  OnboardingDraft? lastDraft;
+
   @override
   Future<void> completeOnboarding({
     required String userId,
@@ -99,6 +103,7 @@ class FakeProfileRepository implements ProfileRepository {
     required int version,
   }) async {
     completionCount++;
+    lastDraft = draft;
     if (shouldFail) throw StateError('offline');
   }
 }

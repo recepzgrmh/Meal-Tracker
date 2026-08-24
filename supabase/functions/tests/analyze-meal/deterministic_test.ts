@@ -1,4 +1,5 @@
 import {
+  aliasLookupKeys,
   analyzeDeterministically,
   type CatalogFood,
   normalizeTurkishInput,
@@ -129,6 +130,38 @@ Deno.test('resolves catalog household measures without leaking unit tokens', () 
   assertEquals(result.items[0].portionLabel, '2 kase')
   assertEquals(result.items[0].needsClarification, false)
   assertEquals(result.unmatchedText, [])
+})
+
+Deno.test('alias lookup keys recover every alias the matcher can still resolve', () => {
+  // The catalog is too large to load whole, so these keys are what scopes the
+  // alias query. Anything the matcher would accept must appear here, otherwise
+  // the food is never fetched and the match silently disappears.
+  const cases: Array<[string, string]> = [
+    ['2 yumurta', 'yumurta'],
+    ['3 yumurtayı yedim', 'yumurta'],
+    ['simitler', 'simit'],
+    ['biraz beyaz peynir', 'beyaz peynir'],
+    ['yoğurdu bitirdim', 'yoğurt'],
+    ['kahvaltıda yumurtadan yedim', 'yumurta'],
+    ['peynirler', 'peynir'],
+  ]
+  for (const [input, expected] of cases) {
+    const keys = aliasLookupKeys([input])
+    if (!keys.includes(expected)) {
+      throw new Error(`"${input}" did not yield "${expected}": ${JSON.stringify(keys)}`)
+    }
+  }
+})
+
+Deno.test('alias lookup keys stay bounded and cover multi-word aliases', () => {
+  // Only the final word of a multi-word alias carries an inflection, matching
+  // inflectedAliasPattern. Turkish possessive forms such as "çorbası" are out of
+  // scope for the matcher too, so they are deliberately not de-inflected here.
+  const keys = aliasLookupKeys(['iki dilim beyaz peynirler ve yarım ekmek'])
+  assertEquals(keys.includes('beyaz peynir'), true)
+  assertEquals(keys.includes('ekmek'), true)
+  assertEquals(keys.length <= 500, true)
+  assertEquals(aliasLookupKeys(['']), [])
 })
 
 function assertEquals(actual: unknown, expected: unknown): void {

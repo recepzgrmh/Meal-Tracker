@@ -35,6 +35,7 @@ void main() {
     repository.nextFailure = const AuthFailure(
       AuthFailureCode.rateLimited,
       'Geri sayım bitince tekrar dene.',
+      retryAfter: Duration(seconds: 2),
     );
 
     final result = await viewModel.requestOtp('test@example.com');
@@ -42,6 +43,38 @@ void main() {
     expect(result, isFalse);
     expect(viewModel.step, AuthStep.email);
     expect(viewModel.errorMessage, 'Geri sayım bitince tekrar dene.');
+    expect(viewModel.resendSeconds, 2);
+    expect(viewModel.canRequestOtp, isFalse);
+  });
+
+  test('email delivery limit allows using an existing code', () async {
+    repository.nextFailure = const AuthFailure(
+      AuthFailureCode.emailRateLimited,
+      'E-posta gönderim sınırına ulaşıldı.',
+      retryAfter: Duration(minutes: 30),
+    );
+
+    final result = await viewModel.requestOtp('test@example.com');
+
+    expect(result, isFalse);
+    expect(viewModel.isEmailRateLimited, isTrue);
+    expect(viewModel.resendSeconds, 1800);
+    viewModel.useExistingCode();
+    expect(viewModel.step, AuthStep.otp);
+    expect(viewModel.errorMessage, isNull);
+  });
+
+  test('email delivery limit without retry time uses local cooldown', () async {
+    repository.nextFailure = const AuthFailure(
+      AuthFailureCode.emailRateLimited,
+      'E-posta gönderim sınırına ulaşıldı.',
+    );
+
+    final result = await viewModel.requestOtp('test@example.com');
+
+    expect(result, isFalse);
+    expect(viewModel.resendSeconds, 2);
+    expect(viewModel.canRequestOtp, isFalse);
   });
 
   test('verification returns a session', () async {

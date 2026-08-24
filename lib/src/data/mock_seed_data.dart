@@ -1,7 +1,7 @@
 import '../domain/models.dart';
 
-List<LoggedMeal> buildMockMeals() {
-  final now = DateTime.now();
+List<LoggedMeal> buildMockMeals([DateTime? asOf]) {
+  final now = asOf ?? DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
   return [
     LoggedMeal(

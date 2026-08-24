@@ -1,4 +1,5 @@
 import { analyzeDeterministically, type CatalogFood } from '../analyze-meal/deterministic.ts'
+import { type EvalCaseRecord, persistenceRequested, persistEvalRun } from './persist_eval_run.ts'
 
 interface ExpectedItem {
   foodId: string
@@ -30,6 +31,8 @@ let noMatchCorrect = 0
 let noMatchTotal = 0
 const portionErrors: number[] = []
 const failures: Array<{ id: string; input: string; reasons: string[] }> = []
+const caseRecords: EvalCaseRecord[] = []
+const startedAt = new Date().toISOString()
 
 for (const gold of cases) {
   const result = analyzeDeterministically(gold.input, catalog)
@@ -62,8 +65,17 @@ for (const gold of cases) {
   }
   if (reasons.length === 0) exactCases++
   else failures.push({ id: gold.id, input: gold.input, reasons })
+  caseRecords.push({
+    caseId: gold.id,
+    passed: reasons.length === 0,
+    expected: { items: gold.expectedItems, expectNoMatch: gold.expectNoMatch === true },
+    actual: { items: result.items },
+    failureKind: reasons[0]?.split(':')[0] ?? null,
+    latencyMs: null,
+  })
 }
 
+const finishedAt = new Date().toISOString()
 const precision = divide(truePositive, truePositive + falsePositive)
 const recall = divide(truePositive, truePositive + falseNegative)
 const report = {
@@ -83,6 +95,22 @@ const report = {
 }
 
 console.log(JSON.stringify(report, null, 2))
+
+if (persistenceRequested()) {
+  await persistEvalRun({
+    kind: 'deterministic',
+    suite: report.dataset,
+    model: null,
+    promptVersion: report.pipeline,
+    startedAt,
+    finishedAt,
+    caseCount: cases.length,
+    passedCount: exactCases,
+    metrics: report.metrics,
+    costMicros: null,
+    notes: null,
+  }, caseRecords)
+}
 
 function validateCase(value: unknown, line: number): GoldCase {
   if (typeof value !== 'object' || value === null) throw new Error(`Invalid case at line ${line}`)

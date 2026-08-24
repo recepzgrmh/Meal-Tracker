@@ -1,0 +1,378 @@
+{
+  "cleaning_version": "food-cleaning-v1",
+  "generated_at": "2026-08-22T23:46:46.187Z",
+  "sources": {
+    "usda-foundation": {
+      "input": 363,
+      "output": 363,
+      "cleaned_name_count": 363,
+      "cleaned_brand_count": 0,
+      "weak_name_count": 0,
+      "nutrition_warning_count": 0,
+      "portion_cleanup_count": 292,
+      "duplicate_candidates": 0
+    },
+    "usda-fndds": {
+      "input": 5432,
+      "output": 5432,
+      "cleaned_name_count": 5432,
+      "cleaned_brand_count": 0,
+      "weak_name_count": 0,
+      "nutrition_warning_count": 26,
+      "portion_cleanup_count": 5578,
+      "duplicate_candidates": 0
+    },
+    "usda-sr-legacy": {
+      "input": 7793,
+      "output": 7793,
+      "cleaned_name_count": 7793,
+      "cleaned_brand_count": 0,
+      "weak_name_count": 0,
+      "nutrition_warning_count": 26,
+      "portion_cleanup_count": 4378,
+      "duplicate_candidates": 1
+    },
+    "usda-branded": {
+      "input": 455458,
+      "output": 455458,
+      "cleaned_name_count": 455454,
+      "cleaned_brand_count": 454220,
+      "weak_name_count": 26,
+      "nutrition_warning_count": 7867,
+      "portion_cleanup_count": 143749,
+      "duplicate_candidates": 54714
+    },
+    "turkomp": {
+      "input": 645,
+      "output": 645,
+      "cleaned_name_count": 645,
+      "cleaned_brand_count": 0,
+      "weak_name_count": 0,
+      "nutrition_warning_count": 3,
+      "portion_cleanup_count": 0,
+      "duplicate_candidates": 0
+    },
+    "openfoodfacts": {
+      "input": 772837,
+      "output": 772837,
+      "cleaned_name_count": 751924,
+      "cleaned_brand_count": 604479,
+      "weak_name_count": 3514,
+      "nutrition_warning_count": 6206,
+      "portion_cleanup_count": 515054,
+      "duplicate_candidates": 97670
+    }
+  },
+  "totals": {
+    "input": 1242528,
+    "output": 1242528,
+    "cleaned_name_count": 1221611,
+    "cleaned_brand_count": 1058699,
+    "weak_name_count": 3540,
+    "nutrition_warning_count": 14128,
+    "portion_cleanup_count": 669051,
+    "duplicate_candidates": 152385
+  },
+  "before_after_examples": [
+    {
+      "source": "usda_foundation",
+      "source_id": "321358",
+      "original_name": "Hummus, commercial",
+      "display_name": "Hummus, commercial",
+      "normalized_name": "hummus commercial",
+      "original_brand": null,
+      "display_brand": null,
+      "normalized_brand": null
+    },
+    {
+      "source": "usda_foundation",
+      "source_id": "321360",
+      "original_name": "Tomatoes, grape, raw",
+      "display_name": "Tomatoes, grape, raw",
+      "normalized_name": "tomatoes grape raw",
+      "original_brand": null,
+      "display_brand": null,
+      "normalized_brand": null
+    },
+    {
+      "source": "usda_foundation",
+      "source_id": "321611",
+      "original_name": "Beans, snap, green, canned, regular pack, drained solids",
+      "display_name": "Beans, snap, green, canned, regular pack, drained solids",
+      "normalized_name": "beans snap green canned regular pack drained solids",
+      "original_brand": null,
+      "display_brand": null,
+      "normalized_brand": null
+    },
+    {
+      "source": "usda_foundation",
+      "source_id": "323121",
+      "original_name": "Frankfurter, beef, unheated",
+      "display_name": "Frankfurter, beef, unheated",
+      "normalized_name": "frankfurter beef unheated",
+      "original_brand": null,
+      "display_brand": null,
+      "normalized_brand": null
+    },
+    {
+      "source": "usda_foundation",
+      "source_id": "323294",
+      "original_name": "Nuts, almonds, dry roasted, with salt added",
+      "display_name": "Nuts, almonds, dry roasted, with salt added",
+      "normalized_name": "nuts almonds dry roasted with salt added",
+      "original_brand": null,
+      "display_brand": null,
+      "normalized_brand": null
+    },
+    {
+      "source": "usda_fndds",
+      "source_id": "2705383",
+      "original_name": "Milk, human",
+      "display_name": "Milk, human",
+      "normalized_name": "milk human",
+      "original_brand": null,
+      "display_brand": null,
+      "normalized_brand": null
+    },
+    {
+      "source": "usda_fndds",
+      "source_id": "2705384",
+      "original_name": "Milk, NFS",
+      "display_name": "Milk, NFS",
+      "normalized_name": "milk nfs",
+      "original_brand": null,
+      "display_brand": null,
+      "normalized_brand": null
+    },
+    {
+      "source": "usda_fndds",
+      "source_id": "2705385",
+      "original_name": "Milk, whole",
+      "display_name": "Milk, whole",
+      "normalized_name": "milk whole",
+      "original_brand": null,
+      "display_brand": null,
+      "normalized_brand": null
+    },
+    {
+      "source": "usda_fndds",
+      "source_id": "2705386",
+      "original_name": "Milk, reduced fat (2%)",
+      "display_name": "Milk, reduced fat (2%)",
+      "normalized_name": "milk reduced fat 2",
+      "original_brand": null,
+      "display_brand": null,
+      "normalized_brand": null
+    },
+    {
+      "source": "usda_fndds",
+      "source_id": "2705387",
+      "original_name": "Milk, low fat (1%)",
+      "display_name": "Milk, low fat (1%)",
+      "normalized_name": "milk low fat 1",
+      "original_brand": null,
+      "display_brand": null,
+      "normalized_brand": null
+    },
+    {
+      "source": "usda_sr_legacy",
+      "source_id": "167512",
+      "original_name": "Pillsbury Golden Layer Buttermilk Biscuits, Artificial Flavor, refrigerated dough",
+      "display_name": "Pillsbury Golden Layer Buttermilk Biscuits, Artificial Flavor, refrigerated dough",
+      "normalized_name": "pillsbury golden layer buttermilk biscuits artificial flavor refrigerated dough",
+      "original_brand": null,
+      "display_brand": null,
+      "normalized_brand": null
+    },
+    {
+      "source": "usda_sr_legacy",
+      "source_id": "167513",
+      "original_name": "Pillsbury, Cinnamon Rolls with Icing, refrigerated dough",
+      "display_name": "Pillsbury, Cinnamon Rolls with Icing, refrigerated dough",
+      "normalized_name": "pillsbury cinnamon rolls with icing refrigerated dough",
+      "original_brand": null,
+      "display_brand": null,
+      "normalized_brand": null
+    },
+    {
+      "source": "usda_sr_legacy",
+      "source_id": "167514",
+      "original_name": "Kraft Foods, Shake N Bake Original Recipe, Coating for Pork, dry",
+      "display_name": "Kraft Foods, Shake N Bake Original Recipe, Coating for Pork, dry",
+      "normalized_name": "kraft foods shake n bake original recipe coating for pork dry",
+      "original_brand": null,
+      "display_brand": null,
+      "normalized_brand": null
+    },
+    {
+      "source": "usda_sr_legacy",
+      "source_id": "167515",
+      "original_name": "George Weston Bakeries, Thomas English Muffins",
+      "display_name": "George Weston Bakeries, Thomas English Muffins",
+      "normalized_name": "george weston bakeries thomas english muffins",
+      "original_brand": null,
+      "display_brand": null,
+      "normalized_brand": null
+    },
+    {
+      "source": "usda_sr_legacy",
+      "source_id": "167516",
+      "original_name": "Waffles, buttermilk, frozen, ready-to-heat",
+      "display_name": "Waffles, buttermilk, frozen, ready-to-heat",
+      "normalized_name": "waffles buttermilk frozen ready to heat",
+      "original_brand": null,
+      "display_brand": null,
+      "normalized_brand": null
+    },
+    {
+      "source": "usda_branded",
+      "source_id": "1106281",
+      "original_name": "GRANOLA, CINNAMON, RAISIN, CINNAMON, RAISIN",
+      "display_name": "Granola, Cinnamon, Raisin, Cinnamon, Raisin",
+      "normalized_name": "granola cinnamon raisin cinnamon raisin",
+      "original_brand": "MICHELE'S",
+      "display_brand": "Michele's",
+      "normalized_brand": "micheles"
+    },
+    {
+      "source": "usda_branded",
+      "source_id": "1106304",
+      "original_name": "SUPREME BASMATI RICE",
+      "display_name": "Supreme Basmati Rice",
+      "normalized_name": "supreme basmati rice",
+      "original_brand": "VEETEE",
+      "display_brand": "Veetee",
+      "normalized_brand": "veetee"
+    },
+    {
+      "source": "usda_branded",
+      "source_id": "1106312",
+      "original_name": "ORIGINAL SWEET & SMOKY BAR \"\"B\"\" \"\"Q\"\" SAUCE, ORIGINAL",
+      "display_name": "Original Sweet & Smoky Bar \"\"b\"\" \"\"q\"\" Sauce, Original",
+      "normalized_name": "original sweet smoky bar b q sauce original",
+      "original_brand": "Cookies Food Products Inc.",
+      "display_brand": "Cookies Food Products Inc.",
+      "normalized_brand": "cookies food products inc"
+    },
+    {
+      "source": "usda_branded",
+      "source_id": "1106456",
+      "original_name": "EGGS, EGG SHAPED BUBBLE GUM FILLED WITH EXTRA SOUR FLAVOR CRYSTALS",
+      "display_name": "Eggs, Egg Shaped Bubble Gum Filled With Extra Sour Flavor Crystals",
+      "normalized_name": "eggs egg shaped bubble gum filled with extra sour flavor crystals",
+      "original_brand": "CRY BABY",
+      "display_brand": "Cry Baby",
+      "normalized_brand": "cry baby"
+    },
+    {
+      "source": "usda_branded",
+      "source_id": "1106457",
+      "original_name": "DUBBLE BUBBLE, BUBBLE GUM",
+      "display_name": "Dubble Bubble, Bubble Gum",
+      "normalized_name": "dubble bubble bubble gum",
+      "original_brand": "DUBBLE BUBBLE",
+      "display_brand": "Dubble Bubble",
+      "normalized_brand": "dubble bubble"
+    },
+    {
+      "source": "turkomp",
+      "source_id": "1",
+      "original_name": "Sütlü buz, vanilya aromalı",
+      "display_name": "Sütlü buz, vanilya aromalı",
+      "normalized_name": "sutlu buz vanilya aromali",
+      "original_brand": null,
+      "display_brand": null,
+      "normalized_brand": null
+    },
+    {
+      "source": "turkomp",
+      "source_id": "2",
+      "original_name": "Yoğurt, kaymaklı",
+      "display_name": "Yoğurt, kaymaklı",
+      "normalized_name": "yogurt kaymakli",
+      "original_brand": null,
+      "display_brand": null,
+      "normalized_brand": null
+    },
+    {
+      "source": "turkomp",
+      "source_id": "3",
+      "original_name": "Yoğurt, homojenize, yarım yağlı (% 2 > süt yağı ≥ % 1.5)",
+      "display_name": "Yoğurt, homojenize, yarım yağlı (% 2 > süt yağı ≥ % 1.5)",
+      "normalized_name": "yogurt homojenize yarim yagli 2 sut yagi 1 5",
+      "original_brand": null,
+      "display_brand": null,
+      "normalized_brand": null
+    },
+    {
+      "source": "turkomp",
+      "source_id": "4",
+      "original_name": "Yoğurt, homojenize, tam yağlı (süt yağı ≥ % 3.8)",
+      "display_name": "Yoğurt, homojenize, tam yağlı (süt yağı ≥ % 3.8)",
+      "normalized_name": "yogurt homojenize tam yagli sut yagi 3 8",
+      "original_brand": null,
+      "display_brand": null,
+      "normalized_brand": null
+    },
+    {
+      "source": "turkomp",
+      "source_id": "5",
+      "original_name": "Kaymak, pastörize (süt yağı ≥ % 60)",
+      "display_name": "Kaymak, pastörize (süt yağı ≥ % 60)",
+      "normalized_name": "kaymak pastorize sut yagi 60",
+      "original_brand": null,
+      "display_brand": null,
+      "normalized_brand": null
+    },
+    {
+      "source": "open_food_facts",
+      "source_id": "0000105000042",
+      "original_name": "Lagg's, herbal tea, peppermint",
+      "display_name": "Lagg's, herbal tea, peppermint",
+      "normalized_name": "laggs herbal tea peppermint",
+      "original_brand": "Lagg's",
+      "display_brand": "Lagg's",
+      "normalized_brand": "laggs"
+    },
+    {
+      "source": "open_food_facts",
+      "source_id": "0000105000219",
+      "original_name": "Green Tea",
+      "display_name": "Green Tea",
+      "normalized_name": "green tea",
+      "original_brand": "Lagg's",
+      "display_brand": "Lagg's",
+      "normalized_brand": "laggs"
+    },
+    {
+      "source": "open_food_facts",
+      "source_id": "0000105000318",
+      "original_name": "Shave Grass Herbal Tea",
+      "display_name": "Shave Grass Herbal Tea",
+      "normalized_name": "shave grass herbal tea",
+      "original_brand": "Lagg's",
+      "display_brand": "Lagg's",
+      "normalized_brand": "laggs"
+    },
+    {
+      "source": "open_food_facts",
+      "source_id": "0000105000356",
+      "original_name": "Lagg's, herbal tea, chamomile * mint",
+      "display_name": "Lagg's, herbal tea, chamomile * mint",
+      "normalized_name": "laggs herbal tea chamomile mint",
+      "original_brand": "Lagg's",
+      "display_brand": "Lagg's",
+      "normalized_brand": "laggs"
+    },
+    {
+      "source": "open_food_facts",
+      "source_id": "0000105000363",
+      "original_name": "Artichoke Herbal Tea",
+      "display_name": "Artichoke Herbal Tea",
+      "normalized_name": "artichoke herbal tea",
+      "original_brand": "Lagg's",
+      "display_brand": "Lagg's",
+      "normalized_brand": "laggs"
+    }
+  ]
+}

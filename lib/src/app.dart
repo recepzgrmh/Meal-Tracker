@@ -18,14 +18,25 @@ import 'features/history_screen.dart';
 import 'features/today_screen.dart';
 import 'media/meal_photo_picker.dart';
 import 'meals/data/cached_meal_repository.dart';
+import 'sync/sync_status.dart';
 import 'theme/app_theme.dart';
+import 'util/haptics.dart';
 import 'view_models/today_view_model.dart';
 import 'widgets/liquid_glass_bottom_bar.dart';
 
 class MealClarityApp extends StatelessWidget {
-  const MealClarityApp({this.locale = const Locale('tr'), super.key});
+  const MealClarityApp({
+    this.locale = const Locale('tr'),
+    this.clock,
+    super.key,
+  });
 
   final Locale? locale;
+
+  /// Freezes "now" for tests. Today renders the current date in its header and
+  /// seeds its demo meals off the clock, which made every screenshot baseline
+  /// expire at midnight.
+  final DateTime Function()? clock;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +47,7 @@ class MealClarityApp extends StatelessWidget {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       theme: buildTheme(),
-      home: const MealClarityShell(),
+      home: MealClarityShell(clock: clock),
     );
   }
 }
@@ -48,11 +59,14 @@ class MealClarityShell extends StatefulWidget {
     this.catalogRepository,
     this.userId,
     this.onSyncRequested,
+    this.syncStatus,
     this.goals = NutritionGoals.fallback,
     this.locale,
     this.onLocaleChanged,
     this.onSignOut,
     this.onDeleteAccount,
+    this.onEditGoals,
+    this.clock,
     super.key,
   });
 
@@ -61,6 +75,12 @@ class MealClarityShell extends StatefulWidget {
   final FoodCatalogRepository? catalogRepository;
   final String? userId;
   final Future<void> Function()? onSyncRequested;
+
+  /// Reports what the outbox is still holding. Absent in the mock-data build
+  /// and in widget tests that never persist anything, where there is no queue
+  /// to report on.
+  final SyncStatusNotifier? syncStatus;
+
   final NutritionGoals goals;
 
   /// `null` means "follow the device". Only set when the user picked a language.
@@ -68,6 +88,14 @@ class MealClarityShell extends StatefulWidget {
   final ValueChanged<Locale?>? onLocaleChanged;
   final Future<void> Function()? onSignOut;
   final Future<bool> Function()? onDeleteAccount;
+
+  /// Reopens the setup flow so the daily target can be revised. When null
+  /// the profile card stays read-only.
+  final VoidCallback? onEditGoals;
+
+  /// Source of "now" for the current day, the midnight rollover and the demo
+  /// seed. Injectable so a screenshot baseline does not expire overnight.
+  final DateTime Function()? clock;
 
   @override
   State<MealClarityShell> createState() => _MealClarityShellState();
@@ -88,6 +116,26 @@ class _MealClarityShellState extends State<MealClarityShell>
   int _selectedTab = 0;
   int _historyDayIndex = 0;
   int _analysisDays = 7;
+  bool _historyLoaded = false;
+
+  /// The page a programmatic tab change is flying towards.
+  ///
+  /// [PageView.onPageChanged] fires for every page the viewport crosses. During
+  /// a tap-driven change that would light up each destination on the way past,
+  /// so intermediate reports are ignored until the target is reached. Swipes
+  /// leave this null and report normally, because there the intermediate pages
+  /// are exactly what the finger is pointing at.
+  int? _programmaticPage;
+  int _navigationToken = 0;
+
+  /// Meals removed on screen but whose removal has not come back through the
+  /// data source yet.
+  ///
+  /// `deleteOptimistically` is a write followed by a stream emission, and
+  /// History renders straight off that stream. Without this the row would sit
+  /// there for a beat after the user confirmed the deletion, which reads as the
+  /// tap not having registered and invites a second one.
+  final Set<String> _removedMealIds = <String>{};
 
   bool get _isPersistent =>
       widget.cachedRepository != null && widget.userId != null;
@@ -100,7 +148,9 @@ class _MealClarityShellState extends State<MealClarityShell>
     _analysisRepository = widget.analysisRepository ?? MockMealRepository();
     _currentDay = _startOfToday();
     _todayViewModel = TodayViewModel(
-      initialMeals: _isPersistent ? const [] : buildMockMeals(),
+      initialMeals: _isPersistent ? const [] : buildMockMeals(_now()),
+      // Mock data is already in hand; a persistent day has not been read yet.
+      hasLoaded: !_isPersistent,
     );
     if (_isPersistent) {
       _subscribeToDay();
@@ -108,15 +158,34 @@ class _MealClarityShellState extends State<MealClarityShell>
           .watchHistory(widget.userId!)
           .listen((meals) {
             if (!mounted) return;
-            setState(() => _historyMeals = meals);
+            _pruneRemovedIds(meals);
+            setState(() {
+              _historyMeals = meals;
+              _historyLoaded = true;
+            });
           });
       unawaited(_warmPersistentState(_currentDay));
+    } else {
+      _historyLoaded = true;
     }
     _scheduleMidnightRollover();
   }
 
-  static DateTime _startOfToday() {
-    final now = DateTime.now();
+  /// Drops optimistic removals the data source has caught up with.
+  ///
+  /// Once a meal is genuinely gone from the incoming set there is nothing left
+  /// to filter, and keeping the id would suppress a later meal that reuses it —
+  /// which is exactly what undo does.
+  void _pruneRemovedIds(List<LoggedMeal> incoming) {
+    if (_removedMealIds.isEmpty) return;
+    final present = incoming.map((meal) => meal.id).toSet();
+    _removedMealIds.removeWhere((id) => !present.contains(id));
+  }
+
+  DateTime _now() => widget.clock?.call() ?? DateTime.now();
+
+  DateTime _startOfToday() {
+    final now = _now();
     return DateTime(now.year, now.month, now.day);
   }
 
@@ -124,7 +193,10 @@ class _MealClarityShellState extends State<MealClarityShell>
     _mealSubscription?.cancel();
     _mealSubscription = widget.cachedRepository!
         .watchDay(userId: widget.userId!, day: _currentDay)
-        .listen(_todayViewModel.replaceAll);
+        .listen((meals) {
+          _pruneRemovedIds(meals);
+          _todayViewModel.replaceAll(meals);
+        });
   }
 
   /// A shell left open overnight used to keep serving yesterday's meals: the
@@ -145,7 +217,7 @@ class _MealClarityShellState extends State<MealClarityShell>
 
   void _scheduleMidnightRollover() {
     _midnightTimer?.cancel();
-    final now = DateTime.now();
+    final now = _now();
     final nextMidnight = DateTime(now.year, now.month, now.day + 1);
     _midnightTimer = Timer(
       // A second of slack so the timer never fires a hair before the boundary
@@ -209,7 +281,7 @@ class _MealClarityShellState extends State<MealClarityShell>
   }
 
   Future<void> _logDraft(MealDraft draft) async {
-    final loggedAt = draft.eatenAt ?? DateTime.now();
+    final loggedAt = draft.eatenAt ?? _now();
     final loggedMeal = _todayViewModel.logDraft(draft, loggedAt);
     if (_isPersistent) {
       try {
@@ -251,6 +323,9 @@ class _MealClarityShellState extends State<MealClarityShell>
     }
 
     if (!mounted) return;
+    // The one moment the app confirms that the thing the user came here to do
+    // actually happened.
+    AppHaptics.success();
     _showFloatingSnackBar(
       message: context.ota(
         'mealSavedMessage',
@@ -260,6 +335,7 @@ class _MealClarityShellState extends State<MealClarityShell>
       ),
       actionLabel: context.ota('commonUndo', tr: 'Geri al', en: 'Undo'),
       onAction: () {
+        AppHaptics.arrived();
         _todayViewModel.deleteMeal(loggedMeal.id);
         if (_isPersistent) {
           unawaited(
@@ -275,26 +351,77 @@ class _MealClarityShellState extends State<MealClarityShell>
     );
   }
 
+  /// Removes a meal from a list, keeping the removal reversible.
+  ///
+  /// The row already confirmed the intent before calling this, so there is no
+  /// second dialog here — only the undo that makes the whole thing safe.
+  void _deleteMeal(LoggedMeal meal) {
+    setState(() => _removedMealIds.add(meal.id));
+    _todayViewModel.deleteMeal(meal.id);
+    if (_isPersistent) {
+      unawaited(
+        widget.cachedRepository!
+            .deleteOptimistically(userId: widget.userId!, mealId: meal.id)
+            .then((_) => widget.onSyncRequested?.call()),
+      );
+    }
+
+    _showFloatingSnackBar(
+      message: context.ota(
+        'mealDeletedMessage',
+        tr: '{meal} silindi',
+        en: '{meal} deleted',
+        replacements: {'meal': meal.name},
+      ),
+      actionLabel: context.ota('commonUndo', tr: 'Geri al', en: 'Undo'),
+      onAction: () => _restoreMeal(meal),
+    );
+  }
+
+  void _restoreMeal(LoggedMeal meal) {
+    AppHaptics.arrived();
+    setState(() => _removedMealIds.remove(meal.id));
+    if (_isPersistent) {
+      // Writing it back is enough: the Drift streams put it on whichever day it
+      // was eaten, which for a meal swiped away in History is not today.
+      unawaited(
+        widget.cachedRepository!
+            .saveOptimistically(
+              userId: widget.userId!,
+              meal: meal,
+              eatenAt: meal.occurredAt,
+            )
+            .then((_) => widget.onSyncRequested?.call()),
+      );
+      return;
+    }
+    _todayViewModel.restoreMeal(meal);
+  }
+
   void _showFloatingSnackBar({
     required String message,
     required String actionLabel,
     required VoidCallback onAction,
   }) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.ink,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadius.large),
+    // Deleting three meals in a row must not queue three bars the user then has
+    // to sit through. The newest one replaces whatever is on screen.
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.ink,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.large),
+          ),
+          content: Text(message),
+          action: SnackBarAction(
+            label: actionLabel,
+            textColor: AppColors.lime,
+            onPressed: onAction,
+          ),
         ),
-        content: Text(message),
-        action: SnackBarAction(
-          label: actionLabel,
-          textColor: AppColors.lime,
-          onPressed: onAction,
-        ),
-      ),
-    );
+      );
   }
 
   Future<void> _showQuickAddSheet(BuildContext context) async {
@@ -335,33 +462,6 @@ class _MealClarityShellState extends State<MealClarityShell>
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(6, 0, 6, 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          context.ota(
-                            'quickAddSheetTitle',
-                            tr: 'Öğün ekle',
-                            en: 'Add meal',
-                          ),
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          context.ota(
-                            'quickAddSheetBody',
-                            tr: 'Yemeğini göster,\ngerisini birlikte halledelim.',
-                            en: 'Show us your meal,\nand we will handle the rest together.',
-                          ),
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      ],
-                    ),
-                  ),
                   _PrimaryCaptureAction(
                     key: const Key('add-meal-camera'),
                     onTap: () =>
@@ -435,10 +535,18 @@ class _MealClarityShellState extends State<MealClarityShell>
     );
   }
 
+  /// Built once. `Listenable.merge` returns a fresh object every call, so
+  /// building it inside `build` made `ListenableBuilder` tear down and re-attach
+  /// its subscription on every single frame.
+  late final Listenable _repaintSources = widget.syncStatus == null
+      ? _todayViewModel
+      : Listenable.merge([_todayViewModel, widget.syncStatus]);
+
   @override
   Widget build(BuildContext context) {
+    final syncStatus = widget.syncStatus;
     return ListenableBuilder(
-      listenable: _todayViewModel,
+      listenable: _repaintSources,
       builder: (context, _) {
         return Scaffold(
           extendBody: true,
@@ -447,15 +555,21 @@ class _MealClarityShellState extends State<MealClarityShell>
             controller: _pageController,
             allowImplicitScrolling: true,
             onPageChanged: (page) {
+              final target = _programmaticPage;
+              if (target != null && page != target) return;
               final tab = _tabOrder[page];
               if (_selectedTab != tab) setState(() => _selectedTab = tab);
             },
             children: [
               TodayScreen(
                 key: const PageStorageKey('today-tab'),
-                meals: _todayViewModel.meals,
+                meals: _todayMeals,
                 goals: widget.goals,
                 day: _currentDay,
+                isLoading: !_todayViewModel.hasLoaded,
+                syncStatus: syncStatus?.status,
+                onRetrySync: syncStatus?.retry,
+                onDeleteMeal: _deleteMeal,
                 onAddMeal: () => _showQuickAddSheet(context),
                 onMealTap: (meal) => _openMeal(context, meal),
                 onNavigationSelected: (index) =>
@@ -465,6 +579,8 @@ class _MealClarityShellState extends State<MealClarityShell>
               HistoryScreen(
                 key: const PageStorageKey('history-tab'),
                 meals: _analysisMeals,
+                isLoading: !_historyLoaded,
+                onDeleteMeal: _deleteMeal,
                 onAddMeal: () => _showQuickAddSheet(context),
                 selectedDayIndex: _historyDayIndex,
                 onSelectedDayIndexChanged: (index) {
@@ -496,6 +612,7 @@ class _MealClarityShellState extends State<MealClarityShell>
                 onLocaleChanged: widget.onLocaleChanged,
                 onSignOut: widget.onSignOut,
                 onDeleteAccount: widget.onDeleteAccount,
+                onEditGoals: widget.onEditGoals,
                 onNavigationSelected: (index) =>
                     _handleNavigation(context, index),
                 showBottomNavigationBar: false,
@@ -518,20 +635,65 @@ class _MealClarityShellState extends State<MealClarityShell>
     }
     final page = _tabOrder.indexOf(index);
     if (page < 0) return;
-    final currentPage = _pageController.hasClients
-        ? (_pageController.page ?? _tabOrder.indexOf(_selectedTab).toDouble())
-              .round()
-        : _tabOrder.indexOf(_selectedTab);
+    if (!_pageController.hasClients) {
+      if (index != _selectedTab) setState(() => _selectedTab = index);
+      return;
+    }
+    final currentPage =
+        (_pageController.page ?? _tabOrder.indexOf(_selectedTab).toDouble())
+            .round();
     if (page == currentPage && index == _selectedTab) return;
+    // The indicator moves now, not when the page lands. A control that waits
+    // for its own animation before acknowledging the tap feels unresponsive
+    // however fast the animation is.
     setState(() => _selectedTab = index);
-    _pageController.jumpToPage(page);
+
+    if (AppMotion.reduced(context)) {
+      _programmaticPage = null;
+      _pageController.jumpToPage(page);
+      return;
+    }
+
+    final token = ++_navigationToken;
+    // Set before the jump below, not after: `jumpToPage` reports a page change
+    // of its own, and an unguarded one lights up the destination it lands on
+    // next to instead of the one that was tapped.
+    _programmaticPage = page;
+
+    // Sliding across three pages at once is a blur, not a transition — the
+    // destinations are peers, and Material's guidance for peers is that no
+    // spatial travel between them is implied at all. Collapsing the trip to a
+    // single page keeps the directional cue the swipe gesture establishes while
+    // making every tab change take the same, short amount of time.
+    if ((page - currentPage).abs() > 1) {
+      _pageController.jumpToPage(page > currentPage ? page - 1 : page + 1);
+    }
+
+    _pageController
+        .animateToPage(
+          page,
+          duration: AppMotion.standard,
+          curve: AppMotion.curve,
+        )
+        .whenComplete(() {
+          // A later tap, or a finger grabbing the page mid-flight, owns the
+          // guard now; this completion is stale.
+          if (!mounted || token != _navigationToken) return;
+          _programmaticPage = null;
+        });
   }
+
+  List<LoggedMeal> get _todayMeals => _removedMealIds.isEmpty
+      ? _todayViewModel.meals
+      : _todayViewModel.meals
+            .where((meal) => !_removedMealIds.contains(meal.id))
+            .toList(growable: false);
 
   List<LoggedMeal> get _analysisMeals {
     final mealsById = <String, LoggedMeal>{
       for (final meal in _historyMeals) meal.id: meal,
       for (final meal in _todayViewModel.meals) meal.id: meal,
-    };
+    }..removeWhere((id, _) => _removedMealIds.contains(id));
     final meals = mealsById.values.toList(growable: false);
     meals.sort((left, right) {
       final leftDate = left.occurredAt;

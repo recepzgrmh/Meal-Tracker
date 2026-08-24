@@ -1,11 +1,14 @@
 # CI/CD runbook
 
-CI runs on pull requests and `main` and has four independent gates:
+CI runs on pull requests and `main` and has five independent jobs:
 
-- Flutter formatting, static analysis, 53 portable unit/widget tests, and an Android compile
-- Deno formatting/lint/type-check, 40 tests, and the 60-case free deterministic eval
-- a fresh local Supabase migration rebuild and database lint
+- Flutter formatting, static analysis, 264 portable unit/widget tests, and an Android compile
+- Deno formatting/lint/type-check, 44 tests, and the 60-case free deterministic eval
+- a macOS job for the visual golden baselines and both integration flows
+- a fresh local Supabase migration rebuild, database lint, and contract tests
 - a tracked-file credential-pattern scan
+
+The admin dashboard tests are currently run locally, not in CI.
 
 Action dependencies and tool versions are pinned. CI never receives the OpenAI
 key and never runs a paid model evaluation.

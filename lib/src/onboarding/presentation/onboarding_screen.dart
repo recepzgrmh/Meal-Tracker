@@ -1,8 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../theme/app_theme.dart';
-import '../domain/onboarding_draft.dart';
+import 'flow_scaffold.dart';
 import 'onboarding_view_model.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -20,25 +22,10 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  final _calorieController = TextEditingController();
-  bool _demoAnalyzed = false;
-  _DemoPortion? _portion;
-  CalorieTargetError? _calorieError;
-
   @override
   void initState() {
     super.initState();
-    widget.viewModel.initialize().then((_) {
-      if (!mounted) return;
-      final target = widget.viewModel.draft.dailyCalorieTarget;
-      if (target != null) _calorieController.text = '$target';
-    });
-  }
-
-  @override
-  void dispose() {
-    _calorieController.dispose();
-    super.dispose();
+    widget.viewModel.initialize();
   }
 
   Future<void> _goTo(int step) async {
@@ -47,21 +34,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _finish() async {
-    final error = widget.viewModel.validateCalorieTarget(
-      _calorieController.text,
-    );
-    if (error != null) {
-      setState(() => _calorieError = error);
-      return;
-    }
-    await widget.viewModel.setCalorieTarget(_calorieController.text);
     await widget.viewModel.finishDraft();
     await widget.onDraftChanged();
   }
 
-  /// Signing in is not an answer to onboarding, so this path persists no
-  /// intention and no calorie target — only the step that routes to auth.
-  Future<void> _skipToSignIn() async {
+  Future<void> _signIn() async {
     await widget.viewModel.skipToSignIn();
     await widget.onDraftChanged();
   }
@@ -76,13 +53,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             body: SafeArea(child: Center(child: CircularProgressIndicator())),
           );
         }
+
         final step = widget.viewModel.draft.step.clamp(0, 2);
         return Scaffold(
           body: SafeArea(
             child: Column(
               children: [
-                _OnboardingHeader(
+                FlowHeader(
                   step: step,
+                  stepCount: 3,
                   onBack: step == 0 ? null : () => _goTo(step - 1),
                 ),
                 Expanded(
@@ -94,27 +73,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       0 => _WelcomeStep(
                         key: const ValueKey('welcome'),
                         onContinue: () => _goTo(1),
-                        onSignIn: _skipToSignIn,
+                        onSignIn: _signIn,
                       ),
-                      1 => _AccuracyDemoStep(
-                        key: const ValueKey('demo'),
-                        analyzed: _demoAnalyzed,
-                        selectedPortion: _portion,
-                        onAnalyze: () => setState(() => _demoAnalyzed = true),
-                        onSelectPortion: (value) =>
-                            setState(() => _portion = value),
+                      1 => _PhotoGuideStep(
+                        key: const ValueKey('photo-guide'),
                         onContinue: () => _goTo(2),
                       ),
-                      _ => _PersonalizationStep(
-                        key: const ValueKey('personalization'),
-                        viewModel: widget.viewModel,
-                        calorieController: _calorieController,
-                        calorieError: _calorieError,
+                      _ => _TextDemoStep(
+                        key: const ValueKey('text-demo'),
                         onFinish: _finish,
-                        onIntentionChanged: (intention) async {
-                          await widget.viewModel.selectIntention(intention);
-                          setState(() => _calorieError = null);
-                        },
                       ),
                     },
                   ),
@@ -124,57 +91,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
         );
       },
-    );
-  }
-}
-
-class _OnboardingHeader extends StatelessWidget {
-  const _OnboardingHeader({required this.step, required this.onBack});
-
-  final int step;
-  final VoidCallback? onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.xs,
-        AppSpacing.page,
-        AppSpacing.xxs,
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: AppTouchTarget.minimum,
-            child: onBack == null
-                ? null
-                : IconButton(
-                    tooltip: context.ota('commonBack', tr: 'Geri', en: 'Back'),
-                    onPressed: onBack,
-                    icon: const Icon(Icons.arrow_back_rounded),
-                  ),
-          ),
-          const Spacer(),
-          Semantics(
-            label: context.ota(
-              'onboardingStepSemantics',
-              tr: '3 adımdan {step}.si',
-              en: 'Step {step} of 3',
-              replacements: {'step': step + 1},
-            ),
-            child: Text(
-              context.ota(
-                'onboardingStepCounter',
-                tr: '{step} / 3',
-                en: '{step} / 3',
-                replacements: {'step': step + 1},
-              ),
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -191,7 +107,8 @@ class _WelcomeStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _StepFrame(
+    return FlowStepLayout(
+      centerContent: true,
       footer: Column(
         children: [
           FilledButton(
@@ -206,6 +123,7 @@ class _WelcomeStep extends StatelessWidget {
             ),
           ),
           TextButton(
+            key: const Key('onboarding-sign-in'),
             onPressed: onSignIn,
             child: Text(
               context.ota(
@@ -220,20 +138,11 @@ class _WelcomeStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'MEAL CLARITY',
-            style: TextStyle(
-              color: AppColors.limeDark,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.6,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
           Text(
             context.ota(
               'onboardingWelcomeTitle',
-              tr: 'Yemeğini anlat. Gerisini birlikte netleştirelim.',
-              en: 'Describe your meal. We will clarify the rest together.',
+              tr: 'Yemeğini kaydetmenin daha doğal yolu.',
+              en: 'A more natural way to log your meals.',
             ),
             style: Theme.of(context).textTheme.headlineMedium,
           ),
@@ -241,24 +150,24 @@ class _WelcomeStep extends StatelessWidget {
           Text(
             context.ota(
               'onboardingWelcomeBody',
-              tr: 'Doğal şekilde yaz; yalnızca sonucu gerçekten etkileyen noktaları kontrol et.',
-              en: 'Write naturally; only review details that truly affect the result.',
+              tr: 'Fotoğrafını çek veya ne yediğini yaz. Gerisini birlikte netleştiririz.',
+              en: 'Take a photo or write what you ate. We clarify the rest together.',
             ),
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: AppSpacing.xl),
           ClipRRect(
-            borderRadius: BorderRadius.circular(AppRadius.feature),
+            borderRadius: BorderRadius.circular(AppRadius.large),
             child: AspectRatio(
-              aspectRatio: 4 / 3,
+              aspectRatio: 16 / 10,
               child: Image.asset(
                 'assets/images/onboarding_breakfast_hero.webp',
                 fit: BoxFit.cover,
-                alignment: const Alignment(0, 0.3),
+                alignment: const Alignment(0, 0.22),
                 semanticLabel: context.ota(
                   'onboardingHeroSemantics',
-                  tr: 'Yumurta, beyaz peynir ve simitten oluşan bir kahvaltı tabağı',
-                  en: 'A breakfast plate of eggs, white cheese, and simit',
+                  tr: 'Yumurta, simit ve beyaz peynirden oluşan kahvaltı tabağı',
+                  en: 'A breakfast plate with eggs, simit, and white cheese',
                 ),
               ),
             ),
@@ -269,43 +178,19 @@ class _WelcomeStep extends StatelessWidget {
   }
 }
 
-class _AccuracyDemoStep extends StatelessWidget {
-  const _AccuracyDemoStep({
-    required this.analyzed,
-    required this.selectedPortion,
-    required this.onAnalyze,
-    required this.onSelectPortion,
-    required this.onContinue,
-    super.key,
-  });
+class _PhotoGuideStep extends StatelessWidget {
+  const _PhotoGuideStep({required this.onContinue, super.key});
 
-  final bool analyzed;
-  final _DemoPortion? selectedPortion;
-  final VoidCallback onAnalyze;
-  final ValueChanged<_DemoPortion> onSelectPortion;
   final VoidCallback onContinue;
 
   @override
   Widget build(BuildContext context) {
-    // Until the user picks, the cheese keeps the estimate the analysis would
-    // have produced, so the running total is never a blank promise.
-    final cheese = selectedPortion ?? _DemoPortion.regular;
-    return _StepFrame(
+    return FlowStepLayout(
       footer: FilledButton(
-        key: const Key('demo-continue'),
-        onPressed: analyzed ? onContinue : onAnalyze,
+        key: const Key('photo-guide-continue'),
+        onPressed: onContinue,
         child: Text(
-          analyzed
-              ? context.ota(
-                  'onboardingDemoContinue',
-                  tr: 'Anladım, devam et',
-                  en: 'Got it, continue',
-                )
-              : context.ota(
-                  'onboardingAnalyzeExample',
-                  tr: 'Örneği analiz et',
-                  en: 'Analyze the example',
-                ),
+          context.ota('onboardingContinue', tr: 'Devam et', en: 'Continue'),
         ),
       ),
       child: Column(
@@ -313,135 +198,47 @@ class _AccuracyDemoStep extends StatelessWidget {
         children: [
           Text(
             context.ota(
-              'onboardingAccuracyTitle',
-              tr: 'Emin olduğumuzu çözeriz.',
-              en: 'We resolve what we are sure about.',
+              'photoGuideTitle',
+              tr: 'Tabağını net görelim.',
+              en: 'Let us see the whole plate.',
             ),
             style: Theme.of(context).textTheme.headlineMedium,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             context.ota(
-              'onboardingAccuracyBody',
-              tr: 'Belirsizliği saklamayız. Yalnızca önemli olduğunda sana sorarız.',
-              en: 'We do not hide uncertainty. We ask only when it matters.',
+              'photoGuideBody',
+              tr: 'Yemeğin tamamı kadrajda ve iyi ışıkta olsun. Gerisini biz çözeriz.',
+              en: 'Keep the whole meal in frame and well lit. We handle the rest.',
             ),
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: AppSpacing.lg),
-          const _DemoInput(),
-          const SizedBox(height: AppSpacing.sm),
-          AnimatedSize(
-            duration: MediaQuery.disableAnimationsOf(context)
-                ? Duration.zero
-                : AppMotion.standard,
-            child: analyzed
-                ? Column(
-                    children: [
-                      _DetectedItem(
-                        title: context.ota(
-                          'demoEggsTitle',
-                          tr: '2 Yumurta',
-                          en: '2 Eggs',
-                        ),
-                        detail: context.ota(
-                          'demoEggsDetail',
-                          tr: '2 adet · yüksek güven',
-                          en: '2 pieces · high confidence',
-                        ),
-                        needsReview: false,
-                      ),
-                      _DetectedItem(
-                        title: context.ota(
-                          'demoSimitTitle',
-                          tr: 'Simit',
-                          en: 'Simit',
-                        ),
-                        detail: context.ota(
-                          'demoSimitDetail',
-                          tr: '½ adet · yüksek güven',
-                          en: '½ piece · high confidence',
-                        ),
-                        needsReview: false,
-                      ),
-                      _DetectedItem(
-                        title: context.ota(
-                          'demoCheeseTitle',
-                          tr: 'Beyaz peynir',
-                          en: 'White cheese',
-                        ),
-                        detail: selectedPortion == null
-                            ? context.ota(
-                                'demoCheeseEstimate',
-                                tr: '~{grams} g tahmin · miktarı kontrol et',
-                                en: '~{grams} g estimate · check the amount',
-                                replacements: {'grams': cheese.grams},
-                              )
-                            : context.ota(
-                                'demoCheeseResolved',
-                                tr: '{grams} g · ~{kcal} kcal',
-                                en: '{grams} g · ~{kcal} kcal',
-                                replacements: {
-                                  'grams': cheese.grams,
-                                  'kcal': cheese.kcal,
-                                },
-                              ),
-                        needsReview: selectedPortion == null,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Row(
-                        children: [
-                          _PortionChoice(
-                            label: context.l10n.portionSmall,
-                            asset: 'assets/images/portion_cheese_small.webp',
-                            selected: selectedPortion == _DemoPortion.small,
-                            onTap: () => onSelectPortion(_DemoPortion.small),
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          _PortionChoice(
-                            label: context.l10n.portionEstimate,
-                            asset: 'assets/images/portion_cheese_regular.webp',
-                            selected: selectedPortion == _DemoPortion.regular,
-                            onTap: () => onSelectPortion(_DemoPortion.regular),
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          _PortionChoice(
-                            label: context.l10n.portionLarge,
-                            asset: 'assets/images/portion_cheese_large.webp',
-                            selected: selectedPortion == _DemoPortion.large,
-                            onTap: () => onSelectPortion(_DemoPortion.large),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Semantics(
-                        liveRegion: true,
-                        child: Text(
-                          context.ota(
-                            'demoRunningTotal',
-                            tr: 'Tahmini toplam: ~{kcal} kcal',
-                            en: 'Estimated total: ~{kcal} kcal',
-                            replacements: {
-                              'kcal': _DemoPortion.baseKcal + cheese.kcal,
-                            },
-                          ),
-                          style: Theme.of(context).textTheme.titleMedium,
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        context.ota(
-                          'onboardingPortionHint',
-                          tr: 'Görseller göreli seçimdir; kesin miktarı her zaman girebilirsin.',
-                          en: 'Images are relative choices; you can always enter the exact amount.',
-                        ),
-                        style: Theme.of(context).textTheme.bodySmall,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  )
-                : const SizedBox.shrink(),
+          const _CameraGuideVisual(),
+          const SizedBox(height: AppSpacing.lg),
+          _GuideTip(
+            icon: Icons.center_focus_strong_rounded,
+            label: context.ota(
+              'photoGuideWholePlate',
+              tr: 'Tabağın tamamı görünsün',
+              en: 'Keep the whole plate visible',
+            ),
+          ),
+          _GuideTip(
+            icon: Icons.light_mode_outlined,
+            label: context.ota(
+              'photoGuideLight',
+              tr: 'İyi ışık kullan',
+              en: 'Use good lighting',
+            ),
+          ),
+          _GuideTip(
+            icon: Icons.zoom_out_rounded,
+            label: context.ota(
+              'photoGuideDistance',
+              tr: 'Çok yakından çekme',
+              en: 'Do not shoot too close',
+            ),
           ),
         ],
       ),
@@ -449,382 +246,614 @@ class _AccuracyDemoStep extends StatelessWidget {
   }
 }
 
-class _DemoInput extends StatelessWidget {
-  const _DemoInput();
+class _CameraGuideVisual extends StatelessWidget {
+  const _CameraGuideVisual();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.feature),
-        border: Border.all(color: AppColors.line),
+    return Semantics(
+      label: context.ota(
+        'photoGuideImageSemantics',
+        tr: 'Kadrajın tamamında görünen, iyi aydınlatılmış bir kahvaltı tabağı örneği',
+        en: 'Example of a well-lit breakfast plate fully visible in frame',
       ),
-      child: Text(
-        context.ota(
-          'onboardingDemoInput',
-          tr: '“2 yumurta, biraz peynir ve yarım simit”',
-          en: '“2 eggs, some cheese, and half a simit”',
+      child: ExcludeSemantics(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadius.large),
+          child: AspectRatio(
+            aspectRatio: 4 / 3,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset('assets/images/breakfast.png', fit: BoxFit.cover),
+                const ColoredBox(color: Color(0x12000000)),
+                const CustomPaint(painter: _FrameCornersPainter()),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-class _DetectedItem extends StatelessWidget {
-  const _DetectedItem({
+class _FrameCornersPainter extends CustomPainter {
+  const _FrameCornersPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    const inset = 22.0;
+    const length = 30.0;
+    final path = Path()
+      ..moveTo(inset, inset + length)
+      ..lineTo(inset, inset)
+      ..lineTo(inset + length, inset)
+      ..moveTo(size.width - inset - length, inset)
+      ..lineTo(size.width - inset, inset)
+      ..lineTo(size.width - inset, inset + length)
+      ..moveTo(inset, size.height - inset - length)
+      ..lineTo(inset, size.height - inset)
+      ..lineTo(inset + length, size.height - inset)
+      ..moveTo(size.width - inset - length, size.height - inset)
+      ..lineTo(size.width - inset, size.height - inset)
+      ..lineTo(size.width - inset, size.height - inset - length);
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(_FrameCornersPainter oldDelegate) => false;
+}
+
+class _GuideTip extends StatelessWidget {
+  const _GuideTip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: AppColors.brand),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(child: Text(label)),
+        ],
+      ),
+    );
+  }
+}
+
+enum _DemoPhase { waiting, typing, analyzing, results, clarify, complete }
+
+class _TextDemoStep extends StatefulWidget {
+  const _TextDemoStep({required this.onFinish, super.key});
+
+  final VoidCallback onFinish;
+
+  @override
+  State<_TextDemoStep> createState() => _TextDemoStepState();
+}
+
+class _TextDemoStepState extends State<_TextDemoStep> {
+  final _inputController = TextEditingController();
+  final _inputFocus = FocusNode();
+  _DemoPhase _phase = _DemoPhase.waiting;
+  int _visibleRows = 0;
+  int? _selectedGrams;
+  int _sequence = 0;
+
+  bool get _reduceMotion => MediaQuery.disableAnimationsOf(context);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _playDemo());
+  }
+
+  @override
+  void dispose() {
+    _sequence++;
+    _inputController.dispose();
+    _inputFocus.dispose();
+    super.dispose();
+  }
+
+  Future<void> _playDemo() async {
+    final run = ++_sequence;
+    final text = context.ota(
+      'textDemoMeal',
+      tr: '2 yumurta, yarım simit ve biraz beyaz peynir yedim',
+      en: 'I ate 2 eggs, half a simit, and some white cheese',
+    );
+
+    if (_reduceMotion) {
+      setState(() {
+        _inputController.text = text;
+        _phase = _DemoPhase.clarify;
+        _visibleRows = 3;
+      });
+      return;
+    }
+
+    await Future<void>.delayed(const Duration(milliseconds: 450));
+    if (!mounted || run != _sequence) return;
+    setState(() => _phase = _DemoPhase.typing);
+    _inputFocus.requestFocus();
+
+    for (var index = 0; index < text.length; index++) {
+      final char = text[index];
+      final pause = char == ' '
+          ? 70
+          : char == ','
+          ? 120
+          : 38 + (index % 4) * 6;
+      await Future<void>.delayed(Duration(milliseconds: pause));
+      if (!mounted || run != _sequence) return;
+      _inputController.value = TextEditingValue(
+        text: text.substring(0, index + 1),
+        selection: TextSelection.collapsed(offset: index + 1),
+      );
+    }
+
+    await Future<void>.delayed(const Duration(milliseconds: 280));
+    if (!mounted || run != _sequence) return;
+    _inputFocus.unfocus();
+    setState(() => _phase = _DemoPhase.analyzing);
+    await Future<void>.delayed(const Duration(milliseconds: 720));
+
+    for (var row = 1; row <= 3; row++) {
+      if (!mounted || run != _sequence) return;
+      setState(() {
+        _phase = _DemoPhase.results;
+        _visibleRows = row;
+      });
+      await Future<void>.delayed(const Duration(milliseconds: 220));
+    }
+    if (!mounted || run != _sequence) return;
+    setState(() => _phase = _DemoPhase.clarify);
+  }
+
+  void _selectPortion(int grams) {
+    setState(() {
+      _selectedGrams = grams;
+      _phase = _DemoPhase.complete;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final complete = _phase == _DemoPhase.complete;
+    return FlowStepLayout(
+      footer: AnimatedSwitcher(
+        duration: _reduceMotion ? Duration.zero : AppMotion.standard,
+        child: complete
+            ? FilledButton(
+                key: const Key('onboarding-finish'),
+                onPressed: widget.onFinish,
+                child: Text(
+                  context.ota(
+                    'onboardingStartAction',
+                    tr: 'Başlayalım',
+                    en: 'Let’s begin',
+                  ),
+                ),
+              )
+            : const SizedBox(height: 52),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.ota(
+              'textDemoTitle',
+              tr: 'İstersen sadece yaz.',
+              en: 'Or simply write it.',
+            ),
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            context.ota(
+              'textDemoBody',
+              tr: 'Nasıl söylüyorsan öyle.',
+              en: 'Just as you would say it.',
+            ),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          TextField(
+            key: const Key('demo-meal-input'),
+            controller: _inputController,
+            focusNode: _inputFocus,
+            readOnly: true,
+            showCursor: _phase == _DemoPhase.typing,
+            maxLines: 3,
+            minLines: 2,
+            decoration: InputDecoration(
+              hintText: context.ota(
+                'textDemoPlaceholder',
+                tr: 'Ne yedin?',
+                en: 'What did you eat?',
+              ),
+              suffixIcon: AnimatedContainer(
+                duration: _reduceMotion ? Duration.zero : AppMotion.fast,
+                margin: const EdgeInsets.all(AppSpacing.xs),
+                decoration: BoxDecoration(
+                  color: _phase.index >= _DemoPhase.analyzing.index
+                      ? AppColors.brand
+                      : AppColors.surfaceMuted,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.arrow_upward_rounded,
+                  color: _phase.index >= _DemoPhase.analyzing.index
+                      ? AppColors.onDark
+                      : AppColors.muted,
+                ),
+              ),
+            ),
+          ),
+          AnimatedSize(
+            duration: _reduceMotion ? Duration.zero : AppMotion.standard,
+            alignment: Alignment.topCenter,
+            child: _phase == _DemoPhase.analyzing
+                ? Padding(
+                    padding: const EdgeInsets.only(top: AppSpacing.md),
+                    child: _AnalyzingLine(),
+                  )
+                : const SizedBox.shrink(),
+          ),
+          if (_visibleRows > 0) ...[
+            const SizedBox(height: AppSpacing.md),
+            AnimatedOpacity(
+              opacity: _phase.index >= _DemoPhase.clarify.index ? 0.48 : 1,
+              duration: _reduceMotion ? Duration.zero : AppMotion.fast,
+              child: Column(
+                children: [
+                  _RevealRow(
+                    visible: _visibleRows >= 1,
+                    title: context.ota(
+                      'demoEggsTitle',
+                      tr: '2 yumurta',
+                      en: '2 eggs',
+                    ),
+                    detail: context.ota(
+                      'demoEggsDetail',
+                      tr: '2 adet',
+                      en: '2 pieces',
+                    ),
+                  ),
+                  _RevealRow(
+                    visible: _visibleRows >= 2,
+                    title: context.ota(
+                      'demoSimitTitle',
+                      tr: 'Yarım simit',
+                      en: 'Half a simit',
+                    ),
+                    detail: context.ota(
+                      'demoSimitDetail',
+                      tr: '½ adet',
+                      en: '½ piece',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (_visibleRows >= 3)
+            _UncertainMealRow(
+              phase: _phase,
+              selectedGrams: _selectedGrams,
+              onSelected: _selectPortion,
+            ),
+          if (complete) ...[
+            const SizedBox(height: AppSpacing.lg),
+            _NutritionResult(grams: _selectedGrams!),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              context.ota(
+                'humanLoopMessage',
+                tr: 'Emin olduğumuzu çözeriz. Emin olmadığımızda yalnızca gerekli şeyi sana sorarız.',
+                en: 'We resolve what we know. When unsure, we ask only what matters.',
+              ),
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _AnalyzingLine extends StatefulWidget {
+  @override
+  State<_AnalyzingLine> createState() => _AnalyzingLineState();
+}
+
+class _AnalyzingLineState extends State<_AnalyzingLine>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 750),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        SizedBox.square(
+          dimension: 16,
+          child: CircularProgressIndicator(
+            valueColor: const AlwaysStoppedAnimation(AppColors.brand),
+            strokeWidth: 2,
+            semanticsLabel: context.ota(
+              'analysisInProgress',
+              tr: 'Öğün çözümleniyor',
+              en: 'Analyzing meal',
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Text(
+          context.ota(
+            'analysisInProgress',
+            tr: 'Öğünün çözümleniyor…',
+            en: 'Analyzing your meal…',
+          ),
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ],
+    );
+  }
+}
+
+class _RevealRow extends StatelessWidget {
+  const _RevealRow({
+    required this.visible,
     required this.title,
     required this.detail,
-    required this.needsReview,
+  });
+
+  final bool visible;
+  final String title;
+  final String detail;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!visible) return const SizedBox.shrink();
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return TweenAnimationBuilder<double>(
+      duration: reduceMotion ? Duration.zero : AppMotion.standard,
+      tween: Tween(begin: 0, end: 1),
+      curve: Curves.easeOut,
+      builder: (context, value, child) => Opacity(
+        opacity: value,
+        child: Transform.translate(
+          offset: Offset(0, (1 - value) * 8),
+          child: child,
+        ),
+      ),
+      child: _MealResultRow(title: title, detail: detail),
+    );
+  }
+}
+
+class _MealResultRow extends StatelessWidget {
+  const _MealResultRow({
+    required this.title,
+    required this.detail,
+    this.confirmed = true,
   });
 
   final String title;
   final String detail;
-  final bool needsReview;
+  final bool confirmed;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
       label: '$title, $detail',
-      child: ListTile(
-        contentPadding: EdgeInsets.zero,
-        leading: Icon(
-          needsReview ? Icons.help_outline_rounded : Icons.check_circle_rounded,
-          color: needsReview ? AppColors.warning : AppColors.limeDark,
-        ),
-        title: Text(title, style: Theme.of(context).textTheme.titleMedium),
-        subtitle: Text(detail),
-      ),
-    );
-  }
-}
-
-class _PortionChoice extends StatelessWidget {
-  const _PortionChoice({
-    required this.label,
-    required this.asset,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final String asset;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Semantics(
-        inMutuallyExclusiveGroup: true,
-        checked: selected,
-        label: context.ota(
-          'cheesePortionSemantics',
-          tr: '{label} peynir porsiyonu',
-          en: '{label} cheese portion',
-          replacements: {'label': label},
-        ),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppRadius.input),
-          child: AnimatedContainer(
-            duration: MediaQuery.disableAnimationsOf(context)
-                ? Duration.zero
-                : AppMotion.fast,
-            padding: const EdgeInsets.all(AppSpacing.tiny),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppRadius.input),
-              border: Border.all(
-                color: selected ? AppColors.limeDark : AppColors.line,
-                width: selected ? 2 : 1,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 24,
+              child: confirmed
+                  ? const Icon(
+                      Icons.check_rounded,
+                      size: 18,
+                      color: AppColors.brand,
+                    )
+                  : null,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: AppSpacing.xxs),
+                  Text(detail, style: Theme.of(context).textTheme.bodyMedium),
+                ],
               ),
             ),
-            child: Column(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(AppRadius.medium),
-                  child: AspectRatio(
-                    aspectRatio: 1,
-                    // The wrapping Semantics already names the choice; an
-                    // image node here would announce the portion twice.
-                    child: Image.asset(
-                      asset,
-                      fit: BoxFit.cover,
-                      excludeFromSemantics: true,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.tiny),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (selected) ...[
-                      const Icon(Icons.check, size: 14),
-                      const SizedBox(width: AppSpacing.micro),
-                    ],
-                    Flexible(
-                      child: Text(label, overflow: TextOverflow.ellipsis),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _PersonalizationStep extends StatelessWidget {
-  const _PersonalizationStep({
-    required this.viewModel,
-    required this.calorieController,
-    required this.calorieError,
-    required this.onFinish,
-    required this.onIntentionChanged,
-    super.key,
+class _UncertainMealRow extends StatelessWidget {
+  const _UncertainMealRow({
+    required this.phase,
+    required this.selectedGrams,
+    required this.onSelected,
   });
 
-  final OnboardingViewModel viewModel;
-  final TextEditingController calorieController;
-  final CalorieTargetError? calorieError;
-  final VoidCallback onFinish;
-  final ValueChanged<TrackingIntention> onIntentionChanged;
+  final _DemoPhase phase;
+  final int? selectedGrams;
+  final ValueChanged<int> onSelected;
 
   @override
   Widget build(BuildContext context) {
-    final intention = viewModel.draft.intention;
-    return _StepFrame(
-      footer: FilledButton(
-        key: const Key('onboarding-finish'),
-        onPressed: intention == null ? null : onFinish,
-        child: Text(
-          context.ota(
-            'createAccountAction',
-            tr: 'Hesabımı oluştur',
-            en: 'Create my account',
+    final complete = phase == _DemoPhase.complete;
+    return AnimatedContainer(
+      key: const Key('demo-cheese-row'),
+      duration: MediaQuery.disableAnimationsOf(context)
+          ? Duration.zero
+          : AppMotion.standard,
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.xs,
+        AppSpacing.md,
+        complete ? AppSpacing.xs : AppSpacing.md,
+      ),
+      decoration: BoxDecoration(
+        color: complete ? Colors.transparent : AppColors.reviewSurface,
+        border: Border(
+          left: BorderSide(
+            color: complete ? Colors.transparent : AppColors.warning,
+            width: 2,
           ),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            context.ota(
-              'personalizationTitle',
-              tr: 'Sana uygun bir başlangıç yapalım.',
-              en: 'Let us tailor your starting point.',
-            ),
-            style: Theme.of(context).textTheme.headlineMedium,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            context.ota(
-              'personalizationBody',
-              tr: 'Burada yalnızca uygulamanın neyi öne çıkaracağını seçiyorsun.',
-              en: 'Here you only choose what the app should emphasize.',
-            ),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          _IntentTile(
-            key: const Key('intent-understand'),
+          _MealResultRow(
             title: context.ota(
-              'intentUnderstand',
-              tr: 'Ne yediğimi daha iyi anlamak',
-              en: 'Better understand what I eat',
+              'demoCheeseTitle',
+              tr: 'Beyaz peynir',
+              en: 'White cheese',
             ),
-            value: TrackingIntention.understand,
-            groupValue: intention,
-            onChanged: onIntentionChanged,
+            detail: complete
+                ? '$selectedGrams g'
+                : context.ota(
+                    'demoCheeseClarify',
+                    tr: 'Miktarı netleştirelim',
+                    en: 'Let’s clarify the amount',
+                  ),
+            confirmed: complete,
           ),
-          _IntentTile(
-            title: context.ota(
-              'intentProtein',
-              tr: 'Proteinimi takip etmek',
-              en: 'Track my protein',
-            ),
-            value: TrackingIntention.protein,
-            groupValue: intention,
-            onChanged: onIntentionChanged,
-          ),
-          _IntentTile(
-            title: context.ota(
-              'intentCalories',
-              tr: 'Kalori hedefimi takip etmek',
-              en: 'Track my calorie goal',
-            ),
-            value: TrackingIntention.calories,
-            groupValue: intention,
-            onChanged: onIntentionChanged,
-          ),
-          if (intention == TrackingIntention.calories) ...[
-            const SizedBox(height: AppSpacing.sm),
-            TextField(
-              key: const Key('calorie-target'),
-              controller: calorieController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: context.ota(
-                  'dailyGoalOptional',
-                  tr: 'Günlük hedef (isteğe bağlı)',
-                  en: 'Daily goal (optional)',
-                ),
-                suffixText: 'kcal',
-                // A field-level error has to reach screen readers the moment
-                // it appears, which InputDecoration.errorText never announces.
-                error: calorieError == null
-                    ? null
-                    : Semantics(
-                        liveRegion: true,
-                        child: Text(_calorieErrorText(context, calorieError!)),
-                      ),
-                helperText: context.ota(
-                  'dailyGoalHelper',
-                  tr: 'Demo önerisi: 2.100 kcal — tıbbi tavsiye değildir.',
-                  en: 'Demo suggestion: 2,100 kcal — not medical advice.',
-                ),
+          if (!complete) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              context.ota(
+                'demoCheeseQuestion',
+                tr: 'Yaklaşık ne kadardı?',
+                en: 'About how much was it?',
               ),
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: [30, 50, 75, 100]
+                  .map(
+                    (grams) => _PortionButton(
+                      grams: grams,
+                      suggested: grams == 50,
+                      onPressed: () => onSelected(grams),
+                    ),
+                  )
+                  .toList(),
             ),
           ],
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            context.ota(
-              'medicalDisclaimer',
-              tr: 'Meal Clarity tahmin sunar; tıbbi tavsiye vermez.',
-              en: 'Meal Clarity provides estimates, not medical advice.',
-            ),
-            style: const TextStyle(color: AppColors.muted),
-          ),
         ],
       ),
     );
   }
 }
 
-class _IntentTile extends StatelessWidget {
-  const _IntentTile({
-    required this.title,
-    required this.value,
-    required this.groupValue,
-    required this.onChanged,
-    super.key,
+class _PortionButton extends StatelessWidget {
+  const _PortionButton({
+    required this.grams,
+    required this.suggested,
+    required this.onPressed,
   });
 
-  final String title;
-  final TrackingIntention value;
-  final TrackingIntention? groupValue;
-  final ValueChanged<TrackingIntention> onChanged;
+  final int grams;
+  final bool suggested;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    final selected = value == groupValue;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Semantics(
-        // These three options are one radio group; announcing them as plain
-        // selected buttons hides that picking one clears the others.
-        inMutuallyExclusiveGroup: true,
-        checked: selected,
-        child: InkWell(
-          onTap: () => onChanged(value),
-          borderRadius: BorderRadius.circular(AppRadius.input),
-          child: Container(
-            constraints: const BoxConstraints(
-              minHeight: AppTouchTarget.minimum,
+    return OutlinedButton(
+      key: Key('demo-portion-$grams'),
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(64, AppTouchTarget.minimum),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        backgroundColor: suggested ? AppColors.surface : Colors.transparent,
+        side: BorderSide(color: suggested ? AppColors.brand : AppColors.line),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.large),
+        ),
+      ),
+      child: Text('$grams g'),
+    );
+  }
+}
+
+class _NutritionResult extends StatelessWidget {
+  const _NutritionResult({required this.grams});
+
+  final int grams;
+
+  int get _calories => 290 + (grams * 2.5).round();
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      liveRegion: true,
+      child: TweenAnimationBuilder<double>(
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 420),
+        tween: Tween(begin: _calories - 25, end: _calories.toDouble()),
+        curve: Curves.easeOutCubic,
+        builder: (context, value, _) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '≈ ${value.round()} kcal',
+              style: Theme.of(context).textTheme.titleLarge,
             ),
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppRadius.input),
-              border: Border.all(
-                color: selected ? AppColors.limeDark : AppColors.line,
-                width: selected ? 2 : 1,
+            const SizedBox(height: AppSpacing.xxs),
+            Text(
+              context.ota(
+                'demoMacros',
+                tr: '24 g protein · 32 g karbonhidrat · 21 g yağ',
+                en: '24 g protein · 32 g carbs · 21 g fat',
               ),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
-            child: Row(
-              children: [
-                Icon(
-                  selected
-                      ? Icons.radio_button_checked
-                      : Icons.radio_button_off,
-                  color: selected ? AppColors.limeDark : AppColors.muted,
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(child: Text(title)),
-              ],
-            ),
-          ),
+          ],
         ),
       ),
     );
   }
-}
-
-class _StepFrame extends StatelessWidget {
-  const _StepFrame({required this.child, required this.footer});
-
-  final Widget child;
-  final Widget footer;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.page,
-        AppSpacing.xs,
-        AppSpacing.page,
-        AppSpacing.lg,
-      ),
-      child: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 560),
-                child: child,
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 560),
-            child: footer,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// The canned numbers behind the accuracy demo. Nothing here talks to the
-/// network, but the values are real enough that choosing a portion visibly
-/// changes the cheese row and the running total — the step promises we resolve
-/// what we can and ask only when it matters, so its control has to do that.
-enum _DemoPortion {
-  small(grams: 30, kcal: 75),
-  regular(grams: 50, kcal: 125),
-  large(grams: 80, kcal: 200);
-
-  const _DemoPortion({required this.grams, required this.kcal});
-
-  /// 2 eggs plus half a simit, the two rows the demo resolves on its own.
-  static const baseKcal = 290;
-
-  final int grams;
-  final int kcal;
-}
-
-String _calorieErrorText(BuildContext context, CalorieTargetError error) {
-  return switch (error) {
-    CalorieTargetError.outOfRange => context.ota(
-      'calorieTargetValidation',
-      tr: '500–10.000 kcal arasında bir değer gir veya alanı boş bırak.',
-      en: 'Enter a value between 500–10,000 kcal or leave the field blank.',
-    ),
-  };
 }

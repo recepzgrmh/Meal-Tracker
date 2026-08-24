@@ -65,7 +65,10 @@ void main() {
   });
 
   test('grounded save persists a durable commit-meal operation', () async {
-    final meal = _domainMeal(name: 'AI Kahvaltısı');
+    final meal = _domainMeal(
+      name: 'AI Kahvaltısı',
+      itemId: '018f6a5e-3528-7b52-a47d-2d5efc3b2f69',
+    );
     const draft = MealDraft(
       inputText: '2 yumurta',
       mealName: 'AI Kahvaltısı',
@@ -73,7 +76,8 @@ void main() {
       traceId: 'trace-1',
       items: [
         MealItem(
-          id: 'item-key-1',
+          id: '018f6a5e-3528-7b52-a47d-2d5efc3b2f69',
+          analysisItemKey: 'item-key-1',
           foodId: 'food-egg',
           name: 'Yumurta',
           sourceText: '2 yumurta',
@@ -106,7 +110,204 @@ void main() {
     expect(payload['analysisRunId'], 'analysis-run-1');
     expect(payload['commitRequestId'], 'operation-1');
     expect((items.single as Map<String, dynamic>)['foodId'], 'food-egg');
+    expect(items.single['itemId'], '018f6a5e-3528-7b52-a47d-2d5efc3b2f69');
+    expect(items.single['itemKey'], 'item-key-1');
     expect(items.single, isNot(contains('calories')));
+  });
+
+  test(
+    'estimate commit sends estimateId and never writes a foodId key',
+    () async {
+      const estimateItem = MealItem(
+        id: '018f6a5e-3528-7b52-a47d-2d5efc3b2f70',
+        analysisItemKey: 'item-key-estimate',
+        estimateId: '0190aaaa-bbbb-7ccc-8ddd-eeeeffff0001',
+        matchMethod: 'ai_estimate',
+        sourceName: '',
+        name: 'Kısır',
+        sourceText: 'ev yapımı kısır',
+        portionLabel: '150 g',
+        grams: 150,
+        nutritionPer100g: Nutrition(
+          calories: 190,
+          protein: 4.2,
+          carbs: 30.1,
+          fat: 6.4,
+        ),
+        matchState: MatchState.matched,
+      );
+      final meal = LoggedMeal(
+        id: 'meal-estimate',
+        name: 'Akşam yemeği',
+        timeLabel: '08:42',
+        items: const [estimateItem],
+      );
+      const draft = MealDraft(
+        inputText: 'ev yapımı kısır',
+        mealName: 'Akşam yemeği',
+        analysisRunId: 'analysis-run-2',
+        traceId: 'trace-2',
+        items: [estimateItem],
+      );
+
+      await repository.saveAnalyzedOptimistically(
+        userId: 'user-a',
+        meal: meal,
+        draft: draft,
+        eatenAt: now,
+      );
+
+      final operation = await database
+          .select(database.syncOperations)
+          .getSingle();
+      final payload = jsonDecode(operation.payloadJson) as Map<String, dynamic>;
+      final item = (payload['items'] as List).single as Map<String, dynamic>;
+      expect(item['estimateId'], '0190aaaa-bbbb-7ccc-8ddd-eeeeffff0001');
+      // A JSON `"foodId": null` still counts as "sent" to the exactly-one
+      // validator, so the key must be absent entirely.
+      expect(item, isNot(contains('foodId')));
+    },
+  );
+
+  test('grounded commit keeps foodId and never writes an estimateId key', () async {
+    final meal = _domainMeal(
+      name: 'Kahvaltı',
+      itemId: '018f6a5e-3528-7b52-a47d-2d5efc3b2f71',
+    );
+    const draft = MealDraft(
+      inputText: '2 yumurta',
+      mealName: 'Kahvaltı',
+      analysisRunId: 'analysis-run-3',
+      traceId: 'trace-3',
+      items: [
+        MealItem(
+          id: '018f6a5e-3528-7b52-a47d-2d5efc3b2f71',
+          analysisItemKey: 'item-key-1',
+          foodId: 'food-egg',
+          name: 'Yumurta',
+          sourceText: '2 yumurta',
+          portionLabel: '2 adet',
+          grams: 100,
+          nutritionPer100g: Nutrition(
+            calories: 155,
+            protein: 12.6,
+            carbs: 1.1,
+            fat: 10.6,
+          ),
+          matchState: MatchState.matched,
+        ),
+      ],
+    );
+
+    await repository.saveAnalyzedOptimistically(
+      userId: 'user-a',
+      meal: meal,
+      draft: draft,
+      eatenAt: now,
+    );
+
+    final operation = await database.select(database.syncOperations).getSingle();
+    final payload = jsonDecode(operation.payloadJson) as Map<String, dynamic>;
+    final item = (payload['items'] as List).single as Map<String, dynamic>;
+    expect(item['foodId'], 'food-egg');
+    expect(item, isNot(contains('estimateId')));
+  });
+
+  test('refuses to commit an item with neither or both authorities', () async {
+    const base = MealItem(
+      id: 'item-broken',
+      name: 'Bilinmeyen',
+      sourceText: 'bilinmeyen',
+      portionLabel: '100 g',
+      grams: 100,
+      nutritionPer100g: Nutrition(calories: 1, protein: 0, carbs: 0, fat: 0),
+      matchState: MatchState.matched,
+    );
+    const both = MealItem(
+      id: 'item-broken',
+      name: 'Bilinmeyen',
+      sourceText: 'bilinmeyen',
+      portionLabel: '100 g',
+      grams: 100,
+      nutritionPer100g: Nutrition(calories: 1, protein: 0, carbs: 0, fat: 0),
+      matchState: MatchState.matched,
+      foodId: 'food-x',
+      estimateId: '0190aaaa-bbbb-7ccc-8ddd-eeeeffff0002',
+    );
+    for (final item in const [base, both]) {
+      final meal = LoggedMeal(
+        id: 'meal-broken',
+        name: 'Öğün',
+        timeLabel: '08:42',
+        items: [item],
+      );
+      final draft = MealDraft(
+        inputText: 'bilinmeyen',
+        mealName: 'Öğün',
+        analysisRunId: 'analysis-run-4',
+        traceId: 'trace-4',
+        items: [item],
+      );
+
+      await expectLater(
+        repository.saveAnalyzedOptimistically(
+          userId: 'user-a',
+          meal: meal,
+          draft: draft,
+          eatenAt: now,
+        ),
+        throwsArgumentError,
+      );
+    }
+  });
+
+  test('match method survives the local cache round-trip', () async {
+    final meal = LoggedMeal(
+      id: 'meal-ai',
+      name: 'AI Öğünü',
+      timeLabel: '08:42',
+      items: const [
+        MealItem(
+          id: 'item-ai',
+          name: 'Kısır',
+          sourceText: 'kısır',
+          portionLabel: '150 g',
+          grams: 150,
+          nutritionPer100g: Nutrition(
+            calories: 190,
+            protein: 4.2,
+            carbs: 30.1,
+            fat: 6.4,
+          ),
+          matchState: MatchState.matched,
+          matchMethod: 'ai_estimate',
+        ),
+      ],
+    );
+
+    await repository.saveOptimistically(
+      userId: 'user-a',
+      meal: meal,
+      eatenAt: now,
+    );
+    final cached = await repository.watchDay(userId: 'user-a', day: now).first;
+
+    // The AI-estimate marker in the meal detail hangs off this flag, so a
+    // meal reopened from the cache must not lose it.
+    expect(cached.single.items.single.matchMethod, 'ai_estimate');
+    expect(cached.single.items.single.isAiEstimate, isTrue);
+  });
+
+  test('refresh keeps the server-recorded match method', () async {
+    remote.meals = [
+      _remoteMeal(name: 'Uzak AI Öğünü', matchMethod: 'ai_estimate'),
+    ];
+
+    await repository.refreshDay(userId: 'user-a', day: now);
+    final meals = await repository.watchDay(userId: 'user-a', day: now).first;
+
+    expect(meals.single.items.single.matchMethod, 'ai_estimate');
+    expect(meals.single.items.single.isAiEstimate, isTrue);
   });
 
   test('refresh never overwrites an unsynced optimistic mutation', () async {
@@ -211,7 +412,7 @@ LoggedMeal _domainMeal({
   );
 }
 
-MealRemoteDto _remoteMeal({required String name}) {
+MealRemoteDto _remoteMeal({required String name, String? matchMethod}) {
   return MealRemoteDto(
     id: 'meal-1',
     userId: 'user-a',
@@ -220,7 +421,7 @@ MealRemoteDto _remoteMeal({required String name}) {
     occurredAt: DateTime.utc(2026, 8, 17, 8, 42),
     updatedAt: DateTime.utc(2026, 8, 17, 9),
     rowVersion: 3,
-    items: const [
+    items: [
       MealItemRemoteDto(
         id: 'item-1',
         position: 0,
@@ -234,6 +435,7 @@ MealRemoteDto _remoteMeal({required String name}) {
         fatPer100g: 9.5,
         reviewStatus: 'accepted',
         nutritionSource: 'catalog',
+        matchMethod: matchMethod,
       ),
     ],
   );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:meal_clarity/src/app.dart';
+import 'package:meal_clarity/src/widgets/meal_list_tile.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -12,6 +13,8 @@ void main() {
     await tester.pumpWidget(const MealClarityApp());
 
     await tester.tap(find.byKey(const Key('quick-composer')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('add-meal-text')));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const Key('meal-input')),
@@ -29,7 +32,7 @@ void main() {
 
     expect(find.text('3 yiyecek bulduk'), findsOneWidget);
     expect(find.text('Miktarı kontrol et'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('review-primary-button')));
+    await tester.tap(find.byKey(const Key('review-edit-button')));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('portion-title')), findsOneWidget);
@@ -41,6 +44,9 @@ void main() {
     expect(find.text('Kahvaltı kaydedildi'), findsOneWidget);
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -650));
     await tester.pumpAndSettle();
-    expect(find.text('Kahvaltı'), findsOneWidget);
+    // Matched through the tile: Today groups meals by part of the day, so a
+    // meal named "Kahvaltı" logged in the morning sits under a group header
+    // carrying the same word, and a bare text match would find two.
+    expect(find.widgetWithText(MealListTile, 'Kahvaltı'), findsOneWidget);
   });
 }

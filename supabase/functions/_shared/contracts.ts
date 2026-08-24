@@ -1,5 +1,6 @@
 export const ANALYSIS_CONTRACT_VERSION = 'analysis.v1' as const
 export const DETERMINISTIC_PIPELINE_VERSION = 'deterministic-tr-v1' as const
+export const TEXT_EXTRACTION_PIPELINE_VERSION = 'text-extraction-grounded-v1' as const
 export const VISION_PIPELINE_VERSION = 'vision-grounded-hybrid-v2' as const
 
 export type InputKind = 'text' | 'voice' | 'photo' | 'mixed'
@@ -28,15 +29,22 @@ export interface NutritionPer100g {
 export interface AnalysisItem {
   itemKey: string
   sourceText: string
-  foodId: string
+  /** Null only for `matchMethod: 'ai_estimate'` items, which carry an `estimateId` instead. */
+  foodId: string | null
   canonicalName: string
   portionLabel: string
   grams: number
   quantity: number
   confidence: number
-  matchMethod: 'exact' | 'alias' | 'retrieval' | 'llm'
+  matchMethod: 'exact' | 'alias' | 'retrieval' | 'llm' | 'ai_estimate'
   needsClarification: boolean
   clarificationReason?: 'identity' | 'portion'
+  /** Runner-up catalog food ids when clarificationReason is 'identity' on the LLM path. */
+  alternativeFoodIds?: string[]
+  /** Server-recorded estimate row this item commits against. Never client-supplied. */
+  estimateId?: string
+  /** Marks nutrition as a bounds-checked AI estimate rather than catalog data. */
+  estimated?: boolean
   portionOptions?: Array<{
     label: string
     grams: number
@@ -44,6 +52,11 @@ export interface AnalysisItem {
     imageUrl?: string
   }>
   nutritionPer100g: NutritionPer100g
+}
+
+export interface UnmatchedItem {
+  itemKey: string
+  text: string
 }
 
 export interface AnalyzeMealResponse {
@@ -54,8 +67,13 @@ export interface AnalyzeMealResponse {
   normalizedInput: string
   items: AnalysisItem[]
   unmatchedText: string[]
+  /** Per-item view of unmatchedText so the client can say "we couldn't match: ayran". */
+  unmatchedItems: UnmatchedItem[]
   pipeline: {
-    extraction: typeof DETERMINISTIC_PIPELINE_VERSION | typeof VISION_PIPELINE_VERSION
+    extraction:
+      | typeof DETERMINISTIC_PIPELINE_VERSION
+      | typeof TEXT_EXTRACTION_PIPELINE_VERSION
+      | typeof VISION_PIPELINE_VERSION
     retrieval: 'exact-alias-v1' | 'hybrid-rrf-v1'
     model: string | null
     promptVersion?: string
@@ -72,6 +90,7 @@ export interface ApiErrorBody {
       | 'ANALYSIS_IN_PROGRESS'
       | 'FORBIDDEN'
       | 'CONFLICT'
+      | 'RATE_LIMITED'
       | 'PROVIDER_UNAVAILABLE'
       | 'INTERNAL_ERROR'
     message: string
