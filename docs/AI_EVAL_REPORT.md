@@ -102,14 +102,45 @@ already repaired one instance of the same pattern, and later migrations
 reintroduced it — which is why the fix now ends in an assertion instead of a
 one-off replacement.
 
+Two further defects sat behind the first, and each was found the same way. The
+selection call then failed with a bare `400`, because the provider had retired
+`minimal` as a reasoning effort for the configured model. The client recorded
+only the status, so the cause was invisible; capturing a bounded slice of the
+provider error body turned "failed with 400" into `Unsupported value: 'minimal'
+is not supported`, which named the fix. Before that, a run whose cases all
+reported `401` looked like a provider outage but was an expired eval JWT —
+`tool/eval/run_live_eval.sh` now mints one per run so the token is never the
+variable under test.
+
 ## Live status
 
-The hosted run is not yet a clean measurement. After the SQL repair the pipeline
-reaches the provider, and the remaining blocker is an OpenAI `401` on the
-selection call, so the LLM path is still unmeasured. The six passing cases all
-resolve through the deterministic alias path, and the six identity mismatches
-are expectations authored against the three-food seed catalog before the
-60,000-food production catalog was loaded; each needs review to decide whether
-the returned food is the correct production entry or a genuine accuracy failure.
-Those numbers should be replaced, not cited, once a valid provider key is in
-place.
+First clean end-to-end measurement of the hosted pipeline, 20 bilingual text
+cases:
+
+| Metric | Value |
+| --- | --- |
+| Pass rate (identity exact and portion within 10%) | 0.40 |
+| Identity exact accuracy | 0.55 |
+| No-match accuracy | 0.17 |
+| Portion MAPE | 1.46 |
+| Latency p50 / p95 | 1685 ms / 13435 ms |
+| Tokens in / out | 5564 / 676 |
+| Estimated cost | $0.002 |
+
+These are honest numbers on a small set, and the shape is more useful than the
+headline. Identity is the stronger half at `0.55`; portions are the weak half,
+with a MAPE far above the 10% gate, which says the gram estimates rather than
+the food choices are what a user would spend time correcting. No-match accuracy
+of `0.17` is the least trustworthy figure here because only a handful of cases
+exercise abstention.
+
+Two caveats before anyone cites the pass rate. Some expectations were authored
+against the three-food seed catalog before the 60,000-food production catalog
+was loaded, so a mismatch may mean the gold label points at a seed entry while
+the system correctly returned a production one; each identity failure needs
+review to separate a stale label from a real error. And p95 latency above 13 s
+is a product problem independent of accuracy.
+
+The immediate next steps are to review the identity failures case by case,
+re-label where the production entry is correct, and then re-measure so portion
+error can be attacked against a trustworthy baseline.

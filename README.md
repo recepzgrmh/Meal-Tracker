@@ -94,14 +94,21 @@ Node-portable, and the entire nutrition data pipeline tooling under
 
 ```text
 text / private photo
-  → deterministic normalization + vision extraction
-  → exact alias, full-text/trigram, and pgvector candidates
+  → deterministic normalization, then text or vision extraction when it is
+    not enough (identity and amount only — the schema has no nutrition field)
+  → per-food exact alias, full-text/trigram, and pgvector candidates
   → reciprocal-rank fusion
   → strict-schema LLM choice from allowed food IDs only
   → catalog portions and nutrition
   → clarification or NO_MATCH/manual correction
   → idempotent commit and correction feedback
 ```
+
+Extraction reads the sentence; the catalog decides every number. A rule-based
+parser cannot separate food words from a conversational Turkish sentence — it
+used to turn "yedim" and "kanka" into foods — so understanding moved to a model
+whose output schema physically cannot carry a calorie. See
+[`docs/TEXT_UNDERSTANDING_FIX.md`](docs/TEXT_UNDERSTANDING_FIX.md).
 
 Nutrition is never accepted from the model or client. Weak vector-only matches
 are rejected. When the catalog has no acceptable match, the server can produce
@@ -179,16 +186,22 @@ disprove them.
 - The analyze path has a concurrent-duplicate race: two identical requests in
   a tight window can double-run the pipeline and double the provider spend.
   The commit path is unaffected — idempotency keys make duplicate commits
-  safe.
-- Confidence thresholds are uncalibrated hand-picked constants. Calibrating
-  them against observed correction rates is pending.
-- The hosted live-eval numbers are not yet a clean measurement. A SQL defect
-  that the live harness caught is fixed in `20260824130000`, but the selection
-  call currently returns a provider `401`, so the LLM path is unmeasured and
-  the passing cases resolve deterministically. See
+  safe. Text extraction adds one more provider call to what that race wastes.
+- Confidence thresholds are uncalibrated hand-picked constants, including the
+  raised `MIN_SEMANTIC_SIMILARITY` and the text-extraction prompt, which has
+  not been tuned against a held-out set. Calibrating them against observed
+  correction rates is pending.
+- Component gram amounts for a decomposed dish are grounded per ingredient in
+  the catalog, but the ratio between ingredients is a model guess and will show
+  up as portion error until it is measured.
+- Portion estimation is the weakest measured part of the pipeline. The first
+  clean hosted run scores identity exact accuracy `0.55` but portion MAPE
+  `1.46`, far outside the 10% gate, so gram estimates are what a user would
+  spend time correcting. Some gold labels also predate the 60,000-food catalog
+  and need review before the pass rate is cited. See
   [`docs/AI_EVAL_REPORT.md`](docs/AI_EVAL_REPORT.md).
-- Text-only analyze requests bypass the cost budget, leaving a bounded
-  database-write amplification open.
+- Analysis p95 latency is above 13 s on the hosted project, which is a product
+  problem independent of accuracy.
 - Embedding backfill runs synchronously in the search request path. In
   production it belongs in a scheduled worker.
 - Privacy production work remains: EXIF stripping, automated retention
