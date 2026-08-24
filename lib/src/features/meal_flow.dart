@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -509,7 +511,12 @@ class _MealFlowState extends State<MealFlow> {
   Future<MealItem?> _showTypeSheet(MealItem item) async {
     if (!_viewModel.canSearchCatalog) return _showPortionSheet(item);
     final locale = _catalogLocale(context);
-    await _viewModel.searchItemVariants(item, locale);
+    // Started, not awaited. The sheet already renders a spinner while
+    // `isSearchingVariants` is true, but awaiting here meant the user tapped and
+    // then watched a frozen screen for the whole catalog round trip before
+    // anything appeared. The ListenableBuilder inside fills it in when the
+    // results land.
+    unawaited(_viewModel.searchItemVariants(item, locale));
     if (!mounted) return null;
     return showModalBottomSheet<MealItem>(
       context: context,

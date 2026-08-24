@@ -38,15 +38,19 @@ interface HybridSearchOptions {
   /** Omit to search the whole catalog; set for the analyze path. */
   minLocaleRelevance?: number
   /**
-   * Skip the catalog embedding backfill for this call.
+   * Run the catalog embedding backfill inside this call.
    *
-   * The backfill is maintenance — it embeds up to 50 stale rows and writes them
-   * back — and it was running inside the request the user is waiting on, so
-   * every analysis paid for catalog upkeep. Manual catalog search still runs it,
-   * which keeps the mechanism alive without putting it on the path where
-   * latency is felt. A scheduled worker is the real home for it.
+   * Off by default. The backfill is maintenance — it embeds up to 50 stale rows
+   * and writes them back — and it used to run inside whatever request happened
+   * to arrive, so users paid for catalog upkeep in latency. That was tolerable
+   * while little was stale; translating 54,857 rows changed their aliases, and
+   * aliases are part of the embedding document, so every one of them went stale
+   * at once and the request path had over a thousand batches to grind through.
+   *
+   * `deno task --config supabase/deno.json backfill:embeddings` runs it to
+   * completion out of band instead.
    */
-  skipBackfill?: boolean
+  runBackfill?: boolean
 }
 
 export interface HybridSearchResult {
@@ -66,7 +70,7 @@ export async function hybridSearch(
   const model = Deno.env.get('OPENAI_EMBEDDING_MODEL')?.trim() || DEFAULT_EMBEDDING_MODEL
   let backfilledFoods = 0
   let backfillTokens = 0
-  if (!options.skipBackfill) {
+  if (options.runBackfill) {
     try {
       const backfill = await backfillCatalogEmbeddings(adminClient, {
         apiKey: options.openAiApiKey,

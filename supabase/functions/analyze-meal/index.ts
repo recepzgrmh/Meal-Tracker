@@ -954,7 +954,6 @@ async function groundUnmatchedText(
           limit: 10,
           openAiApiKey: apiKey,
           minLocaleRelevance: ANALYSIS_LOCALE_RELEVANCE_FLOOR,
-          skipBackfill: true,
         })
       ),
     )
