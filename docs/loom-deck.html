@@ -1,35 +1,36 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Meal Clarity Walkthrough Deck</title>
+<title>Meal Clarity Sunum Paneli</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 
 <style>
-  /* Single, deliberate theme: this deck is screen-recorded next to a code
-     editor and an iOS simulator, so it commits to a warm dark ground that
-     will not blow out under video compression. Every colour is painted
-     explicitly so the page never borrows the host's ground. */
+  /* Tek ve bilinçli tema: bu panel kod editörü ile iOS simülatörünün yanında
+     ekran kaydına giriyor, bu yüzden video sıkıştırmasında patlamayan sıcak
+     koyu bir zemine bağlanıyor. Her renk açıkça boyanıyor; sayfa hiçbir rengi
+     tarayıcıdan miras almıyor. */
   :root {
     --ground: #14100c;
-    --surface: #1f1913;
-    --surface-high: #2a2219;
-    --rule: #3a3129;
-    --ink: #f2ebe0;
-    --muted: #a2968a;
-    --accent: #e8a33d;
-    --verified: #6fb3a0;
-    --alert: #c9614a;
+    --surface: #1e1812;
+    --surface-2: #292118;
+    --rule: #3b3229;
+    --rule-soft: #2c251d;
+    --ink: #f4ede2;
+    --muted: #a89b8d;
+    --accent: #e8a33d;      /* ölçüm, tahmin, belirsizlik */
+    --verified: #6fb3a0;    /* katalogdan doğrulanmış */
+    --alert: #cc6349;       /* sorun, limit */
 
     --display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
-    --body: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif;
+    --body: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --data: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-    --step: clamp(0.95rem, 0.62rem + 0.72vw, 1.42rem);
-    --rail-h: 58px;
+    --step: clamp(0.92rem, 0.58rem + 0.7vw, 1.34rem);
+    --rail-h: 56px;
   }
 
   * { box-sizing: border-box; }
@@ -44,302 +45,189 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  .deck {
-    position: relative;
-    min-height: 100vh;
-    padding-bottom: var(--rail-h);
-  }
+  .deck { position: relative; min-height: 100vh; padding-bottom: var(--rail-h); }
 
   .slide {
     display: none;
     min-height: calc(100vh - var(--rail-h));
-    padding: clamp(2rem, 4.5vw, 5rem) clamp(1.5rem, 6vw, 7rem);
+    padding: clamp(1.6rem, 3.4vw, 3.6rem) clamp(1.4rem, 5vw, 5.5rem);
     flex-direction: column;
     justify-content: center;
-    gap: clamp(1.1rem, 2vw, 2rem);
-    max-width: 1500px;
+    gap: clamp(0.9rem, 1.7vw, 1.7rem);
+    max-width: 1520px;
     margin: 0 auto;
   }
   .slide[data-active="true"] { display: flex; }
 
   @media (prefers-reduced-motion: no-preference) {
-    .slide[data-active="true"] { animation: rise 260ms ease-out both; }
+    .slide[data-active="true"] { animation: rise 240ms ease-out both; }
     @keyframes rise {
-      from { opacity: 0; transform: translateY(10px); }
+      from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: none; }
     }
   }
 
   .eyebrow {
     font-family: var(--data);
-    font-size: 0.78em;
-    letter-spacing: 0.16em;
+    font-size: 0.76em;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--accent);
     display: flex;
     align-items: center;
     gap: 0.9em;
+    margin: 0;
   }
-  .eyebrow::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: var(--rule);
-  }
+  .eyebrow::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
 
   h1, h2 {
     font-family: var(--display);
     font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1.03;
+    letter-spacing: -0.021em;
+    line-height: 1.04;
     text-wrap: balance;
     margin: 0;
   }
-  h1 { font-size: clamp(3rem, 8vw, 7rem); text-transform: uppercase; }
-  h2 { font-size: clamp(1.8rem, 3.6vw, 3.2rem); }
+  h1 { font-size: clamp(2.8rem, 7.4vw, 6.4rem); text-transform: uppercase; }
+  h2 { font-size: clamp(1.55rem, 3.1vw, 2.85rem); }
 
   .lede {
-    font-size: clamp(1.15rem, 1.9vw, 1.9rem);
-    line-height: 1.34;
-    max-width: 26ch;
-    color: var(--ink);
+    font-size: clamp(1.1rem, 1.8vw, 1.75rem);
+    line-height: 1.32;
+    max-width: 24ch;
     font-weight: 500;
     text-wrap: balance;
+    margin: 0;
   }
-  .sub { color: var(--muted); max-width: 62ch; margin: 0; }
+  .sub { color: var(--muted); max-width: 74ch; margin: 0; font-size: 0.94em; }
+  .sub b, .callout b { color: var(--ink); font-weight: 600; }
 
-  /* Nutrition-label rules: weight encodes hierarchy, the way a panel
-     separates servings from totals. */
-  .rule-heavy { height: 7px; background: var(--ink); border: 0; margin: 0; }
-  .rule-thin { height: 1px; background: var(--rule); border: 0; margin: 0; }
+  /* Besin etiketi kuralları: çizgi kalınlığı hiyerarşiyi taşır. */
+  .rule-heavy { height: 6px; background: var(--ink); border: 0; margin: 0; }
+  .rule-thin { height: 1px; background: var(--rule); border: 0; margin: 0.2rem 0; }
 
-  .cols {
-    display: grid;
-    gap: clamp(1rem, 2.4vw, 2.4rem);
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    align-items: start;
-  }
+  .cols { display: grid; gap: clamp(0.8rem, 1.8vw, 1.8rem); grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); align-items: start; }
+  .cols--2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+  .split { display: grid; gap: clamp(1rem, 2.4vw, 2.4rem); grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: center; }
+  @media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
 
   .card {
     background: var(--surface);
     border: 1px solid var(--rule);
-    border-radius: 3px;
-    padding: clamp(1rem, 1.6vw, 1.6rem);
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    border-radius: 4px;
+    padding: clamp(0.85rem, 1.4vw, 1.4rem);
+    display: flex; flex-direction: column; gap: 0.45rem;
   }
-  .card h3 {
-    font-family: var(--display);
-    font-weight: 600;
-    font-size: 1.05em;
-    margin: 0;
-    letter-spacing: -0.01em;
-  }
-  .card p { margin: 0; color: var(--muted); font-size: 0.9em; line-height: 1.45; }
-
+  .card h3 { font-family: var(--display); font-weight: 600; font-size: 1.02em; margin: 0; letter-spacing: -0.01em; }
+  .card p { margin: 0; color: var(--muted); font-size: 0.87em; line-height: 1.45; }
   .card--verified { border-left: 4px solid var(--verified); }
   .card--accent { border-left: 4px solid var(--accent); }
   .card--alert { border-left: 4px solid var(--alert); }
 
-  /* Pipeline: stages read left to right, the two enforcement points are
-     called out because they are the whole argument. */
-  .pipe {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.55rem;
-    align-items: stretch;
-  }
-  .stage {
-    background: var(--surface);
+  .callouts { display: grid; gap: 0.65rem; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); }
+  .callout { font-size: 0.86em; color: var(--muted); border-left: 2px solid var(--rule); padding-left: 0.85em; margin: 0; }
+
+  figure { margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+  figure svg { max-width: 100%; height: auto; display: block; }
+  figcaption { color: var(--muted); font-size: 0.82em; line-height: 1.45; }
+
+  /* Telefon çerçevesi: ekran görüntüleri arayüz olduklarını belli etsin. */
+  .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 186px)); gap: clamp(0.9rem, 2vw, 2rem); justify-content: center; }
+  .shot { display: flex; flex-direction: column; gap: 0.55rem; }
+  .phone {
     border: 1px solid var(--rule);
-    border-radius: 3px;
-    padding: 0.7em 0.9em;
-    font-size: 0.82em;
-    line-height: 1.25;
-    display: flex;
-    align-items: center;
-    flex: 1 1 130px;
-    min-width: 118px;
+    background: var(--surface-2);
+    border-radius: 22px;
+    padding: 5px;
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.5);
   }
-  .stage--gate {
-    background: var(--surface-high);
-    border-color: var(--accent);
-    color: var(--accent);
-    font-weight: 600;
-  }
-  .stage--commit { border-color: var(--verified); color: var(--verified); font-weight: 600; }
-  .arrow {
-    align-self: center;
-    color: var(--rule);
-    font-family: var(--data);
-    flex: 0 0 auto;
-  }
+  .phone img { display: block; width: 100%; height: auto; border-radius: 17px; }
+  .shot figcaption { text-align: center; font-size: 0.78em; }
+  .shot b { display: block; color: var(--ink); font-weight: 600; font-size: 1.05em; margin-bottom: 0.1em; }
 
-  .callouts { display: grid; gap: 0.7rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
-  .callout {
-    font-size: 0.88em;
-    color: var(--muted);
-    border-left: 2px solid var(--rule);
-    padding-left: 0.9em;
-  }
-  .callout b { color: var(--ink); font-weight: 600; }
-
-  ol.steps { margin: 0; padding: 0; list-style: none; counter-reset: gate; display: grid; gap: 0.7rem; }
+  ol.steps { margin: 0; padding: 0; list-style: none; counter-reset: gate; display: grid; gap: 0.55rem; }
   ol.steps li {
     counter-increment: gate;
-    display: grid;
-    grid-template-columns: 2.4em 1fr;
-    gap: 0.9em;
-    align-items: baseline;
-    padding-bottom: 0.7rem;
-    border-bottom: 1px solid var(--rule);
+    display: grid; grid-template-columns: 2.3em 1fr; gap: 0.8em;
+    align-items: baseline; padding-bottom: 0.55rem; border-bottom: 1px solid var(--rule-soft);
   }
-  ol.steps li::before {
-    content: counter(gate, decimal-leading-zero);
-    font-family: var(--data);
-    color: var(--accent);
-    font-size: 0.85em;
-  }
+  ol.steps li::before { content: counter(gate, decimal-leading-zero); font-family: var(--data); color: var(--accent); font-size: 0.84em; }
   ol.steps b { font-weight: 600; }
-  ol.steps span { color: var(--muted); font-size: 0.9em; display: block; margin-top: 0.15em; }
+  ol.steps span { color: var(--muted); font-size: 0.88em; display: block; margin-top: 0.12em; }
 
   .table-wrap { overflow-x: auto; }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.87em;
-    font-variant-numeric: tabular-nums;
-  }
-  th, td { text-align: left; padding: 0.62em 0.8em 0.62em 0; vertical-align: top; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85em; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 0.55em 0.8em 0.55em 0; vertical-align: top; }
   thead th {
-    font-family: var(--data);
-    font-size: 0.8em;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    font-weight: 400;
+    font-family: var(--data); font-size: 0.78em; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted); font-weight: 400;
     border-bottom: 2px solid var(--ink);
   }
-  tbody tr { border-bottom: 1px solid var(--rule); }
+  tbody tr { border-bottom: 1px solid var(--rule-soft); }
   td.num { font-family: var(--data); font-weight: 500; white-space: nowrap; }
   .good { color: var(--verified); }
   .warn { color: var(--alert); }
+  .dim { color: var(--muted); }
 
   .pill {
-    display: inline-block;
-    font-family: var(--data);
-    font-size: 0.72em;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    padding: 0.24em 0.6em;
-    border-radius: 2px;
-    border: 1px solid currentColor;
-    white-space: nowrap;
+    display: inline-block; font-family: var(--data); font-size: 0.7em;
+    letter-spacing: 0.06em; text-transform: uppercase; padding: 0.22em 0.55em;
+    border-radius: 2px; border: 1px solid currentColor; white-space: nowrap;
   }
   .pill--hyp { color: var(--accent); }
   .pill--fact { color: var(--verified); }
-  .pill--contested { color: var(--muted); }
+  .pill--dim { color: var(--muted); }
 
-  code, .mono { font-family: var(--data); font-size: 0.88em; }
+  code, .mono { font-family: var(--data); font-size: 0.9em; }
   .quote {
-    font-family: var(--data);
-    font-size: clamp(0.82rem, 1.15vw, 1.02rem);
-    background: var(--surface);
-    border-left: 3px solid var(--alert);
-    padding: 0.9em 1.1em;
-    color: var(--ink);
-    line-height: 1.5;
-    overflow-x: auto;
+    font-family: var(--data); font-size: clamp(0.78rem, 1.05vw, 0.98rem);
+    background: var(--surface); border-left: 3px solid var(--alert);
+    padding: 0.85em 1em; line-height: 1.5; overflow-x: auto; margin: 0;
   }
 
   .cue {
-    font-family: var(--data);
-    font-size: 0.8em;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--ground);
-    background: var(--accent);
-    padding: 0.5em 0.9em;
-    border-radius: 2px;
-    align-self: flex-start;
+    font-family: var(--data); font-size: 0.78em; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--ground); background: var(--accent);
+    padding: 0.45em 0.85em; border-radius: 2px; align-self: flex-start; font-weight: 500;
   }
 
-  /* Rail: the segments are the script's real beats, so position on the rail
-     is elapsed recording time, not decoration. */
+  .metric-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.7rem; }
+  .metric { background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; padding: 0.75rem 0.9rem; }
+  .metric .v { font-family: var(--data); font-size: clamp(1.3rem, 2.4vw, 2.1rem); font-weight: 500; line-height: 1; display: block; }
+  .metric .k { color: var(--muted); font-size: 0.76em; margin-top: 0.35em; display: block; line-height: 1.3; }
+
   .rail {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    height: var(--rail-h);
-    background: var(--ground);
-    border-top: 1px solid var(--rule);
-    display: flex;
-    align-items: stretch;
-    z-index: 5;
+    position: fixed; bottom: 0; left: 0; right: 0; height: var(--rail-h);
+    background: var(--ground); border-top: 1px solid var(--rule);
+    display: flex; align-items: stretch; z-index: 5;
   }
   .rail button {
-    flex: 1;
-    background: none;
-    border: 0;
-    border-right: 1px solid var(--rule);
-    color: var(--muted);
-    font-family: var(--data);
-    font-size: 0.68rem;
-    letter-spacing: 0.06em;
-    cursor: pointer;
-    padding: 0.3rem 0.2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-    align-items: center;
-    justify-content: center;
+    flex: 1; background: none; border: 0; border-right: 1px solid var(--rule-soft);
+    color: var(--muted); font-family: var(--data); font-size: 0.66rem; letter-spacing: 0.05em;
+    cursor: pointer; padding: 0.25rem 0.15rem;
+    display: flex; flex-direction: column; gap: 0.12rem; align-items: center; justify-content: center;
     transition: color 120ms ease, background 120ms ease;
   }
   .rail button:last-child { border-right: 0; }
   .rail button:hover { color: var(--ink); background: var(--surface); }
   .rail button[aria-current="true"] { color: var(--ground); background: var(--accent); font-weight: 500; }
-  .rail .t { opacity: 0.75; font-size: 0.62rem; }
+  .rail .t { opacity: 0.72; font-size: 0.6rem; }
   .rail .n { display: none; }
-  @media (min-width: 900px) { .rail .n { display: block; } }
+  @media (min-width: 980px) { .rail .n { display: block; } }
 
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   .notes {
-    position: fixed;
-    right: clamp(0.6rem, 2vw, 1.6rem);
-    bottom: calc(var(--rail-h) + 0.8rem);
-    width: min(400px, 88vw);
-    background: var(--surface-high);
-    border: 1px solid var(--accent);
-    border-radius: 3px;
-    padding: 1rem 1.1rem;
-    font-size: 0.85rem;
-    line-height: 1.5;
-    color: var(--ink);
-    z-index: 6;
+    position: fixed; right: clamp(0.5rem, 1.8vw, 1.4rem); bottom: calc(var(--rail-h) + 0.7rem);
+    width: min(400px, 88vw); background: var(--surface-2); border: 1px solid var(--accent);
+    border-radius: 4px; padding: 0.9rem 1rem; font-size: 0.84rem; line-height: 1.5; z-index: 6;
   }
   .notes[hidden] { display: none; }
-  .notes h4 {
-    margin: 0 0 0.5em;
-    font-family: var(--data);
-    font-size: 0.72rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--accent);
-    font-weight: 400;
-  }
-  .notes p { margin: 0 0 0.6em; }
+  .notes h4 { margin: 0 0 0.45em; font-family: var(--data); font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); font-weight: 400; }
+  .notes p { margin: 0 0 0.55em; }
   .notes p:last-child { margin-bottom: 0; }
 
-  .hint {
-    position: fixed;
-    left: clamp(0.6rem, 2vw, 1.6rem);
-    bottom: calc(var(--rail-h) + 0.8rem);
-    font-family: var(--data);
-    font-size: 0.72rem;
-    color: var(--muted);
-    z-index: 6;
-  }
+  .hint { position: fixed; left: clamp(0.5rem, 1.8vw, 1.4rem); bottom: calc(var(--rail-h) + 0.7rem); font-family: var(--data); font-size: 0.7rem; color: var(--muted); z-index: 6; margin: 0; }
 
   @media print { .rail, .notes, .hint { display: none; } .slide { display: flex !important; page-break-after: always; } }
 </style>
@@ -348,177 +236,386 @@
 
 <div class="deck">
 
-  <section class="slide" data-time="0:00" data-name="Thesis" data-notes="Open here. Say the rule first, then show the pipeline. Do not open code yet.|&quot;This is Meal Clarity, an accuracy-first meal logger. The rule the whole system is built around: the model interprets, the catalog decides.&quot;">
-    <p class="eyebrow">Loom walkthrough &middot; approx. 8 minutes</p>
+  <!-- 1 -->
+  <section class="slide" data-time="0:00" data-name="Tez" data-notes="Kuralı önce söyle, sonra boru hattını göster. Henüz kod açma.|&quot;Bu Meal Clarity. Tüm sistemin kurulduğu kural şu: model yorumlar, katalog karar verir.&quot;">
+    <p class="eyebrow">Loom sunumu &middot; yaklaşık 8 dakika</p>
     <h1>Meal<br>Clarity</h1>
     <hr class="rule-heavy">
-    <p class="lede">The model interprets.<br>The catalog decides.</p>
-    <p class="sub">Flutter app, TypeScript Edge Functions, Postgres with pgvector, and an internal console for AI quality and cost. Built for the EatBetter full-stack case study.</p>
+    <p class="lede">Model yorumlar.<br>Katalog karar verir.</p>
+    <p class="sub">Flutter uygulaması, TypeScript Edge Functions, pgvector'lü Postgres ve yapay zekâ kalitesi ile maliyeti izleyen bir yönetim konsolu. EatBetter vaka çalışması için doğruluk öncelikli bir öğün kaydedici.</p>
   </section>
 
-  <section class="slide" data-time="0:15" data-name="Pipeline" data-notes="Trace it left to right with the cursor. Land on the two coloured stages — they are the argument.|&quot;The language model never emits a number. It picks an ID from a list the server built, and nutrition is re-read from the catalog inside Postgres at commit time.&quot;">
-    <p class="eyebrow">How a meal becomes data</p>
-    <h2>One path, two enforcement points</h2>
-    <div class="pipe">
-      <div class="stage">Text or private photo</div><span class="arrow">&rarr;</span>
-      <div class="stage">Extraction<br>identity &amp; amount only</div><span class="arrow">&rarr;</span>
-      <div class="stage">Alias &middot; full-text &middot; pgvector<br>fused by RRF</div><span class="arrow">&rarr;</span>
-      <div class="stage stage--gate">LLM selection<br>allow-list only</div><span class="arrow">&rarr;</span>
-      <div class="stage">Catalog portions<br>&amp; nutrition</div><span class="arrow">&rarr;</span>
-      <div class="stage stage--commit">Commit<br>nutrition re-read</div>
+  <!-- 2 -->
+  <section class="slide" data-time="0:20" data-name="Boru hattı" data-notes="İmleçle soldan sağa izle. Kırmızı kesikli oku göster: modelin besin değeri gönderebileceği bir kanal yok.|&quot;Model asla bir sayı üretmez. Sunucunun hazırladığı listeden bir kimlik seçer; besin değeri commit anında Postgres içinde katalogdan yeniden okunur.&quot;">
+    <p class="eyebrow">Bir öğün nasıl veriye dönüşüyor</p>
+    <h2>İki kanal, biri kapalı</h2>
+    <figure>
+      <svg viewBox="0 0 1080 400" role="img" aria-label="Girdi çıkarımdan ve hibrit aramadan geçip aday listesi üretir; model bu listeden yalnızca kimlik ve gram seçer, besin değerleri ayrı bir kanaldan katalogdan gelir ve modelin besin kanalına erişimi kapalıdır.">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <polygon points="0,0 10,5 0,10" fill="currentColor"></polygon>
+          </marker>
+          <marker id="ar-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <polygon points="0,0 10,5 0,10" fill="#e8a33d"></polygon>
+          </marker>
+          <marker id="ar-v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <polygon points="0,0 10,5 0,10" fill="#6fb3a0"></polygon>
+          </marker>
+        </defs>
+        <g font-family="IBM Plex Sans, sans-serif" font-size="13" fill="currentColor">
+
+          <!-- omurga: girdi -> çıkarım -> arama -> aday listesi -->
+          <rect x="10" y="175" width="120" height="50" rx="3" fill="none" stroke="currentColor" opacity="0.85"></rect>
+          <text x="70" y="195" text-anchor="middle">Metin veya</text>
+          <text x="70" y="212" text-anchor="middle">özel fotoğraf</text>
+
+          <line x1="132" y1="200" x2="176" y2="200" stroke="currentColor" marker-end="url(#ar)"></line>
+
+          <rect x="178" y="175" width="126" height="50" rx="3" fill="none" stroke="currentColor" opacity="0.85"></rect>
+          <text x="241" y="195" text-anchor="middle">Çıkarım</text>
+          <text x="241" y="212" text-anchor="middle" font-size="11" opacity="0.7">kimlik + miktar</text>
+
+          <line x1="306" y1="200" x2="350" y2="200" stroke="currentColor" marker-end="url(#ar)"></line>
+
+          <!-- hibrit arama üç bacak -->
+          <rect x="352" y="146" width="150" height="108" rx="3" fill="none" stroke="currentColor" opacity="0.5" stroke-dasharray="3 3"></rect>
+          <text x="427" y="140" text-anchor="middle" font-size="11" opacity="0.7">hibrit arama</text>
+          <text x="427" y="169" text-anchor="middle" font-size="11.5">tam eşleşen ad</text>
+          <text x="427" y="190" text-anchor="middle" font-size="11.5">tam metin + trigram</text>
+          <text x="427" y="211" text-anchor="middle" font-size="11.5">pgvector</text>
+          <text x="427" y="238" text-anchor="middle" font-size="11.5" opacity="0.75">RRF ile birleştirme</text>
+
+          <line x1="504" y1="200" x2="548" y2="200" stroke="currentColor" marker-end="url(#ar)"></line>
+
+          <rect x="550" y="172" width="140" height="56" rx="3" fill="#292118" stroke="#e8a33d"></rect>
+          <text x="620" y="193" text-anchor="middle" fill="#e8a33d" font-weight="600">Aday listesi</text>
+          <text x="620" y="211" text-anchor="middle" fill="#e8a33d" font-size="11" opacity="0.85">izin verilen ID'ler</text>
+
+          <!-- yukarı: model kanalı -->
+          <path d="M 620 170 L 620 96 L 756 96" fill="none" stroke="#e8a33d" marker-end="url(#ar-a)"></path>
+          <rect x="758" y="66" width="170" height="58" rx="3" fill="#292118" stroke="#e8a33d"></rect>
+          <text x="843" y="88" text-anchor="middle" fill="#e8a33d" font-weight="600">Model seçimi</text>
+          <text x="843" y="106" text-anchor="middle" fill="#e8a33d" font-size="11" opacity="0.85">yalnızca ID + gram</text>
+
+          <!-- aşağı: katalog kanalı -->
+          <path d="M 620 230 L 620 304 L 756 304" fill="none" stroke="#6fb3a0" marker-end="url(#ar-v)"></path>
+          <rect x="758" y="274" width="170" height="58" rx="3" fill="#1e1812" stroke="#6fb3a0"></rect>
+          <text x="843" y="296" text-anchor="middle" fill="#6fb3a0" font-weight="600">Katalog</text>
+          <text x="843" y="314" text-anchor="middle" fill="#6fb3a0" font-size="11" opacity="0.85">100 g başına besin</text>
+
+          <!-- commit -->
+          <path d="M 930 96 L 1000 96 L 1000 176" fill="none" stroke="#e8a33d" marker-end="url(#ar-a)"></path>
+          <path d="M 930 304 L 1000 304 L 1000 226" fill="none" stroke="#6fb3a0" marker-end="url(#ar-v)"></path>
+          <rect x="940" y="178" width="120" height="46" rx="3" fill="none" stroke="currentColor"></rect>
+          <text x="1000" y="199" text-anchor="middle" font-weight="600">Commit</text>
+          <text x="1000" y="215" text-anchor="middle" font-size="10.5" opacity="0.7">tek işlem</text>
+
+          <!-- kapalı kanal -->
+          <line x1="843" y1="128" x2="843" y2="268" stroke="#cc6349" stroke-dasharray="5 5" opacity="0.9"></line>
+          <line x1="829" y1="184" x2="857" y2="212" stroke="#cc6349" stroke-width="2.5"></line>
+          <line x1="857" y1="184" x2="829" y2="212" stroke="#cc6349" stroke-width="2.5"></line>
+          <text x="866" y="196" fill="#cc6349" font-size="11.5">model besin değeri</text>
+          <text x="866" y="212" fill="#cc6349" font-size="11.5">gönderemez</text>
+        </g>
+      </svg>
+      <figcaption>Modelin çıktı şeması fiziksel olarak bir kalori taşıyamaz: <code>candidateId</code> alanı, aramanın az önce bulduğu kimliklerden oluşan bir <b>enum</b>. Besin değerleri ayrı kanaldan, commit işlemi içinde <code>foods</code> tablosundan yeniden okunur.</figcaption>
+    </figure>
+  </section>
+
+  <!-- 3 -->
+  <section class="slide" data-time="0:55" data-name="Demo" data-notes="Şimdi simülatöre geç. Üç an, bu sırayla. Arayüzün nasıl göründüğünü değil, SUNUCUNUN ne karar verdiğini anlat.|Tahmin yolu yavaşsa sessiz beklemek yerine bunu sesli söyle.">
+    <p class="eyebrow">Canlı demo</p>
+    <h2>Üç an</h2>
+    <div class="gallery">
+      <figure class="shot">
+        <div class="phone"><img src="../test/goldens/add_meal.png" alt="Öğün oluşturma ekranı: metin, fotoğraf ve karma giriş"></div>
+        <figcaption><b>Yazıyorum</b>&ldquo;biraz beyaz peynir&rdquo;</figcaption>
+      </figure>
+      <figure class="shot">
+        <div class="phone"><img src="../test/goldens/ai_review.png" alt="İnceleme ekranı: miktarı kontrol et uyarısı taşıyan satır"></div>
+        <figcaption><b>Belirsizlik saklanmıyor</b>Sunucu miktarı şüpheli işaretledi</figcaption>
+      </figure>
+      <figure class="shot">
+        <div class="phone"><img src="../test/goldens/portion_clarification.png" alt="Porsiyon netleştirme sayfası: küçük, normal, büyük referans görselleri"></div>
+        <figcaption><b>Tahmin değil, soru</b>Porsiyonu ben seçiyorum</figcaption>
+      </figure>
+      <figure class="shot">
+        <div class="phone"><img src="../test/goldens/today_grouped.png" alt="Bugün ekranı: öğünler ve günlük toplamlar"></div>
+        <figcaption><b>Kayıt</b>Toplamlar öğe öğe türetiliyor</figcaption>
+      </figure>
     </div>
     <div class="callouts">
-      <p class="callout"><b>The selection schema</b> types <code>candidateId</code> as an enum of the IDs retrieval just found. Choosing anything else is a schema violation, not a subtle bug.</p>
-      <p class="callout"><b>The commit RPC</b> reads per-100&nbsp;g values from <code>foods</code> inside the transaction. Whatever the client sends for nutrition is ignored.</p>
+      <p class="callout"><b>Eşleşme yoksa:</b> açık bir <code>NO_MATCH</code>. Önce elle katalog araması; hiçbir şey uymazsa sunucu <b>etiketli ve sınır kontrollü</b> bir tahmin üretir — istemci hâlâ besin değeri gönderemez.</p>
+      <p class="callout"><b>Fotoğrafın ayrıcalığı yok:</b> kameradan kullanıcıya özel gizli depolamaya, oradan metinle aynı temellendirme yoluna.</p>
     </div>
+    <p class="cue">Simülatöre geç</p>
   </section>
 
-  <section class="slide" data-time="0:40" data-name="Demo" data-notes="Switch to the simulator now. Three moments, in this order. Keep narrating what the SERVER decided, not what the UI looks like.|If the estimate path is slow, say so out loud rather than waiting in silence.">
-    <p class="eyebrow">Live demo</p>
-    <h2>Three moments</h2>
-    <div class="cols">
-      <div class="card card--verified">
-        <h3>Uncertainty is surfaced</h3>
-        <p>Type <span class="mono">biraz beyaz peynir</span> — &ldquo;a bit of white cheese.&rdquo; The server flags the amount as uncertain instead of silently guessing. Pick a portion, commit, it lands on the dashboard.</p>
-      </div>
-      <div class="card card--accent">
-        <h3>No match is a real answer</h3>
-        <p>A food the catalog does not carry returns an explicit <span class="mono">NO_MATCH</span>. Manual search first; when nothing fits, the server returns a labelled, bounds-checked estimate — persisted server-side, never supplied by the client.</p>
-      </div>
-      <div class="card">
-        <h3>Photos get no special trust</h3>
-        <p>Camera to private per-user storage, vision extraction, then the same grounded matching path as text.</p>
-      </div>
-    </div>
-    <p class="cue">Switch to simulator</p>
-  </section>
+  <!-- 4 -->
+  <section class="slide" data-time="3:00" data-name="Dört kapı" data-notes="Sadece iki dosya aç: enum için candidate-selector.ts, yeniden okuma için commit migration'ı. Sonra uydurma besin testini çalıştır.|&quot;Bu kuralı gelenek değil, geçen bir test koruyor.&quot;">
+    <p class="eyebrow">Uydurma besin değeri neden yapısal olarak imkânsız</p>
+    <h2>Tek bir prompt değil, dört kapı</h2>
+    <figure>
+      <svg viewBox="0 0 1080 190" role="img" aria-label="Katalogda olmayan bir gıda kimliği taşıyan istek dört ardışık kontrolden geçmeye çalışır ve ilkinde durdurulur.">
+        <defs>
+          <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <polygon points="0,0 10,5 0,10" fill="currentColor"></polygon>
+          </marker>
+        </defs>
+        <g font-family="IBM Plex Sans, sans-serif" font-size="12.5" fill="currentColor">
+          <line x1="8" y1="96" x2="188" y2="96" stroke="#cc6349" stroke-width="2" marker-end="url(#ar2)" color="#cc6349"></line>
+          <text x="12" y="82" fill="#cc6349" font-size="12">katalogda olmayan</text>
+          <text x="12" y="66" fill="#cc6349" font-size="12">bir gıda kimliği</text>
 
-  <section class="slide" data-time="3:00" data-name="Gates" data-notes="Open two files only: candidate-selector.ts for the enum, and the commit migration for the re-read. Then run the forged-nutrition test.|&quot;This invariant is held by a test, not by convention.&quot;">
-    <p class="eyebrow">Why hallucinated nutrition is structurally impossible</p>
-    <h2>Four gates, not one prompt</h2>
+          <!-- durduruldu -->
+          <line x1="196" y1="46" x2="196" y2="146" stroke="#cc6349" stroke-width="4"></line>
+          <circle cx="196" cy="96" r="15" fill="#14100c" stroke="#cc6349" stroke-width="2"></circle>
+          <line x1="190" y1="90" x2="202" y2="102" stroke="#cc6349" stroke-width="2"></line>
+          <line x1="202" y1="90" x2="190" y2="102" stroke="#cc6349" stroke-width="2"></line>
+          <text x="196" y="34" text-anchor="middle" fill="#cc6349" font-weight="600">01 Şema</text>
+          <text x="196" y="168" text-anchor="middle" font-size="11" opacity="0.75">enum ihlali</text>
+
+          <line x1="212" y1="96" x2="430" y2="96" stroke="currentColor" opacity="0.3" stroke-dasharray="4 4"></line>
+
+          <line x1="438" y1="56" x2="438" y2="136" stroke="currentColor" stroke-width="3" opacity="0.6"></line>
+          <text x="438" y="34" text-anchor="middle" font-weight="600" opacity="0.75">02 Sunucu ayrıştırma</text>
+          <text x="438" y="168" text-anchor="middle" font-size="11" opacity="0.6">her alan sınır kontrollü</text>
+
+          <line x1="454" y1="96" x2="672" y2="96" stroke="currentColor" opacity="0.3" stroke-dasharray="4 4"></line>
+
+          <line x1="680" y1="56" x2="680" y2="136" stroke="currentColor" stroke-width="3" opacity="0.6"></line>
+          <text x="680" y="34" text-anchor="middle" font-weight="600" opacity="0.75">03 Önbellek doğrulama</text>
+          <text x="680" y="168" text-anchor="middle" font-size="11" opacity="0.6">güncel listeye karşı</text>
+
+          <line x1="696" y1="96" x2="914" y2="96" stroke="currentColor" opacity="0.3" stroke-dasharray="4 4"></line>
+
+          <line x1="922" y1="46" x2="922" y2="146" stroke="#6fb3a0" stroke-width="4"></line>
+          <text x="922" y="34" text-anchor="middle" fill="#6fb3a0" font-weight="600">04 Commit</text>
+          <text x="922" y="168" text-anchor="middle" font-size="11" fill="#6fb3a0" opacity="0.85">besin katalogdan</text>
+
+          <line x1="938" y1="96" x2="1070" y2="96" stroke="#6fb3a0" opacity="0.35" stroke-dasharray="4 4"></line>
+          <text x="1004" y="82" text-anchor="middle" font-size="11" opacity="0.6">veritabanı</text>
+        </g>
+      </svg>
+      <figcaption>Uydurma bir kimlik daha ilk kapıda ölür: şema ihlali, ince bir hata değil. Kalan üç kapı bağımsız — biri atlansa diğerleri yakalar.</figcaption>
+    </figure>
     <ol class="steps">
-      <li><b>Response schema</b><span>Strict JSON schema; <code>candidateId</code> is an enum of retrieved IDs.</span></li>
-      <li><b>Server re-parse</b><span>Every field re-validated and bounds-checked after the model replies.</span></li>
-      <li><b>Cache re-validation</b><span>A cached selection is re-checked against the current allow-list before reuse.</span></li>
-      <li><b>Commit RPC</b><span>Nutrition re-read from <code>foods</code> in-transaction; a client sending forged macros is rejected by a passing test.</span></li>
+      <li><b>Yanıt şeması</b><span><code>candidateId</code>, aramanın döndürdüğü kimliklerden oluşan bir enum.</span></li>
+      <li><b>Sunucu tarafında yeniden ayrıştırma</b><span>Model yanıtladıktan sonra her alan yeniden doğrulanır ve sınırlanır.</span></li>
+      <li><b>Önbellek yeniden doğrulama</b><span>Önbellekten gelen seçim, güncel aday listesine karşı yeniden kontrol edilir.</span></li>
+      <li><b>Commit RPC</b><span>Besin değerleri işlem içinde <code>foods</code> tablosundan okunur; sahte makro gönderen istemci geçen bir testle reddedilir.</span></li>
     </ol>
   </section>
 
-  <section class="slide" data-time="4:30" data-name="Instruments" data-notes="State the limitation of the perfect score BEFORE showing it. This is the single most important credibility move in the video.|&quot;A three-food fixture cannot exercise retrieval or the model. That 60/60 means no Turkish-parsing regressions. It is not product accuracy.&quot;">
-    <p class="eyebrow">Measurement</p>
-    <h2>Two instruments that measure different things</h2>
-    <div class="cols">
+  <!-- 5 -->
+  <section class="slide" data-time="4:20" data-name="İki alet" data-notes="Mükemmel skorun sınırını, skoru göstermeden ÖNCE söyle. Videodaki en önemli güvenilirlik hamlesi bu.|&quot;Üç gıdalık bir fikstür ne aramayı ne modeli çalıştırabilir. O 60/60 sadece Türkçe ayrıştırmada regresyon yok demek. Ürün doğruluğu değil.&quot;">
+    <p class="eyebrow">Ölçüm</p>
+    <h2>Farklı şeyleri ölçen iki alet</h2>
+    <div class="cols cols--2">
       <div class="card">
-        <h3>Regression gate &middot; free, in CI</h3>
-        <p><b class="mono">60/60</b> &nbsp; F1 <b class="mono">1.00</b> &nbsp; portion MAPE <b class="mono">0</b></p>
+        <h3>Regresyon kapısı &middot; ücretsiz, CI'da</h3>
+        <p class="mono" style="color:var(--ink);font-size:1.05em">60/60 &nbsp;&middot;&nbsp; F1 1.00 &nbsp;&middot;&nbsp; MAPE 0</p>
         <hr class="rule-thin">
-        <p>Runs the parsing path against a <b>three-food fixture catalog</b> with no network, no retrieval, no model. The perfect score means one thing: no regressions in Turkish parsing. It says nothing about product accuracy.</p>
+        <p>Ayrıştırma yolunu <b>üç gıdalık bir fikstür kataloğuna</b> karşı çalıştırır: ağ yok, arama yok, model yok. Mükemmel skor tek bir şey söyler — Türkçe ayrıştırmada regresyon yok. Ürün doğruluğu hakkında hiçbir şey söylemez.</p>
       </div>
       <div class="card card--accent">
-        <h3>Live eval &middot; paid, product accuracy</h3>
-        <p>20 bilingual cases through the <b>deployed</b> function, reporting latency, tokens, cache hits and cost per case.</p>
+        <h3>Canlı değerlendirme &middot; ücretli, ürün doğruluğu</h3>
+        <p>20 çift dilli vaka, <b>deploy edilmiş</b> fonksiyondan geçer; vaka başına gecikme, token, önbellek isabeti ve maliyet raporlanır.</p>
         <hr class="rule-thin">
-        <p>Every run persists to <code>eval_runs</code> / <code>eval_cases</code>, so results are inspectable in the console afterwards rather than scrolling past in a terminal.</p>
+        <p>Her koşu <code>eval_runs</code> / <code>eval_cases</code> tablolarına yazılır; sonuçlar terminalde kayıp gitmek yerine konsolda sonradan incelenebilir.</p>
       </div>
     </div>
+    <p class="sub">Bu ayrımı yapmak, elimdeki en iyi rakamı öne çıkarmaktan daha önemli. Mükemmel bir skoru ürün doğruluğu diye sunmak, ölçtüğüm şeyi anlamadığım anlamına gelirdi.</p>
   </section>
 
-  <section class="slide" data-time="4:50" data-name="Numbers" data-notes="Do not apologise for these. Lead with the shape: identity is the stronger half, portions are the weak half. That is a finding, not a failure.|&quot;Portion error is what a user would actually spend time correcting — which is exactly the complaint EatBetter's own reviews describe.&quot;">
-    <p class="eyebrow">First clean hosted run &middot; 20 cases</p>
-    <h2>What the numbers say</h2>
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Metric</th><th>Value</th><th>Reading</th></tr></thead>
-        <tbody>
-          <tr><td>Identity exact accuracy</td><td class="num good">0.55</td><td>The stronger half — the food choice is usually right</td></tr>
-          <tr><td>Pass rate (identity + portion within 10%)</td><td class="num">0.40</td><td>Gated by portion, not identity</td></tr>
-          <tr><td>Portion MAPE</td><td class="num warn">1.46</td><td>The weak half, far outside the 10% gate</td></tr>
-          <tr><td>No-match accuracy</td><td class="num">0.17</td><td>Least trustworthy figure — few abstention cases</td></tr>
-          <tr><td>Latency p50 / p95</td><td class="num">1685 / 13435 ms</td><td>p95 is a product problem on its own</td></tr>
-          <tr><td>Cost per run</td><td class="num">$0.002</td><td>5564 in / 676 out tokens</td></tr>
-        </tbody>
-      </table>
+  <!-- 6 -->
+  <section class="slide" data-time="4:50" data-name="Sayılar" data-notes="Bu sayılar için özür dileme. Şekli anlat: kimlik güçlü yarı, porsiyon zayıf yarı. Bu bir başarısızlık değil, bulgu.|&quot;Porsiyon hatası kullanıcının düzeltmekle vakit harcayacağı şey — ki EatBetter'ın kendi yorumlarında şikâyet edilen tam olarak bu.&quot;">
+    <p class="eyebrow">İlk temiz canlı koşu &middot; 20 vaka</p>
+    <h2>Sayılar ne söylüyor</h2>
+    <div class="metric-row">
+      <div class="metric"><span class="v good">0.55</span><span class="k">Kimlik doğruluğu<br>güçlü yarı</span></div>
+      <div class="metric"><span class="v">0.40</span><span class="k">Geçme oranı<br>porsiyon sınırlıyor</span></div>
+      <div class="metric"><span class="v warn">1.46</span><span class="k">Porsiyon MAPE<br>%10 eşiğinin çok dışında</span></div>
+      <div class="metric"><span class="v">1.7 sn</span><span class="k">Gecikme p50<br>p95: 13.4 sn</span></div>
+      <div class="metric"><span class="v">$0.002</span><span class="k">Koşu maliyeti<br>5564 / 676 token</span></div>
     </div>
-    <p class="sub">Caveat stated up front: some gold labels were authored against the seed catalog before the 60,000-food production catalog was loaded, so a share of the identity failures are stale labels rather than wrong answers. They need case-by-case review before the pass rate is quoted anywhere.</p>
+    <div class="split">
+      <p class="sub">Okunacak şey tek bir not değil, <b>şekil</b>: yemeğin ne olduğunu bulmak görece iyi çalışıyor, ne kadar olduğunu kestirmek çalışmıyor. Yani kullanıcıyı yoran şey yanlış yemek değil, yanlış gram olurdu — ve bu, EatBetter kullanıcılarının kendi yorumlarında anlattığı şikâyetle birebir örtüşüyor.</p>
+      <p class="callout"><b>Sorulmadan söylenecek uyarı:</b> gold etiketlerin bir kısmı, 60.000'lik üretim kataloğu yüklenmeden önce üç gıdalık seed kataloğuna göre yazılmıştı. Kimlik hatalarının bir bölümü yanlış cevap değil, <b>bayat etiket</b>. Geçme oranını herhangi bir yerde alıntılamadan önce vaka vaka gözden geçirilmeleri gerekiyor.</p>
+    </div>
   </section>
 
-  <section class="slide" data-time="5:20" data-name="Caught" data-notes="This is the strongest story in the video. Tell it as a process win, not an incident.|&quot;Lint accepted it, 65 unit tests never reached it, and the database test needed a local stack that had not been run. Only measuring end-to-end found it.&quot;">
-    <p class="eyebrow">What the harness caught</p>
-    <h2>A defect every other gate missed</h2>
+  <!-- 7 -->
+  <section class="slide" data-time="5:20" data-name="Yakalanan hata" data-notes="Videodaki en güçlü hikâye bu. Kaza gibi değil, süreç kazanımı olarak anlat.|&quot;Lint kabul etti, 65 birim testi hiç ulaşamadı, veritabanı testi çalıştırılmamış bir yerel yığın istiyordu. Sadece uçtan uca ölçmek buldu.&quot;">
+    <p class="eyebrow">Ölçüm düzeneğinin yakaladığı şey</p>
+    <h2>Diğer bütün kapıların kaçırdığı bir hata</h2>
     <p class="quote">Candidate grounding is unavailable:<br>function pg_catalog.coalesce(numeric, integer) does not exist</p>
-    <p class="sub"><code>COALESCE</code>, <code>GREATEST</code> and <code>LEAST</code> are parser constructs, not catalog functions. Schema-qualifying them turns each into a missing-function lookup at execution time. Two deployed functions carried it: the daily cost ceiling, which runs immediately before grounding, and the commit RPC — so every analysis failed as a provider outage, and every analyzed-meal commit would have failed the moment a user saved.</p>
-    <div class="callouts">
-      <p class="callout"><b>Why it survived.</b> Valid SQL, so lint accepted it. Unit tests mock <code>fetch</code>, so they never reach Postgres. The database test needs a local stack that had not been run.</p>
-      <p class="callout"><b>What changed.</b> The repair asserts the pattern is gone instead of replacing one instance, and a test keeps the guard in the suite — an earlier migration had fixed this once already and later work reintroduced it.</p>
-    </div>
-  </section>
+    <div class="split">
+      <figure>
+        <svg viewBox="0 0 560 150" role="img" aria-label="Günlük maliyet tavanı kontrolü temellendirmeden hemen önce çalıştığı için, oradaki hata dışarıya sağlayıcı kesintisi gibi görünüyordu.">
+          <defs>
+            <marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"></polygon>
+            </marker>
+          </defs>
+          <g font-family="IBM Plex Sans, sans-serif" font-size="12" fill="currentColor">
+            <rect x="6" y="52" width="104" height="42" rx="3" fill="none" stroke="currentColor" opacity="0.8"></rect>
+            <text x="58" y="78" text-anchor="middle">İstek</text>
+            <line x1="112" y1="73" x2="150" y2="73" stroke="currentColor" marker-end="url(#ar3)"></line>
 
-  <section class="slide" data-time="5:45" data-name="Reliability" data-notes="Demo both. Replay the commit request ID in the terminal, then airplane mode in the simulator.|&quot;A flaky network cannot double-log a meal, and a lost connection does not lose the meal.&quot;">
-    <p class="eyebrow">Reliability</p>
-    <h2>Two things I can show, not just claim</h2>
-    <div class="cols">
-      <div class="card card--verified">
-        <h3>Replay the same commit twice</h3>
-        <p>The second is a no-op. An advisory lock plus a unique request key means a retry after a partial failure cannot duplicate a meal.</p>
+            <rect x="152" y="52" width="132" height="42" rx="3" fill="#292118" stroke="#cc6349" stroke-width="2"></rect>
+            <text x="218" y="70" text-anchor="middle" fill="#cc6349" font-weight="600">Maliyet tavanı</text>
+            <text x="218" y="86" text-anchor="middle" fill="#cc6349" font-size="10.5">42883 hatası</text>
+            <line x1="212" y1="34" x2="224" y2="46" stroke="#cc6349" stroke-width="2"></line>
+            <line x1="224" y1="34" x2="212" y2="46" stroke="#cc6349" stroke-width="2"></line>
+
+            <line x1="286" y1="73" x2="324" y2="73" stroke="currentColor" opacity="0.25" stroke-dasharray="4 4"></line>
+            <rect x="326" y="52" width="110" height="42" rx="3" fill="none" stroke="currentColor" opacity="0.3"></rect>
+            <text x="381" y="78" text-anchor="middle" opacity="0.45">Temellendirme</text>
+
+            <line x1="438" y1="73" x2="476" y2="73" stroke="currentColor" opacity="0.25" stroke-dasharray="4 4"></line>
+            <rect x="478" y="52" width="76" height="42" rx="3" fill="none" stroke="currentColor" opacity="0.3"></rect>
+            <text x="516" y="78" text-anchor="middle" opacity="0.45">Commit</text>
+
+            <text x="218" y="122" text-anchor="middle" font-size="11" fill="#cc6349">temellendirmeden hemen önce çalışıyor,</text>
+            <text x="218" y="137" text-anchor="middle" font-size="11" fill="#cc6349">bu yüzden dışarıya sağlayıcı kesintisi gibi göründü</text>
+          </g>
+        </svg>
+        <figcaption>Aynı hata commit RPC'sinde de vardı: kullanıcı incelediği öğünü kaydettiği anda kayıt da başarısız olacaktı.</figcaption>
+      </figure>
+      <div>
+        <p class="sub" style="margin-bottom:0.8rem"><code>COALESCE</code>, <code>GREATEST</code> ve <code>LEAST</code> birer katalog fonksiyonu değil, <b>ayrıştırıcı yapısı</b>. Şema adıyla nitelendirmek her birini, çalışma anında bulunamayan bir fonksiyon aramasına dönüştürüyor.</p>
+        <div class="callouts">
+          <p class="callout"><b>Neden hayatta kaldı.</b> Geçerli SQL olduğu için lint kabul etti. Birim testleri <code>fetch</code>'i taklit ediyor, Postgres'e hiç ulaşmıyor. Veritabanı testi çalıştırılmamış bir yerel yığın istiyor.</p>
+          <p class="callout"><b>Ne değişti.</b> Onarım tek bir örneği düzeltmek yerine <b>kalıbın kalmadığını doğruluyor</b> — çünkü daha önceki bir migration bunu bir kez düzeltmiş, sonraki işler geri getirmişti.</p>
+        </div>
       </div>
-      <div class="card card--verified">
-        <h3>Airplane mode, then back</h3>
-        <p>The meal is written locally and queued in a Drift outbox with backoff and blocked-state handling, then syncs. Covered by tests, not only demoed.</p>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section class="slide" data-time="6:00" data-name="Güvenilirlik" data-notes="İkisini de göster: terminalde aynı commit isteğini tekrarla, sonra simülatörde uçak modu.|&quot;Titrek bir ağ öğünü iki kez kaydedemez, kopan bir bağlantı da öğünü kaybettirmez.&quot;">
+    <p class="eyebrow">Güvenilirlik</p>
+    <h2>İddia değil, gösterebildiğim iki şey</h2>
+    <div class="split">
+      <figure>
+        <svg viewBox="0 0 560 210" role="img" aria-label="Öğün önce yerele yazılır ve kuyruğa alınır; gönderim başarısız olursa artan bekleme ile yeniden denenir, kalıcı hatalarda bloke duruma geçer.">
+          <defs>
+            <marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"></polygon>
+            </marker>
+            <marker id="ar4v" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="#6fb3a0"></polygon>
+            </marker>
+          </defs>
+          <g font-family="IBM Plex Sans, sans-serif" font-size="12" fill="currentColor">
+            <rect x="6" y="82" width="112" height="44" rx="3" fill="none" stroke="#6fb3a0"></rect>
+            <text x="62" y="101" text-anchor="middle" fill="#6fb3a0">Yerel yazma</text>
+            <text x="62" y="116" text-anchor="middle" fill="#6fb3a0" font-size="10.5" opacity="0.8">anında görünür</text>
+
+            <line x1="120" y1="104" x2="158" y2="104" stroke="currentColor" marker-end="url(#ar4)"></line>
+            <text x="139" y="94" text-anchor="middle" font-size="10">kuyruk</text>
+
+            <rect x="160" y="82" width="104" height="44" rx="3" fill="none" stroke="currentColor"></rect>
+            <text x="212" y="108" text-anchor="middle">Bekliyor</text>
+
+            <line x1="266" y1="104" x2="304" y2="104" stroke="currentColor" marker-end="url(#ar4)"></line>
+            <rect x="306" y="82" width="104" height="44" rx="3" fill="none" stroke="currentColor"></rect>
+            <text x="358" y="108" text-anchor="middle">Gönderiliyor</text>
+
+            <line x1="412" y1="94" x2="450" y2="70" stroke="#6fb3a0" marker-end="url(#ar4v)"></line>
+            <text x="500" y="62" text-anchor="middle" fill="#6fb3a0">Sunucuda</text>
+
+            <path d="M 358 128 L 358 168 L 212 168 L 212 130" fill="none" stroke="#e8a33d" marker-end="url(#ar4)" color="#e8a33d"></path>
+            <text x="285" y="186" text-anchor="middle" font-size="11" fill="#e8a33d">geçici hata: artan bekleme ile yeniden dene</text>
+
+            <line x1="412" y1="114" x2="450" y2="138" stroke="#cc6349" marker-end="url(#ar4)" color="#cc6349"></line>
+            <text x="498" y="150" text-anchor="middle" fill="#cc6349">Bloke</text>
+            <text x="498" y="165" text-anchor="middle" fill="#cc6349" font-size="10.5">kullanıcıya sorulur</text>
+          </g>
+        </svg>
+        <figcaption>Doğrulama hataları sessizce yeniden denenmez; kullanıcıya bloke olarak gösterilir. Yeniden deneme sayacı kullanıcı müdahalesinde sıfırlanır.</figcaption>
+      </figure>
+      <div class="gallery" style="grid-template-columns:repeat(2,minmax(120px,155px))">
+        <figure class="shot">
+          <div class="phone"><img src="../test/goldens/today_pending_sync.png" alt="Bugün ekranı: eşitlenmeyi bekleyen öğün işareti"></div>
+          <figcaption><b>Bekliyor</b>Öğün zaten kayıtlı</figcaption>
+        </figure>
+        <figure class="shot">
+          <div class="phone"><img src="../test/goldens/today_sync_failed.png" alt="Bugün ekranı: eşitleme başarısız bandı ve yeniden dene eylemi"></div>
+          <figcaption><b>Bloke</b>Eylem isteniyor</figcaption>
+        </figure>
       </div>
     </div>
+    <p class="callout"><b>Aynı commit isteğini iki kez oynat:</b> ikincisi hiçbir şey yapmaz. Danışma kilidi ve benzersiz istek anahtarı, kısmi hatadan sonraki yeniden denemenin öğünü ikiye katlamasını engeller.</p>
   </section>
 
-  <section class="slide" data-time="6:45" data-name="Console" data-notes="Show AI Quality and the eval page. Point at cost and error breakdown.|&quot;When accuracy or spend drifts, this is where you see it first — and raw meal text never reaches the logs.&quot;">
-    <p class="eyebrow">Observability</p>
-    <h2>Every run is accountable</h2>
-    <p class="sub">Recorded per analysis: model, prompt version, retrieval version, latency, input and output tokens, cache hits, vision fallback reason, error code, and estimated cost in micro-dollars. Raw meal text stays out of standard logs.</p>
-    <div class="cols">
-      <div class="card"><h3>Failure, by stage</h3><p>Daily runs and failures with an error breakdown, so &ldquo;what broke today&rdquo; is a query rather than a guess.</p></div>
-      <div class="card"><h3>Spend, per model</h3><p>Token and cost telemetry per prompt version, with a daily ceiling enforced before any paid call.</p></div>
-      <div class="card"><h3>Corrections</h3><p>Commit-time diffs record what users repaired — the production accuracy signal that thresholds should eventually be calibrated against.</p></div>
-    </div>
-  </section>
-
-  <section class="slide" data-time="7:30" data-name="EatBetter" data-notes="Read the last line verbatim. Separating evidence from hypothesis is the point of this slide.|Sources: App Store US and TR listings, Google Play, eatbetter.app.">
-    <p class="eyebrow">Against EatBetter &middot; public listings and reviews</p>
-    <h2>Evidence, separated from hypothesis</h2>
+  <!-- 9 -->
+  <section class="slide" data-time="6:50" data-name="Konsol" data-notes="Şimdi admin paneline geç: AI Quality ve AI Evals sayfaları. Maliyet ve hata dağılımını göster.|&quot;Doğruluk ya da harcama kaydığında ilk burada görülür — ham öğün metni ise loglara hiç girmez.&quot;">
+    <p class="eyebrow">Gözlemlenebilirlik &middot; yönetim konsolu</p>
+    <h2>Her koşunun hesabı var</h2>
+    <p class="sub">Analiz başına kaydedilenler: model, prompt sürümü, arama sürümü, gecikme, giriş ve çıkış token'ları, önbellek isabetleri, görüntü geri düşme nedeni, hata kodu ve mikro dolar cinsinden tahmini maliyet. Ham öğün metni standart loglara girmez.</p>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Area</th><th>Their published behaviour</th><th>This build</th><th>Status</th></tr></thead>
+        <caption style="text-align:left;color:var(--muted);font-size:0.82em;padding-bottom:0.6em">Konsoldaki <b style="color:var(--ink)">AI Evals</b> sayfasının okuduğu gerçek kayıtlar — her koşu kalıcı, sonradan incelenebilir</caption>
+        <thead><tr><th>Koşu</th><th>Geçen</th><th>Kimlik</th><th>Porsiyon MAPE</th><th>p50</th><th>Maliyet</th><th>Not</th></tr></thead>
         <tbody>
-          <tr><td>Portion accuracy</td><td>Reviews report both under- and over-estimation; one describes two minutes logging and twenty fixing</td><td>Catalog portions, clarification sheets, tolerance-banded eval</td><td><span class="pill pill--hyp">Hypothesis</span></td></tr>
-          <tr><td>Uncertainty shown</td><td>No confidence indicator found anywhere</td><td>Uncertain amount and type are explicit states that persist into the logged meal</td><td><span class="pill pill--hyp">Design difference</span></td></tr>
-          <tr><td>Invented nutrition</td><td>Not verifiable from outside</td><td>Structurally impossible; estimates are labelled and bounded</td><td><span class="pill pill--fact">Property of ours</span></td></tr>
-          <tr><td>Turkish coverage</td><td>Turkish foods with stated dietitian review</td><td>Turkish morphology and TürKomp sourcing</td><td><span class="pill pill--contested">Contested</span></td></tr>
+          <tr><td>canlı &middot; çift dilli</td><td class="num">8/20</td><td class="num good">0.55</td><td class="num warn">1.46</td><td class="num">1685 ms</td><td class="num">$0.0020</td><td class="dim">ilk temiz koşu</td></tr>
+          <tr><td>canlı &middot; çift dilli</td><td class="num">8/20</td><td class="num">0.50</td><td class="num warn">1.58</td><td class="num">1637 ms</td><td class="num">$0.0017</td><td class="dim">tekrar</td></tr>
+          <tr><td>canlı &middot; çift dilli</td><td class="num">6/20</td><td class="num">0.35</td><td class="num">0.13</td><td class="num">9819 ms</td><td class="num">$0</td><td class="warn">model 400 veriyor</td></tr>
+          <tr><td>canlı &middot; çift dilli</td><td class="num">0/20</td><td class="num">0</td><td class="num">0</td><td class="num">131 ms</td><td class="num">$0</td><td class="warn">SQL hatası</td></tr>
+          <tr><td>deterministik</td><td class="num good">60/60</td><td class="num good">1.00</td><td class="num good">0</td><td class="num dim">—</td><td class="num">$0</td><td class="dim">regresyon kapısı</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="lede" style="max-width:52ch;font-size:clamp(1rem,1.5vw,1.4rem)">Most of these are hypotheses with a measurement plan, not demonstrated improvements. Correction telemetry is how I would prove or disprove them.</p>
+    <p class="callout">Tablo aynı zamanda hikâyeyi anlatıyor: <b>alttan yukarı doğru</b> okunduğunda SQL hatasının bulunuşu, sağlayıcı hatasının bulunuşu ve ilk temiz ölçüm sırayla görülüyor.</p>
+    <p class="cue">Konsolu canlı aç</p>
   </section>
 
-  <section class="slide" data-time="8:10" data-name="Limits" data-notes="Say these before anyone asks. Ending on self-identified limits is the strongest possible close.|Then stop talking. Do not trail off into extra features.">
-    <p class="eyebrow">Limits I would fix next</p>
-    <h2>What I already know is wrong</h2>
-    <div class="cols">
-      <div class="card card--alert"><h3>Portion estimation</h3><p>The weak half of the measurement, and the first thing I would attack once labels are trustworthy.</p></div>
-      <div class="card card--alert"><h3>Uncalibrated thresholds</h3><p>Confidence gates are hand-picked constants; correction rates are the signal to calibrate them against.</p></div>
-      <div class="card card--alert"><h3>Analyze duplicate race</h3><p>A tight concurrent window can double-run the pipeline and double provider spend. The commit path is unaffected.</p></div>
-      <div class="card card--alert"><h3>p95 latency</h3><p>13.4&nbsp;s at the tail is a product problem independent of accuracy.</p></div>
+  <!-- 10 -->
+  <section class="slide" data-time="7:30" data-name="EatBetter" data-notes="Son satırı kelimesi kelimesine oku. Bu slaytın amacı kanıtı hipotezden ayırmak.|Kaynaklar: App Store ABD ve TR listeleri, Google Play, eatbetter.app">
+    <p class="eyebrow">EatBetter karşısında &middot; herkese açık listeler ve yorumlar</p>
+    <h2>Kanıt, hipotezden ayrılmış</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Alan</th><th>Onların yayımlanmış davranışı</th><th>Bu sürüm</th><th>Durum</th></tr></thead>
+        <tbody>
+          <tr><td>Porsiyon doğruluğu</td><td>Yorumlar hem düşük hem yüksek tahmin bildiriyor; biri &ldquo;2 dakika kaydetme, 20 dakika düzeltme&rdquo; diyor</td><td>Katalog porsiyonları, netleştirme sayfaları, tolerans bantlı değerlendirme</td><td><span class="pill pill--hyp">Hipotez</span></td></tr>
+          <tr><td>Belirsizliğin gösterimi</td><td>Hiçbir yerde güven göstergesi bulunamadı</td><td>Şüpheli miktar ve tür, kaydedilen öğüne kadar taşınan açık durumlar</td><td><span class="pill pill--hyp">Tasarım farkı</span></td></tr>
+          <tr><td>Uydurma besin değeri</td><td>Dışarıdan doğrulanamaz</td><td>Yapısal olarak imkânsız; tahminler etiketli ve sınırlı</td><td><span class="pill pill--fact">Bizim özelliğimiz</span></td></tr>
+          <tr><td>Düzeltme döngüsü</td><td>Düzenleme hızlı, ama geri besleme görünmüyor</td><td>Düzeltme farkları kaydediliyor — kalibrasyonun sinyali</td><td><span class="pill pill--hyp">Hipotez</span></td></tr>
+          <tr><td>Türkçe kapsam</td><td>Diyetisyen incelemesi beyan edilen Türk yemekleri</td><td>Türkçe morfoloji ve TürKomp kaynaklı katalog</td><td><span class="pill pill--dim">Tartışmalı</span></td></tr>
+        </tbody>
+      </table>
     </div>
-    <p class="sub">Next: review and re-label the identity failures, re-measure against a trustworthy baseline, calibrate thresholds from correction rates, and move embedding backfill out of the request path into a scheduled worker.</p>
+    <p class="lede" style="max-width:56ch;font-size:clamp(0.98rem,1.45vw,1.3rem)">Bunların çoğu kanıtlanmış üstünlük değil, <b>ölçüm planı olan hipotezler</b>. Düzeltme telemetrisi, bunları doğrulamanın ya da çürütmenin yolu.</p>
   </section>
 
-  <section class="slide" data-time="8:40" data-name="Close" data-notes="One sentence, then stop.">
+  <!-- 11 -->
+  <section class="slide" data-time="8:10" data-name="Limitler" data-notes="Bunları sorulmadan söyle. Kendi tespit ettiğin sınırlarla bitirmek mümkün olan en güçlü kapanış.|Sonra sus. Ekstra özelliklere kayma.">
+    <p class="eyebrow">Bildiğim eksikler</p>
+    <h2>Sırada ne var</h2>
+    <div class="cols">
+      <div class="card card--alert"><h3>Porsiyon tahmini</h3><p>Ölçümün zayıf yarısı. Etiketler güvenilir hale gelince ilk saldıracağım yer burası.</p></div>
+      <div class="card card--alert"><h3>Kalibre edilmemiş eşikler</h3><p>Güven eşikleri elle seçilmiş sabitler; kalibre edilecekleri sinyal düzeltme oranları.</p></div>
+      <div class="card card--alert"><h3>Analiz yolunda yarış</h3><p>Dar bir eşzamanlılık penceresi boru hattını iki kez çalıştırıp sağlayıcı harcamasını ikiye katlayabilir. Commit yolu etkilenmiyor.</p></div>
+      <div class="card card--alert"><h3>p95 gecikmesi</h3><p>Kuyrukta 13,4 saniye. Doğruluktan bağımsız bir ürün sorunu.</p></div>
+    </div>
+    <p class="sub">Sıradaki adımlar: kimlik hatalarını gözden geçirip yeniden etiketlemek, güvenilir bir taban çizgisine karşı yeniden ölçmek, eşikleri düzeltme oranlarından kalibre etmek ve gömme doldurmayı istek yolundan çıkarıp zamanlanmış bir işçiye taşımak.</p>
+  </section>
+
+  <!-- 12 -->
+  <section class="slide" data-time="8:40" data-name="Kapanış" data-notes="Tek cümle, sonra dur.">
     <hr class="rule-heavy">
-    <h2 style="font-size:clamp(1.6rem,3.2vw,2.9rem);max-width:20ch">Nutrition cannot be invented here — and where it has to be estimated, it is labelled and bounded.</h2>
-    <p class="sub">Thanks for watching. Repository, README, and the full evaluation report are linked in the email.</p>
+    <h2 style="font-size:clamp(1.5rem,3vw,2.6rem);max-width:22ch">Burada besin değeri uydurulamaz — tahmin edilmesi gerektiğinde ise etiketli ve sınırlıdır.</h2>
+    <p class="sub">Depo, README ve tam değerlendirme raporu e-postadaki bağlantılarda.</p>
   </section>
 
 </div>
 
-<nav class="rail" id="rail" aria-label="Slides"></nav>
-<aside class="notes" id="notes" hidden aria-live="polite"><h4>Speaker notes &middot; press N to hide</h4><div id="notesBody"></div></aside>
-<p class="hint" id="hint">&larr; &rarr; move &middot; N notes</p>
+<nav class="rail" id="rail" aria-label="Slaytlar"></nav>
+<aside class="notes" id="notes" hidden aria-live="polite"><h4>Konuşmacı notları &middot; gizlemek için N</h4><div id="notesBody"></div></aside>
+<p class="hint" id="hint">&larr; &rarr; ilerle &middot; N notlar</p>
 
 <script>
   (function () {
@@ -540,8 +637,7 @@
     var buttons = Array.prototype.slice.call(rail.children);
 
     function renderNotes() {
-      var raw = slides[index].dataset.notes || '';
-      notesBody.innerHTML = raw
+      notesBody.innerHTML = (slides[index].dataset.notes || '')
         .split('|')
         .map(function (line) { return '<p>' + line + '</p>'; })
         .join('');
@@ -550,12 +646,8 @@
 
     function go(next) {
       index = Math.max(0, Math.min(slides.length - 1, next));
-      slides.forEach(function (slide, i) {
-        slide.dataset.active = i === index ? 'true' : 'false';
-      });
-      buttons.forEach(function (button, i) {
-        button.setAttribute('aria-current', i === index ? 'true' : 'false');
-      });
+      slides.forEach(function (slide, i) { slide.dataset.active = i === index ? 'true' : 'false'; });
+      buttons.forEach(function (button, i) { button.setAttribute('aria-current', i === index ? 'true' : 'false'); });
       renderNotes();
     }
 
@@ -569,10 +661,11 @@
     });
 
     go(0);
-    setTimeout(function () { if (hint) hint.style.opacity = '0'; }, 6000);
-    if (hint) hint.style.transition = 'opacity 600ms ease';
+    if (hint) {
+      hint.style.transition = 'opacity 600ms ease';
+      setTimeout(function () { hint.style.opacity = '0'; }, 6000);
+    }
   })();
 </script>
-
 </body>
 </html>
