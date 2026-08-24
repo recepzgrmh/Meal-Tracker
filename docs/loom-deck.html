@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meal Clarity Walkthrough Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+  /* Single, deliberate theme: this deck is screen-recorded next to a code
+     editor and an iOS simulator, so it commits to a warm dark ground that
+     will not blow out under video compression. Every colour is painted
+     explicitly so the page never borrows the host's ground. */
+  :root {
+    --ground: #14100c;
+    --surface: #1f1913;
+    --surface-high: #2a2219;
+    --rule: #3a3129;
+    --ink: #f2ebe0;
+    --muted: #a2968a;
+    --accent: #e8a33d;
+    --verified: #6fb3a0;
+    --alert: #c9614a;
+
+    --display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+    --body: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif;
+    --data: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --step: clamp(0.95rem, 0.62rem + 0.72vw, 1.42rem);
+    --rail-h: 58px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: var(--step);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .deck {
+    position: relative;
+    min-height: 100vh;
+    padding-bottom: var(--rail-h);
+  }
+
+  .slide {
+    display: none;
+    min-height: calc(100vh - var(--rail-h));
+    padding: clamp(2rem, 4.5vw, 5rem) clamp(1.5rem, 6vw, 7rem);
+    flex-direction: column;
+    justify-content: center;
+    gap: clamp(1.1rem, 2vw, 2rem);
+    max-width: 1500px;
+    margin: 0 auto;
+  }
+  .slide[data-active="true"] { display: flex; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .slide[data-active="true"] { animation: rise 260ms ease-out both; }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: none; }
+    }
+  }
+
+  .eyebrow {
+    font-family: var(--data);
+    font-size: 0.78em;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 0.9em;
+  }
+  .eyebrow::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  h1, h2 {
+    font-family: var(--display);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.03;
+    text-wrap: balance;
+    margin: 0;
+  }
+  h1 { font-size: clamp(3rem, 8vw, 7rem); text-transform: uppercase; }
+  h2 { font-size: clamp(1.8rem, 3.6vw, 3.2rem); }
+
+  .lede {
+    font-size: clamp(1.15rem, 1.9vw, 1.9rem);
+    line-height: 1.34;
+    max-width: 26ch;
+    color: var(--ink);
+    font-weight: 500;
+    text-wrap: balance;
+  }
+  .sub { color: var(--muted); max-width: 62ch; margin: 0; }
+
+  /* Nutrition-label rules: weight encodes hierarchy, the way a panel
+     separates servings from totals. */
+  .rule-heavy { height: 7px; background: var(--ink); border: 0; margin: 0; }
+  .rule-thin { height: 1px; background: var(--rule); border: 0; margin: 0; }
+
+  .cols {
+    display: grid;
+    gap: clamp(1rem, 2.4vw, 2.4rem);
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    align-items: start;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: clamp(1rem, 1.6vw, 1.6rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .card h3 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.05em;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .card p { margin: 0; color: var(--muted); font-size: 0.9em; line-height: 1.45; }
+
+  .card--verified { border-left: 4px solid var(--verified); }
+  .card--accent { border-left: 4px solid var(--accent); }
+  .card--alert { border-left: 4px solid var(--alert); }
+
+  /* Pipeline: stages read left to right, the two enforcement points are
+     called out because they are the whole argument. */
+  .pipe {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    align-items: stretch;
+  }
+  .stage {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.7em 0.9em;
+    font-size: 0.82em;
+    line-height: 1.25;
+    display: flex;
+    align-items: center;
+    flex: 1 1 130px;
+    min-width: 118px;
+  }
+  .stage--gate {
+    background: var(--surface-high);
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .stage--commit { border-color: var(--verified); color: var(--verified); font-weight: 600; }
+  .arrow {
+    align-self: center;
+    color: var(--rule);
+    font-family: var(--data);
+    flex: 0 0 auto;
+  }
+
+  .callouts { display: grid; gap: 0.7rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .callout {
+    font-size: 0.88em;
+    color: var(--muted);
+    border-left: 2px solid var(--rule);
+    padding-left: 0.9em;
+  }
+  .callout b { color: var(--ink); font-weight: 600; }
+
+  ol.steps { margin: 0; padding: 0; list-style: none; counter-reset: gate; display: grid; gap: 0.7rem; }
+  ol.steps li {
+    counter-increment: gate;
+    display: grid;
+    grid-template-columns: 2.4em 1fr;
+    gap: 0.9em;
+    align-items: baseline;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  ol.steps li::before {
+    content: counter(gate, decimal-leading-zero);
+    font-family: var(--data);
+    color: var(--accent);
+    font-size: 0.85em;
+  }
+  ol.steps b { font-weight: 600; }
+  ol.steps span { color: var(--muted); font-size: 0.9em; display: block; margin-top: 0.15em; }
+
+  .table-wrap { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.87em;
+    font-variant-numeric: tabular-nums;
+  }
+  th, td { text-align: left; padding: 0.62em 0.8em 0.62em 0; vertical-align: top; }
+  thead th {
+    font-family: var(--data);
+    font-size: 0.8em;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 400;
+    border-bottom: 2px solid var(--ink);
+  }
+  tbody tr { border-bottom: 1px solid var(--rule); }
+  td.num { font-family: var(--data); font-weight: 500; white-space: nowrap; }
+  .good { color: var(--verified); }
+  .warn { color: var(--alert); }
+
+  .pill {
+    display: inline-block;
+    font-family: var(--data);
+    font-size: 0.72em;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 0.24em 0.6em;
+    border-radius: 2px;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+  }
+  .pill--hyp { color: var(--accent); }
+  .pill--fact { color: var(--verified); }
+  .pill--contested { color: var(--muted); }
+
+  code, .mono { font-family: var(--data); font-size: 0.88em; }
+  .quote {
+    font-family: var(--data);
+    font-size: clamp(0.82rem, 1.15vw, 1.02rem);
+    background: var(--surface);
+    border-left: 3px solid var(--alert);
+    padding: 0.9em 1.1em;
+    color: var(--ink);
+    line-height: 1.5;
+    overflow-x: auto;
+  }
+
+  .cue {
+    font-family: var(--data);
+    font-size: 0.8em;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ground);
+    background: var(--accent);
+    padding: 0.5em 0.9em;
+    border-radius: 2px;
+    align-self: flex-start;
+  }
+
+  /* Rail: the segments are the script's real beats, so position on the rail
+     is elapsed recording time, not decoration. */
+  .rail {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: var(--rail-h);
+    background: var(--ground);
+    border-top: 1px solid var(--rule);
+    display: flex;
+    align-items: stretch;
+    z-index: 5;
+  }
+  .rail button {
+    flex: 1;
+    background: none;
+    border: 0;
+    border-right: 1px solid var(--rule);
+    color: var(--muted);
+    font-family: var(--data);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    padding: 0.3rem 0.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    align-items: center;
+    justify-content: center;
+    transition: color 120ms ease, background 120ms ease;
+  }
+  .rail button:last-child { border-right: 0; }
+  .rail button:hover { color: var(--ink); background: var(--surface); }
+  .rail button[aria-current="true"] { color: var(--ground); background: var(--accent); font-weight: 500; }
+  .rail .t { opacity: 0.75; font-size: 0.62rem; }
+  .rail .n { display: none; }
+  @media (min-width: 900px) { .rail .n { display: block; } }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .notes {
+    position: fixed;
+    right: clamp(0.6rem, 2vw, 1.6rem);
+    bottom: calc(var(--rail-h) + 0.8rem);
+    width: min(400px, 88vw);
+    background: var(--surface-high);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    padding: 1rem 1.1rem;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--ink);
+    z-index: 6;
+  }
+  .notes[hidden] { display: none; }
+  .notes h4 {
+    margin: 0 0 0.5em;
+    font-family: var(--data);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 400;
+  }
+  .notes p { margin: 0 0 0.6em; }
+  .notes p:last-child { margin-bottom: 0; }
+
+  .hint {
+    position: fixed;
+    left: clamp(0.6rem, 2vw, 1.6rem);
+    bottom: calc(var(--rail-h) + 0.8rem);
+    font-family: var(--data);
+    font-size: 0.72rem;
+    color: var(--muted);
+    z-index: 6;
+  }
+
+  @media print { .rail, .notes, .hint { display: none; } .slide { display: flex !important; page-break-after: always; } }
+</style>
+</head>
+<body>
+
+<div class="deck">
+
+  <section class="slide" data-time="0:00" data-name="Thesis" data-notes="Open here. Say the rule first, then show the pipeline. Do not open code yet.|&quot;This is Meal Clarity, an accuracy-first meal logger. The rule the whole system is built around: the model interprets, the catalog decides.&quot;">
+    <p class="eyebrow">Loom walkthrough &middot; approx. 8 minutes</p>
+    <h1>Meal<br>Clarity</h1>
+    <hr class="rule-heavy">
+    <p class="lede">The model interprets.<br>The catalog decides.</p>
+    <p class="sub">Flutter app, TypeScript Edge Functions, Postgres with pgvector, and an internal console for AI quality and cost. Built for the EatBetter full-stack case study.</p>
+  </section>
+
+  <section class="slide" data-time="0:15" data-name="Pipeline" data-notes="Trace it left to right with the cursor. Land on the two coloured stages — they are the argument.|&quot;The language model never emits a number. It picks an ID from a list the server built, and nutrition is re-read from the catalog inside Postgres at commit time.&quot;">
+    <p class="eyebrow">How a meal becomes data</p>
+    <h2>One path, two enforcement points</h2>
+    <div class="pipe">
+      <div class="stage">Text or private photo</div><span class="arrow">&rarr;</span>
+      <div class="stage">Extraction<br>identity &amp; amount only</div><span class="arrow">&rarr;</span>
+      <div class="stage">Alias &middot; full-text &middot; pgvector<br>fused by RRF</div><span class="arrow">&rarr;</span>
+      <div class="stage stage--gate">LLM selection<br>allow-list only</div><span class="arrow">&rarr;</span>
+      <div class="stage">Catalog portions<br>&amp; nutrition</div><span class="arrow">&rarr;</span>
+      <div class="stage stage--commit">Commit<br>nutrition re-read</div>
+    </div>
+    <div class="callouts">
+      <p class="callout"><b>The selection schema</b> types <code>candidateId</code> as an enum of the IDs retrieval just found. Choosing anything else is a schema violation, not a subtle bug.</p>
+      <p class="callout"><b>The commit RPC</b> reads per-100&nbsp;g values from <code>foods</code> inside the transaction. Whatever the client sends for nutrition is ignored.</p>
+    </div>
+  </section>
+
+  <section class="slide" data-time="0:40" data-name="Demo" data-notes="Switch to the simulator now. Three moments, in this order. Keep narrating what the SERVER decided, not what the UI looks like.|If the estimate path is slow, say so out loud rather than waiting in silence.">
+    <p class="eyebrow">Live demo</p>
+    <h2>Three moments</h2>
+    <div class="cols">
+      <div class="card card--verified">
+        <h3>Uncertainty is surfaced</h3>
+        <p>Type <span class="mono">biraz beyaz peynir</span> — &ldquo;a bit of white cheese.&rdquo; The server flags the amount as uncertain instead of silently guessing. Pick a portion, commit, it lands on the dashboard.</p>
+      </div>
+      <div class="card card--accent">
+        <h3>No match is a real answer</h3>
+        <p>A food the catalog does not carry returns an explicit <span class="mono">NO_MATCH</span>. Manual search first; when nothing fits, the server returns a labelled, bounds-checked estimate — persisted server-side, never supplied by the client.</p>
+      </div>
+      <div class="card">
+        <h3>Photos get no special trust</h3>
+        <p>Camera to private per-user storage, vision extraction, then the same grounded matching path as text.</p>
+      </div>
+    </div>
+    <p class="cue">Switch to simulator</p>
+  </section>
+
+  <section class="slide" data-time="3:00" data-name="Gates" data-notes="Open two files only: candidate-selector.ts for the enum, and the commit migration for the re-read. Then run the forged-nutrition test.|&quot;This invariant is held by a test, not by convention.&quot;">
+    <p class="eyebrow">Why hallucinated nutrition is structurally impossible</p>
+    <h2>Four gates, not one prompt</h2>
+    <ol class="steps">
+      <li><b>Response schema</b><span>Strict JSON schema; <code>candidateId</code> is an enum of retrieved IDs.</span></li>
+      <li><b>Server re-parse</b><span>Every field re-validated and bounds-checked after the model replies.</span></li>
+      <li><b>Cache re-validation</b><span>A cached selection is re-checked against the current allow-list before reuse.</span></li>
+      <li><b>Commit RPC</b><span>Nutrition re-read from <code>foods</code> in-transaction; a client sending forged macros is rejected by a passing test.</span></li>
+    </ol>
+  </section>
+
+  <section class="slide" data-time="4:30" data-name="Instruments" data-notes="State the limitation of the perfect score BEFORE showing it. This is the single most important credibility move in the video.|&quot;A three-food fixture cannot exercise retrieval or the model. That 60/60 means no Turkish-parsing regressions. It is not product accuracy.&quot;">
+    <p class="eyebrow">Measurement</p>
+    <h2>Two instruments that measure different things</h2>
+    <div class="cols">
+      <div class="card">
+        <h3>Regression gate &middot; free, in CI</h3>
+        <p><b class="mono">60/60</b> &nbsp; F1 <b class="mono">1.00</b> &nbsp; portion MAPE <b class="mono">0</b></p>
+        <hr class="rule-thin">
+        <p>Runs the parsing path against a <b>three-food fixture catalog</b> with no network, no retrieval, no model. The perfect score means one thing: no regressions in Turkish parsing. It says nothing about product accuracy.</p>
+      </div>
+      <div class="card card--accent">
+        <h3>Live eval &middot; paid, product accuracy</h3>
+        <p>20 bilingual cases through the <b>deployed</b> function, reporting latency, tokens, cache hits and cost per case.</p>
+        <hr class="rule-thin">
+        <p>Every run persists to <code>eval_runs</code> / <code>eval_cases</code>, so results are inspectable in the console afterwards rather than scrolling past in a terminal.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-time="4:50" data-name="Numbers" data-notes="Do not apologise for these. Lead with the shape: identity is the stronger half, portions are the weak half. That is a finding, not a failure.|&quot;Portion error is what a user would actually spend time correcting — which is exactly the complaint EatBetter's own reviews describe.&quot;">
+    <p class="eyebrow">First clean hosted run &middot; 20 cases</p>
+    <h2>What the numbers say</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Metric</th><th>Value</th><th>Reading</th></tr></thead>
+        <tbody>
+          <tr><td>Identity exact accuracy</td><td class="num good">0.55</td><td>The stronger half — the food choice is usually right</td></tr>
+          <tr><td>Pass rate (identity + portion within 10%)</td><td class="num">0.40</td><td>Gated by portion, not identity</td></tr>
+          <tr><td>Portion MAPE</td><td class="num warn">1.46</td><td>The weak half, far outside the 10% gate</td></tr>
+          <tr><td>No-match accuracy</td><td class="num">0.17</td><td>Least trustworthy figure — few abstention cases</td></tr>
+          <tr><td>Latency p50 / p95</td><td class="num">1685 / 13435 ms</td><td>p95 is a product problem on its own</td></tr>
+          <tr><td>Cost per run</td><td class="num">$0.002</td><td>5564 in / 676 out tokens</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="sub">Caveat stated up front: some gold labels were authored against the seed catalog before the 60,000-food production catalog was loaded, so a share of the identity failures are stale labels rather than wrong answers. They need case-by-case review before the pass rate is quoted anywhere.</p>
+  </section>
+
+  <section class="slide" data-time="5:20" data-name="Caught" data-notes="This is the strongest story in the video. Tell it as a process win, not an incident.|&quot;Lint accepted it, 65 unit tests never reached it, and the database test needed a local stack that had not been run. Only measuring end-to-end found it.&quot;">
+    <p class="eyebrow">What the harness caught</p>
+    <h2>A defect every other gate missed</h2>
+    <p class="quote">Candidate grounding is unavailable:<br>function pg_catalog.coalesce(numeric, integer) does not exist</p>
+    <p class="sub"><code>COALESCE</code>, <code>GREATEST</code> and <code>LEAST</code> are parser constructs, not catalog functions. Schema-qualifying them turns each into a missing-function lookup at execution time. Two deployed functions carried it: the daily cost ceiling, which runs immediately before grounding, and the commit RPC — so every analysis failed as a provider outage, and every analyzed-meal commit would have failed the moment a user saved.</p>
+    <div class="callouts">
+      <p class="callout"><b>Why it survived.</b> Valid SQL, so lint accepted it. Unit tests mock <code>fetch</code>, so they never reach Postgres. The database test needs a local stack that had not been run.</p>
+      <p class="callout"><b>What changed.</b> The repair asserts the pattern is gone instead of replacing one instance, and a test keeps the guard in the suite — an earlier migration had fixed this once already and later work reintroduced it.</p>
+    </div>
+  </section>
+
+  <section class="slide" data-time="5:45" data-name="Reliability" data-notes="Demo both. Replay the commit request ID in the terminal, then airplane mode in the simulator.|&quot;A flaky network cannot double-log a meal, and a lost connection does not lose the meal.&quot;">
+    <p class="eyebrow">Reliability</p>
+    <h2>Two things I can show, not just claim</h2>
+    <div class="cols">
+      <div class="card card--verified">
+        <h3>Replay the same commit twice</h3>
+        <p>The second is a no-op. An advisory lock plus a unique request key means a retry after a partial failure cannot duplicate a meal.</p>
+      </div>
+      <div class="card card--verified">
+        <h3>Airplane mode, then back</h3>
+        <p>The meal is written locally and queued in a Drift outbox with backoff and blocked-state handling, then syncs. Covered by tests, not only demoed.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" data-time="6:45" data-name="Console" data-notes="Show AI Quality and the eval page. Point at cost and error breakdown.|&quot;When accuracy or spend drifts, this is where you see it first — and raw meal text never reaches the logs.&quot;">
+    <p class="eyebrow">Observability</p>
+    <h2>Every run is accountable</h2>
+    <p class="sub">Recorded per analysis: model, prompt version, retrieval version, latency, input and output tokens, cache hits, vision fallback reason, error code, and estimated cost in micro-dollars. Raw meal text stays out of standard logs.</p>
+    <div class="cols">
+      <div class="card"><h3>Failure, by stage</h3><p>Daily runs and failures with an error breakdown, so &ldquo;what broke today&rdquo; is a query rather than a guess.</p></div>
+      <div class="card"><h3>Spend, per model</h3><p>Token and cost telemetry per prompt version, with a daily ceiling enforced before any paid call.</p></div>
+      <div class="card"><h3>Corrections</h3><p>Commit-time diffs record what users repaired — the production accuracy signal that thresholds should eventually be calibrated against.</p></div>
+    </div>
+  </section>
+
+  <section class="slide" data-time="7:30" data-name="EatBetter" data-notes="Read the last line verbatim. Separating evidence from hypothesis is the point of this slide.|Sources: App Store US and TR listings, Google Play, eatbetter.app.">
+    <p class="eyebrow">Against EatBetter &middot; public listings and reviews</p>
+    <h2>Evidence, separated from hypothesis</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Area</th><th>Their published behaviour</th><th>This build</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Portion accuracy</td><td>Reviews report both under- and over-estimation; one describes two minutes logging and twenty fixing</td><td>Catalog portions, clarification sheets, tolerance-banded eval</td><td><span class="pill pill--hyp">Hypothesis</span></td></tr>
+          <tr><td>Uncertainty shown</td><td>No confidence indicator found anywhere</td><td>Uncertain amount and type are explicit states that persist into the logged meal</td><td><span class="pill pill--hyp">Design difference</span></td></tr>
+          <tr><td>Invented nutrition</td><td>Not verifiable from outside</td><td>Structurally impossible; estimates are labelled and bounded</td><td><span class="pill pill--fact">Property of ours</span></td></tr>
+          <tr><td>Turkish coverage</td><td>Turkish foods with stated dietitian review</td><td>Turkish morphology and TürKomp sourcing</td><td><span class="pill pill--contested">Contested</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="lede" style="max-width:52ch;font-size:clamp(1rem,1.5vw,1.4rem)">Most of these are hypotheses with a measurement plan, not demonstrated improvements. Correction telemetry is how I would prove or disprove them.</p>
+  </section>
+
+  <section class="slide" data-time="8:10" data-name="Limits" data-notes="Say these before anyone asks. Ending on self-identified limits is the strongest possible close.|Then stop talking. Do not trail off into extra features.">
+    <p class="eyebrow">Limits I would fix next</p>
+    <h2>What I already know is wrong</h2>
+    <div class="cols">
+      <div class="card card--alert"><h3>Portion estimation</h3><p>The weak half of the measurement, and the first thing I would attack once labels are trustworthy.</p></div>
+      <div class="card card--alert"><h3>Uncalibrated thresholds</h3><p>Confidence gates are hand-picked constants; correction rates are the signal to calibrate them against.</p></div>
+      <div class="card card--alert"><h3>Analyze duplicate race</h3><p>A tight concurrent window can double-run the pipeline and double provider spend. The commit path is unaffected.</p></div>
+      <div class="card card--alert"><h3>p95 latency</h3><p>13.4&nbsp;s at the tail is a product problem independent of accuracy.</p></div>
+    </div>
+    <p class="sub">Next: review and re-label the identity failures, re-measure against a trustworthy baseline, calibrate thresholds from correction rates, and move embedding backfill out of the request path into a scheduled worker.</p>
+  </section>
+
+  <section class="slide" data-time="8:40" data-name="Close" data-notes="One sentence, then stop.">
+    <hr class="rule-heavy">
+    <h2 style="font-size:clamp(1.6rem,3.2vw,2.9rem);max-width:20ch">Nutrition cannot be invented here — and where it has to be estimated, it is labelled and bounded.</h2>
+    <p class="sub">Thanks for watching. Repository, README, and the full evaluation report are linked in the email.</p>
+  </section>
+
+</div>
+
+<nav class="rail" id="rail" aria-label="Slides"></nav>
+<aside class="notes" id="notes" hidden aria-live="polite"><h4>Speaker notes &middot; press N to hide</h4><div id="notesBody"></div></aside>
+<p class="hint" id="hint">&larr; &rarr; move &middot; N notes</p>
+
+<script>
+  (function () {
+    var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+    var rail = document.getElementById('rail');
+    var notes = document.getElementById('notes');
+    var notesBody = document.getElementById('notesBody');
+    var hint = document.getElementById('hint');
+    var index = 0;
+    var notesOn = false;
+
+    slides.forEach(function (slide, i) {
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.innerHTML = '<span class="t">' + slide.dataset.time + '</span><span class="n">' + slide.dataset.name + '</span>';
+      button.addEventListener('click', function () { go(i); });
+      rail.appendChild(button);
+    });
+    var buttons = Array.prototype.slice.call(rail.children);
+
+    function renderNotes() {
+      var raw = slides[index].dataset.notes || '';
+      notesBody.innerHTML = raw
+        .split('|')
+        .map(function (line) { return '<p>' + line + '</p>'; })
+        .join('');
+      notes.hidden = !notesOn;
+    }
+
+    function go(next) {
+      index = Math.max(0, Math.min(slides.length - 1, next));
+      slides.forEach(function (slide, i) {
+        slide.dataset.active = i === index ? 'true' : 'false';
+      });
+      buttons.forEach(function (button, i) {
+        button.setAttribute('aria-current', i === index ? 'true' : 'false');
+      });
+      renderNotes();
+    }
+
+    document.addEventListener('keydown', function (event) {
+      var key = event.key;
+      if (key === 'ArrowRight' || key === ' ' || key === 'PageDown') { event.preventDefault(); go(index + 1); }
+      else if (key === 'ArrowLeft' || key === 'PageUp') { event.preventDefault(); go(index - 1); }
+      else if (key === 'Home') { event.preventDefault(); go(0); }
+      else if (key === 'End') { event.preventDefault(); go(slides.length - 1); }
+      else if (key === 'n' || key === 'N') { notesOn = !notesOn; renderNotes(); }
+    });
+
+    go(0);
+    setTimeout(function () { if (hint) hint.style.opacity = '0'; }, 6000);
+    if (hint) hint.style.transition = 'opacity 600ms ease';
+  })();
+</script>
+
+</body>
+</html>
