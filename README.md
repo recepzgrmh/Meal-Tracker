@@ -182,6 +182,11 @@ disprove them.
   safe.
 - Confidence thresholds are uncalibrated hand-picked constants. Calibrating
   them against observed correction rates is pending.
+- The hosted live-eval numbers are not yet a clean measurement. A SQL defect
+  that the live harness caught is fixed in `20260824130000`, but the selection
+  call currently returns a provider `401`, so the LLM path is unmeasured and
+  the passing cases resolve deterministically. See
+  [`docs/AI_EVAL_REPORT.md`](docs/AI_EVAL_REPORT.md).
 - Text-only analyze requests bypass the cost budget, leaving a bounded
   database-write amplification open.
 - Embedding backfill runs synchronously in the search request path. In

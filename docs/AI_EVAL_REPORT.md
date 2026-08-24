@@ -54,6 +54,62 @@ cd supabase
 deno task eval
 ```
 
+Append `--persist` with service-role credentials to store the run in
+`eval_runs`/`eval_cases`, which the admin console reads on its AI Evals page.
+
 The current labels were authored for engineering evaluation and have not yet
 been independently reviewed by a dietitian. They are suitable for regression
 comparison, not clinical validation or nutrition advice.
+
+## What the live harness caught
+
+The deterministic suite is a parser gate and passes offline, so it cannot see
+anything about the deployed system. The first real run of the live harness
+against the hosted project returned a 30% pass rate, and the failure breakdown
+in `eval_cases` explained why: seven cases carried `PROVIDER_UNAVAILABLE` with
+
+```
+Candidate grounding is unavailable:
+function pg_catalog.coalesce(numeric, integer) does not exist
+```
+
+`COALESCE`, `GREATEST`, `LEAST`, and `NULLIF` are parser constructs rather than
+catalog functions. The grammar only matches them as bare keywords, so a
+schema-qualified `pg_catalog.coalesce(...)` is parsed as an ordinary function
+call and rejected with `42883` when the statement executes. Qualifying them is
+also unnecessary under `set search_path = ''`, because the parser resolves the
+keyword before any schema lookup.
+
+Two deployed functions carried the qualified form:
+
+- `analysis_cost_budget_check`, which runs immediately before grounding, so
+  every model-backed analysis failed and surfaced as a provider outage
+- `commit_analyzed_meal`, on the confidence clamp, so every analyzed-meal
+  commit would have failed at the moment a user saved a reviewed meal
+
+Migration `20260824130000` repairs whatever is deployed through
+`pg_get_functiondef` instead of restating each body, then asserts the pattern is
+gone so a reintroduction fails the migration. `supabase/tests/
+schema_qualified_constructs_test.sql` keeps the guard in the suite.
+
+The defect is worth recording because of how it evaded the existing gates. It is
+valid SQL, so `db lint` accepts it. The Deno tests mock `fetch`, so they never
+reach Postgres. The pgTAP commit test needs a local database that had not been
+run. Only an end-to-end run against the deployed project executed the statement,
+and only because failures were persisted per case was the cause visible rather
+than a generic provider error. An earlier migration, `20260818170000`, had
+already repaired one instance of the same pattern, and later migrations
+reintroduced it — which is why the fix now ends in an assertion instead of a
+one-off replacement.
+
+## Live status
+
+The hosted run is not yet a clean measurement. After the SQL repair the pipeline
+reaches the provider, and the remaining blocker is an OpenAI `401` on the
+selection call, so the LLM path is still unmeasured. The six passing cases all
+resolve through the deterministic alias path, and the six identity mismatches
+are expectations authored against the three-food seed catalog before the
+60,000-food production catalog was loaded; each needs review to decide whether
+the returned food is the correct production entry or a genuine accuracy failure.
+Those numbers should be replaced, not cited, once a valid provider key is in
+place.
