@@ -2,8 +2,8 @@
 
 The repository keeps three versioned evaluation layers:
 
-- `turkish_meals_v1.jsonl`: 60 deterministic parser regressions, safe for every PR.
-- `bilingual_hybrid_v1.jsonl`: 20 Turkish/English hybrid cases covering typos,
+- `turkish_meals_v1.jsonl`: 63 deterministic parser regressions, safe for every PR.
+- `bilingual_hybrid_v1.jsonl`: 26 Turkish/English hybrid cases covering typos,
   morphology, regional aliases, mixed inputs, and deliberate `NO_MATCH` cases.
 - `photo_meals_v1.json`: four controlled photo fixtures with identity labels and
   portion tolerance bands.

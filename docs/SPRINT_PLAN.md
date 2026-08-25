@@ -1,5 +1,11 @@
 # Meal Clarity — Delivery Sprints
 
+> [!NOTE]
+> **Superseded**: The active meal-analysis runtime is `backend/` (Node.js/TypeScript).
+> This document was written during the Supabase Edge Functions (Deno) era and
+> may reference architecture that has since been ported. See `backend/README.md`
+> for the current backend layout.
+
 Status: Sprints 1–5 implemented; Sprint 6 delivery gates active
 Planning date: 17 August 2026  
 Cadence: seven-day case-study delivery, focused daily sprints
@@ -612,7 +618,7 @@ Do not cut:
 ## 13. Immediate next actions
 
 1. User generates or delivers optional onboarding hero using the asset brief.
-2. Remove stale `SUPABASE_ACCESS_TOKEN` exports from `~/.zshrc` so CLI profiles
+2. Remove stale `SUPABASE_ACCESS_TOKEN` exports from shell profile so CLI profiles
    do not switch accounts unexpectedly.
 3. Obtain the project's publishable key through the Supabase Connect dialog;
    never copy a secret key into Flutter.

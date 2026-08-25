@@ -218,18 +218,28 @@ class MealFlowViewModel extends ChangeNotifier {
   }
 
   /// Server-suggested identity alternatives lead the variant list; everything
-  /// else keeps the retrieval order behind them.
+  /// else keeps the retrieval order behind them. Duplicate candidate names are deduplicated.
   List<CatalogFoodCandidate> _preferAlternatives(
     List<CatalogFoodCandidate> results,
     List<String> alternativeFoodIds,
   ) {
-    if (alternativeFoodIds.isEmpty) return results;
-    final byId = {for (final candidate in results) candidate.foodId: candidate};
-    final leading = [for (final foodId in alternativeFoodIds) ?byId[foodId]];
+    final seenNames = <String>{};
+    final deduplicatedResults = <CatalogFoodCandidate>[];
+    for (final candidate in results) {
+      final normName = candidate.name.trim().toLowerCase();
+      if (!seenNames.contains(normName)) {
+        seenNames.add(normName);
+        deduplicatedResults.add(candidate);
+      }
+    }
+
+    if (alternativeFoodIds.isEmpty) return deduplicatedResults;
+    final byId = {for (final candidate in deduplicatedResults) candidate.foodId: candidate};
+    final leading = [for (final foodId in alternativeFoodIds) if (byId.containsKey(foodId)) byId[foodId]!];
     final leadingIds = {for (final candidate in leading) candidate.foodId};
     return [
       ...leading,
-      ...results.where((candidate) => !leadingIds.contains(candidate.foodId)),
+      ...deduplicatedResults.where((candidate) => !leadingIds.contains(candidate.foodId)),
     ];
   }
 

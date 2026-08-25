@@ -377,7 +377,7 @@ async function findRun(
 ): Promise<RunRow | null> {
   const { data, error } = await context.supabaseAdmin
     .from('analysis_runs')
-    .select('id,trace_id,status,output')
+    .select('id,trace_id,status,output,created_at')
     .eq('user_id', userId)
     .eq('client_request_id', clientRequestId)
     .maybeSingle()
@@ -408,7 +408,7 @@ async function createRun(
       status: 'running',
       retrieval_version: 'hybrid-rrf-v1',
     }, { onConflict: 'user_id,client_request_id', ignoreDuplicates: true })
-    .select('id,trace_id,status,output')
+    .select('id,trace_id,status,output,created_at')
     .maybeSingle()
   if (error) throw error
   if (data) return data as RunRow
@@ -416,6 +416,25 @@ async function createRun(
   const replay = await findRun(context, input.userId, input.clientRequestId)
   if (!replay) throw new Error('Analysis run could not be created')
   if (replay.status === 'running') {
+    const createdAt = (replay as unknown as Record<string, unknown>).created_at
+    const runAgeMs = typeof createdAt === 'string' ? Date.now() - new Date(createdAt).getTime() : 0
+    const STALE_RUN_THRESHOLD_MS = 5 * 60 * 1000 // 5 minutes
+    if (runAgeMs > STALE_RUN_THRESHOLD_MS) {
+      // Re-claim stale run by updating trace_id and status
+      const { data: updated, error: updateErr } = await context.supabaseAdmin
+        .from('analysis_runs')
+        .update({
+          trace_id: input.traceId,
+          status: 'running',
+          raw_input: input.input,
+          input_kind: input.inputKind,
+          image_path: input.imagePath,
+        })
+        .eq('id', replay.id)
+        .select('id,trace_id,status,output,created_at')
+        .single()
+      if (!updateErr && updated) return updated as RunRow
+    }
     throw new Error('Concurrent analysis is already running')
   }
   return replay
@@ -862,7 +881,7 @@ async function groundUnmatchedItems(
   // not depend on each other, so wall-clock is now one round trip rather than N.
   // The embedding backfill self-deduplicates under concurrency: it takes an
   // advisory lock and the losers return immediately instead of repeating it.
-  const settled: Array<[string, GroundingResult | null]> = await Promise.all(
+  const results = await Promise.allSettled(
     input.queries.map(async (
       query,
     ): Promise<[string, GroundingResult | null]> => [
@@ -875,6 +894,24 @@ async function groundUnmatchedItems(
       }),
     ]),
   )
+
+  const settled: Array<[string, GroundingResult | null]> = []
+  let lastError: Error | null = null
+  for (let i = 0; i < results.length; i++) {
+    const res = results[i]
+    if (res.status === 'fulfilled') {
+      settled.push(res.value)
+    } else {
+      lastError = res.reason instanceof Error ? res.reason : new Error(String(res.reason))
+      redactedLog('info', 'grounding_query_partial_failure', {
+        query: input.queries[i],
+        errorType: lastError.name,
+      })
+    }
+  }
+  if (settled.length === 0 && lastError && input.queries.length > 0) {
+    throw lastError
+  }
 
   // Claiming has to happen after the fact now, in query order, so two foods that
   // independently retrieved the same catalog row still produce one item — and
@@ -1004,16 +1041,19 @@ async function groundUnmatchedText(
   // failure. It falls through to the estimate path and then to NO_MATCH.
   if (candidates.length === 0) return null
 
+  // Deduplicate candidate options so duplicate catalog rows do not pollute the LLM selection prompt
+  const deduplicatedCandidates = deduplicateRetrievalCandidates(candidates, input.query)
+
   try {
     const selection = await cachedCandidateSelection(context.supabaseAdmin, {
       apiKey,
       locale: input.locale,
       input: input.query,
-      candidates,
+      candidates: deduplicatedCandidates,
     })
     return {
       query: input.query,
-      candidates,
+      candidates: deduplicatedCandidates,
       selection,
       cacheHit: retrievalCacheHit,
       embeddingPromptTokens,
@@ -1209,8 +1249,65 @@ function toRetrievalCandidate(row: Record<string, unknown>): RetrievalCandidate 
  * default carried by retrieval. Two or more options is what lets the client
  * show a genuine size choice rather than synthesising one.
  */
-function normalizeForDisplay(value: string): string {
+export function normalizeForDisplay(value: string): string {
   return value.normalize('NFKC').toLocaleLowerCase('tr-TR').replace(/\s+/gu, ' ').trim()
+}
+
+/**
+ * Deduplicates catalog retrieval candidates that represent the same food item.
+ *
+ * Catalog import frequently produces multiple rows for the same food (e.g. multiple "Yumurta"
+ * rows from different sources or import batches). Comparing score gaps across duplicate rows
+ * confuses backend data artifacts with user intent, presenting identical "Yumurta vs Yumurta" options.
+ *
+ * Candidates are grouped by their normalized canonical name. For each group, we select the single best candidate.
+ */
+export function deduplicateRetrievalCandidates(
+  candidates: RetrievalCandidate[],
+  query?: string,
+): RetrievalCandidate[] {
+  const normQuery = query ? normalizeForDisplay(query) : ''
+  const grouped = new Map<string, RetrievalCandidate[]>()
+
+  for (const candidate of candidates) {
+    const key = normalizeForDisplay(candidate.canonicalName)
+    const existing = grouped.get(key) ?? []
+    existing.push(candidate)
+    grouped.set(key, existing)
+  }
+
+  const deduplicated: RetrievalCandidate[] = []
+  for (const group of grouped.values()) {
+    group.sort((a, b) => {
+      if (normQuery) {
+        const aAliasExact = normalizeForDisplay(a.matchedAlias) === normQuery
+        const bAliasExact = normalizeForDisplay(b.matchedAlias) === normQuery
+        if (aAliasExact && !bAliasExact) return -1
+        if (!aAliasExact && bAliasExact) return 1
+
+        const aCanonExact = normalizeForDisplay(a.canonicalName) === normQuery
+        const bCanonExact = normalizeForDisplay(b.canonicalName) === normQuery
+        if (aCanonExact && !bCanonExact) return -1
+        if (!aCanonExact && bCanonExact) return 1
+      }
+      return b.score - a.score || a.foodId.localeCompare(b.foodId)
+    })
+    deduplicated.push(group[0])
+  }
+
+  return deduplicated.sort((a, b) => b.score - a.score || a.foodId.localeCompare(b.foodId))
+}
+
+/**
+ * Returns true if a candidate is an exact match for the user's query expression
+ * (e.g. user typed "yumurta" and candidate canonicalName or matchedAlias is "Yumurta").
+ */
+export function isExactCanonicalMatch(query: string, candidate: RetrievalCandidate): boolean {
+  const normQuery = normalizeForDisplay(query)
+  if (!normQuery) return false
+  const normCanonical = normalizeForDisplay(candidate.canonicalName)
+  const normAlias = normalizeForDisplay(candidate.matchedAlias)
+  return normCanonical === normQuery || normAlias === normQuery
 }
 
 function portionOptionsFor(
@@ -1236,36 +1333,46 @@ function portionOptionsFor(
     }))
 }
 
-function toAnalysisItems(
+export function toAnalysisItems(
   selection: CandidateSelectionResult,
   candidates: RetrievalCandidate[],
   portionsByFood: Map<string, CatalogPortion[]>,
   query: string,
 ): AnalysisItem[] {
   if (selection.noMatch) return []
+  const deduplicatedCandidates = deduplicateRetrievalCandidates(candidates, query)
   const byId = new Map(candidates.map((candidate) => [candidate.foodId, candidate]))
+
   return selection.selections.flatMap((selected, index) => {
     const candidate = byId.get(selected.candidateId)
     if (!candidate) return []
-    // "tavuk" must be able to ask "which chicken?": when retrieval scores are
-    // nearly tied or the model itself is unsure of the identity, the
-    // clarification is about the food, not the portion, and the runner-up
-    // candidates give the client something to offer.
-    const alternatives = candidates
+
+    // Distinct alternatives from deduplicated set (semantically different foods only)
+    const alternatives = deduplicatedCandidates
       .filter((other) => other.foodId !== candidate.foodId)
       .sort((left, right) => right.score - left.score)
-    const identityAmbiguous = selected.confidence < IDENTITY_CONFIDENCE_GATE ||
+
+    // Exact canonical match bypasses identity ambiguity: when the user explicitly typed
+    // an exact canonical food name/alias like "yumurta", "beyaz ekmek", or "beyaz peynir",
+    // there is no identity ambiguity intended.
+    const isExact = isExactCanonicalMatch(query, candidate) || isExactCanonicalMatch(selected.sourceText, candidate)
+
+    const identityAmbiguous = !isExact && (
+      selected.confidence < IDENTITY_CONFIDENCE_GATE ||
       (alternatives.length > 0 && candidate.score - alternatives[0].score < IDENTITY_SCORE_GAP)
-    const alternativeFoodIds = alternatives
-      .slice(0, MAX_IDENTITY_ALTERNATIVES)
-      .map((other) => other.foodId)
+    )
+
+    const alternativeFoodIds = identityAmbiguous && alternatives.length > 0
+      ? alternatives.slice(0, MAX_IDENTITY_ALTERNATIVES).map((other) => other.foodId)
+      : undefined
+
+    const needsClarification = identityAmbiguous
+
     return [{
       itemKey: `item-grounded-${index + 1}`,
       sourceText: selected.sourceText,
       foodId: candidate.foodId,
       canonicalName: candidate.canonicalName,
-      // Only when the catalog name is not already what the user said: an
-      // exact-alias hit means the catalog already speaks their language.
       ...(selection.selections.length === 1 &&
           normalizeForDisplay(candidate.canonicalName) !== normalizeForDisplay(query)
         ? { displayName: query }
@@ -1273,11 +1380,13 @@ function toAnalysisItems(
       portionLabel: `${Math.round(selected.estimatedGrams)} g`,
       grams: selected.estimatedGrams,
       quantity: 1,
-      confidence: Math.round(Math.min(selected.confidence, candidate.score) * 100) / 100,
+      confidence: Math.min(Math.round(Math.min(selected.confidence, candidate.score) * 100) / 100, 0.90),
       matchMethod: 'llm' as const,
-      needsClarification: true,
-      clarificationReason: identityAmbiguous ? 'identity' as const : 'portion' as const,
-      ...(identityAmbiguous && alternativeFoodIds.length > 0 ? { alternativeFoodIds } : {}),
+      needsClarification,
+      ...(needsClarification
+        ? { clarificationReason: identityAmbiguous ? 'identity' as const : 'portion' as const }
+        : {}),
+      ...(alternativeFoodIds && alternativeFoodIds.length > 0 ? { alternativeFoodIds } : {}),
       portionOptions: portionOptionsFor(candidate, portionsByFood),
       nutritionPer100g: candidate.nutritionPer100g,
     }]

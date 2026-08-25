@@ -1,9 +1,15 @@
 # CI/CD runbook
 
+> [!NOTE]
+> **Superseded**: The active meal-analysis runtime is `backend/` (Node.js/TypeScript).
+> This document was written during the Supabase Edge Functions (Deno) era and
+> may reference architecture that has since been ported. See `backend/README.md`
+> for the current backend layout.
+
 CI runs on pull requests and `main` and has five independent jobs:
 
 - Flutter formatting, static analysis, 264 portable unit/widget tests, and an Android compile
-- Deno formatting/lint/type-check, 44 tests, and the 60-case free deterministic eval
+- Deno formatting/lint/type-check, 44 tests, and the 63-case free deterministic eval
 - a macOS job for the visual golden baselines and both integration flows
 - a fresh local Supabase migration rebuild, database lint, and contract tests
 - a tracked-file credential-pattern scan

@@ -62,4 +62,4 @@ jobs:
         # --persist: this is the only eval that costs money, so it is the
         # one whose result has to survive the run. Without it a comparison
         # between two commits needs someone to re-run it by hand.
-        run: npm run eval:live -- "../evals/gold/${{ inputs.dataset }}" --persist
+        run: npm run eval:live -- "evals/gold/${{ inputs.dataset }}" --persist

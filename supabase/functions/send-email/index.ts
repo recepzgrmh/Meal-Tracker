@@ -19,25 +19,33 @@ async function sendWithResend(
   delivery: ReturnType<typeof buildEmailDeliveries>[number],
   idempotencyKey: string,
 ): Promise<void> {
-  const response = await fetch(resendEndpoint, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'Idempotency-Key': idempotencyKey,
-    },
-    body: JSON.stringify({
-      from,
-      to: [delivery.to],
-      subject: delivery.subject,
-      text: delivery.text,
-      html: delivery.html,
-    }),
-  })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
 
-  if (!response.ok) {
-    const providerRequestId = response.headers.get('x-request-id') ?? 'unknown'
-    throw new Error(`Resend rejected delivery (${response.status}, request ${providerRequestId})`)
+  try {
+    const response = await fetch(resendEndpoint, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'Idempotency-Key': idempotencyKey,
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        from,
+        to: [delivery.to],
+        subject: delivery.subject,
+        text: delivery.text,
+        html: delivery.html,
+      }),
+    })
+
+    if (!response.ok) {
+      const providerRequestId = response.headers.get('x-request-id') ?? 'unknown'
+      throw new Error(`Resend rejected delivery (${response.status}, request ${providerRequestId})`)
+    }
+  } finally {
+    clearTimeout(timeoutId)
   }
 }
 

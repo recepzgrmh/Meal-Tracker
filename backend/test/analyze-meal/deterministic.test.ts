@@ -440,3 +440,24 @@ test('a size variant beside the default is not mistaken for a unit', () => {
   assertEquals(analyzeDeterministically('1 simit', simit).items[0].grams, 100)
   assertEquals(analyzeDeterministically('2 simit', simit).items[0].grams, 200)
 })
+
+test('zero quantity falls through to default portion without breaking normal counts', () => {
+  const zeroBefore = analyzeDeterministically('0 yumurta yedim', catalog)
+  assertEquals(zeroBefore.items[0].grams, 50)
+  assertEquals(zeroBefore.items[0].confidence, 0.84)
+  assertEquals(zeroBefore.items[0].needsClarification, true)
+
+  const zeroPadded = analyzeDeterministically('00 yumurta', catalog)
+  assertEquals(zeroPadded.items[0].grams, 50)
+  
+  const zeroAfter = analyzeDeterministically('yumurta 0 adet', catalog)
+  assertEquals(zeroAfter.items[0].grams, 50)
+
+  // Verify normal counts still work correctly
+  const oneBefore = analyzeDeterministically('1 yumurta', catalog)
+  assertEquals(oneBefore.items[0].grams, 50)
+  assertEquals(oneBefore.items[0].confidence, 0.98)
+
+  const twoBefore = analyzeDeterministically('2 yumurta', catalog)
+  assertEquals(twoBefore.items[0].grams, 100)
+})

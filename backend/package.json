@@ -14,7 +14,9 @@
     "test:watch": "vitest",
     "eval": "tsx src/cli/eval-deterministic.ts",
     "eval:live": "tsx src/cli/eval-live.ts",
-    "backfill:embeddings": "tsx src/cli/backfill-embeddings.ts"
+    "backfill:embeddings": "tsx src/cli/backfill-embeddings.ts",
+    "seed:telemetry": "tsx ../tool/seed/generate_telemetry.ts",
+    "seed:live": "tsx src/cli/push-telemetry.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.112.3",

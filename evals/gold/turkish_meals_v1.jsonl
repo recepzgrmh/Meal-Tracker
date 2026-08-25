@@ -58,3 +58,6 @@
 {"id":"tr-058","input":"mercimek çorbası içtim","expectedItems":[],"expectNoMatch":true,"tags":["no_match","dish"]}
 {"id":"tr-059","input":"pizza ve kola","expectedItems":[],"expectNoMatch":true,"tags":["no_match","multi_item"]}
 {"id":"tr-060","input":"bugün çok güzel kahvaltı yaptım","expectedItems":[],"expectNoMatch":true,"tags":["no_match","non_food_specific"]}
+{"id":"tr-061","input":"0 yumurta yedim","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":50}],"tags":["zero_quantity","regression"]}
+{"id":"tr-062","input":"00 yumurta","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":50}],"tags":["zero_quantity","regression"]}
+{"id":"tr-063","input":"yumurta 0 adet","expectedItems":[{"foodId":"10000000-0000-0000-0000-000000000001","grams":50}],"tags":["zero_quantity","regression"]}

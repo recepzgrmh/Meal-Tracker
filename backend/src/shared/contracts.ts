@@ -45,6 +45,10 @@ export interface AnalysisItem {
   portionLabel: string
   grams: number
   quantity: number
+  /**
+   * Represents a rank-derived heuristic score rather than a calibrated probability.
+   * On LLM paths, this value is capped to reflect lower structural certainty.
+   */
   confidence: number
   matchMethod: 'exact' | 'alias' | 'retrieval' | 'llm' | 'ai_estimate'
   needsClarification: boolean

@@ -64,7 +64,7 @@ npm run dev               # http://localhost:8080
 | `npm run dev` | watch-mode server |
 | `npm start` | server (what Railway runs) |
 | `npm run typecheck` | `tsc --noEmit` |
-| `npm test` | vitest, 69 tests |
+| `npm test` | vitest, 99 tests |
 | `npm run eval` | deterministic eval over `evals/gold/*.jsonl` — no network, no cost |
 | `npm run eval:live` | live eval against a running backend — **calls paid provider APIs** |
 | `npm run backfill:embeddings` | re-embeds stale catalog rows to completion |

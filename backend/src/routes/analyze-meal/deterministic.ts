@@ -324,9 +324,13 @@ function findNonOverlappingMatches(
   return selected.sort((a, b) => a.start - b.start)
 }
 
-function toAnalysisItem(input: string, match: PhraseMatch, index: number): AnalysisItem {
+function toAnalysisItem(input: string, match: PhraseMatch, index: number, locale: 'tr-TR' | 'en-US' = 'tr-TR'): AnalysisItem {
   const portion = resolvePortion(input, match)
-  const identityAmbiguous = match.alias.priority < 80
+  const normalizedSource = normalizeTurkishInput(match.sourceText, locale)
+  const normalizedCanonical = normalizeTurkishInput(match.food.canonicalName, locale)
+  const isCanonicalMatch = normalizedSource === normalizedCanonical || match.alias.priority >= 80
+
+  const identityAmbiguous = !isCanonicalMatch && match.alias.priority < 80
   const needsClarification = identityAmbiguous || portion.inferred
 
   return {
@@ -338,7 +342,7 @@ function toAnalysisItem(input: string, match: PhraseMatch, index: number): Analy
     grams: round(portion.grams, 2),
     quantity: portion.quantity,
     confidence: identityAmbiguous ? 0.72 : portion.inferred ? 0.84 : 0.98,
-    matchMethod: match.alias.priority >= 100 ? 'exact' : 'alias',
+    matchMethod: match.alias.priority >= 100 || isCanonicalMatch ? 'exact' : 'alias',
     needsClarification,
     ...(needsClarification
       ? { clarificationReason: identityAmbiguous ? 'identity' as const : 'portion' as const }
@@ -373,24 +377,31 @@ function toAnalysisItem(input: string, match: PhraseMatch, index: number): Analy
  * many, and multiplying a count by "yarım" is how "1 simit" became 50 g.
  */
 function isCountableUnitLabel(label: string): boolean {
-  return /^\s*\d+(?:[.,]\d+)?\s+(?:adet|tane|dilim|porsiyon|piece|pieces|slice|serving)\b/iu
+  return /^\s*\d+(?:[.,]\d+)?\s+(?:adet|tane|dilim|porsiyon|piece|pieces|slice|serving|portion)\b/iu
     .test(label)
 }
 
 function isMassBasisLabel(label: string, grams: number): boolean {
+  if (/^\s*1\s+(?:adet|tane|dilim|porsiyon|piece|pieces|slice|serving|portion)\b/iu.test(label)) {
+    return false
+  }
   if (/^\s*\d+(?:[.,]\d+)?\s*(?:g|gr|gram|ml|mL)\s*$/u.test(label)) return true
 
-  // The importer also wrote mass bases as fake units: "1 portion (100 g)",
-  // "1.65 portion (100 g)", "1 ONZ (28 g)". The parenthetical is the giveaway —
-  // when it restates exactly the portion's own weight, the label is describing
-  // that weight, not a thing you can hold. "1.65 portion" of an egg is not
-  // something anyone counts, and treating it as countable is how "2 yumurta"
-  // became 200 g.
+  // The importer also wrote mass bases as fake units: "1.65 portion (100 g)",
+  // "1 ONZ (28 g)". The parenthetical is the giveaway — when it restates exactly
+  // the portion's own weight, the label is describing that weight, not a thing you can hold.
   const parenthetical = /\(\s*(\d+(?:[.,]\d+)?)\s*(?:g|gr|gram|ml|mL)\s*\)/u.exec(label)
   if (parenthetical) {
     return Math.abs(Number(parenthetical[1].replace(',', '.')) - grams) < 0.01
   }
   return false
+}
+
+function parseQuantity(token: string): number | null {
+  const numeric = Number(token)
+  if (Number.isFinite(numeric)) return numeric
+  const word = numberWords[token]
+  return word !== undefined ? word : null
 }
 
 function resolvePortion(input: string, match: PhraseMatch): PortionResolution {
@@ -439,34 +450,18 @@ function resolvePortion(input: string, match: PhraseMatch): PortionResolution {
     /(?:^|\s)(\d{1,2}|bir|iki|üç|uc|dört|dort|beş|bes|one|two|three|four|five)(?:\s+(?:adet|tane|piece|pieces))?\s*$/u,
   )
   if (countMatch) {
-    const quantity = Number(countMatch[1]) || numberWords[countMatch[1]]
-    // A count asks "how many of one of these", so it multiplies a portion that
-    // means one of them. The default portion is usually the nutrition basis —
-    // catalog rows are imported with "100 g" as their default and any real unit
-    // added alongside it — so taking the default here multiplied the wrong
-    // thing and made two eggs 200 g.
-    // The default is the right answer whenever it is countable — it is the
-    // catalog's own statement of what one serving is. Only when it turns out to
-    // be a mass basis is another portion worth looking for, and even then a
-    // size variant like "yarım" or "az" is not a unit either, so the search is
-    // for a leading quantity followed by a unit word.
-    const countable = !isMassBasisLabel(defaultPortion.label, defaultPortion.grams)
-      ? defaultPortion
-      : match.food.portions.find((portion) => isCountableUnitLabel(portion.label)) ??
-        defaultPortion
-    return {
-      label: scalePortionLabel(countable.label, String(quantity)),
-      grams: countable.grams * quantity,
-      quantity,
-      // A count can only be honoured confidently against a portion that means
-      // *one of the food*. Most imported rows carry only a reference basis like
-      // "100 g", and multiplying that by a count says two eggs weigh 200 g —
-      // wrong by double, presented at 0.98 confidence with no question asked.
-      //
-      // The number still has to be something, so the multiplication stands, but
-      // it is marked inferred so the portion question is raised and the user
-      // corrects it instead of being told a confident wrong answer.
-      inferred: isMassBasisLabel(countable.label, countable.grams),
+    const quantity = parseQuantity(countMatch[1])
+    if (quantity !== null && quantity > 0) {
+      const countable = !isMassBasisLabel(defaultPortion.label, defaultPortion.grams)
+        ? defaultPortion
+        : match.food.portions.find((portion) => isCountableUnitLabel(portion.label)) ??
+          defaultPortion
+      return {
+        label: scalePortionLabel(countable.label, String(quantity)),
+        grams: countable.grams * quantity,
+        quantity,
+        inferred: isMassBasisLabel(countable.label, countable.grams),
+      }
     }
   }
 
@@ -507,12 +502,14 @@ function resolvePortion(input: string, match: PhraseMatch): PortionResolution {
     /^(\d{1,2}|bir|iki|üç|uc|dört|dort|beş|bes|one|two|three|four|five)\s+(?:adet|tane|piece|pieces)(?:\s|$)/u,
   )
   if (countAfter) {
-    const quantity = Number(countAfter[1]) || numberWords[countAfter[1]]
-    return {
-      label: scalePortionLabel(defaultPortion.label, String(quantity)),
-      grams: defaultPortion.grams * quantity,
-      quantity,
-      inferred: false,
+    const quantity = parseQuantity(countAfter[1])
+    if (quantity !== null && quantity > 0) {
+      return {
+        label: scalePortionLabel(defaultPortion.label, String(quantity)),
+        grams: defaultPortion.grams * quantity,
+        quantity,
+        inferred: false,
+      }
     }
   }
 
@@ -552,8 +549,8 @@ function resolveHouseholdPortion(
     )
     const token = beforeMatch?.[1] ?? afterMatch?.[1]
     if (!token) continue
-    const quantity = Number(token) || numberWords[token]
-    if (!quantity) continue
+    const quantity = parseQuantity(token)
+    if (quantity === null || quantity <= 0) continue
     return {
       label: `${quantity} ${unit}`,
       grams: portion.grams * quantity,

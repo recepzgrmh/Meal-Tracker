@@ -1,5 +1,11 @@
 # Production Catalog Architecture
 
+> [!NOTE]
+> **Superseded**: The active meal-analysis runtime is `backend/` (Node.js/TypeScript).
+> This document was written during the Supabase Edge Functions (Deno) era and
+> may reference architecture that has since been ported. See `backend/README.md`
+> for the current backend layout.
+
 Updated: 2026-08-23
 
 ## Decision

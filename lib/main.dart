@@ -36,12 +36,17 @@ bool _crashlyticsReady = false;
 
 Future<void> _startApplication() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  _crashlyticsReady = true;
-  FlutterError.onError = (details) {
-    FlutterError.presentError(details);
-    unawaited(FirebaseCrashlytics.instance.recordFlutterFatalError(details));
-  };
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    _crashlyticsReady = true;
+    FlutterError.onError = (details) {
+      FlutterError.presentError(details);
+      unawaited(FirebaseCrashlytics.instance.recordFlutterFatalError(details));
+    };
+  } catch (_) {
+    // Firebase is unavailable (CI stub or missing config).
+    // Crashlytics will not report, but the app continues.
+  }
   PlatformDispatcher.instance.onError = (error, stackTrace) {
     _reportUnhandledError(error, stackTrace);
     return true;

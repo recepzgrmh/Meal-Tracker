@@ -1778,9 +1778,7 @@ class _Review extends StatelessWidget {
                         item: draft.items[index],
                         onTap: () => onReviewItem(draft.items[index]),
                         onRemove: () => onRemoveItem(draft.items[index]),
-                        onReplace:
-                            draft.items[index].isAiEstimate &&
-                                onReplaceItem != null
+                        onReplace: onReplaceItem != null
                             ? () => onReplaceItem!(draft.items[index])
                             : null,
                       ),

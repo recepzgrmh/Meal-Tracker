@@ -1,5 +1,9 @@
 # Nutrition Normalization Report
 
+> [!NOTE]
+> This is generated pipeline output preserved for audit. See
+> `tool/food_import/` for the scripts that produce it.
+
 This report is generated deterministically from `normalization-metrics.json`. No source records are merged, overwritten, or imported into Supabase.
 
 ## Schema decisions

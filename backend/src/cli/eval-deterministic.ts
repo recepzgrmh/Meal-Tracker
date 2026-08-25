@@ -110,7 +110,7 @@ console.log(JSON.stringify(report, null, 2))
  * regression trips them, far enough that a single new hard case does not turn
  * the build red before anyone has looked at it.
  *
- * They are floors on a 60-case suite over a three-food fixture catalog, so
+ * They are floors on a 63-case suite over a three-food fixture catalog, so
  * clearing them means "Turkish parsing did not regress", not "the product is
  * accurate". README/Evaluation says the same thing at more length.
  */

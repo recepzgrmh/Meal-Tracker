@@ -1,0 +1,25 @@
+{
+  "_comment": "Template for live evaluation reports. Run with credentials to populate.",
+  "generatedAt": null,
+  "gitRef": null,
+  "dataset": "evals/gold/bilingual_hybrid_v1.jsonl",
+  "datasetVersion": "v1",
+  "caseCount": 26,
+  "pricingVersion": "openai-standard-2026-08-18",
+  "metrics": {
+    "passRate": null,
+    "identityExactAccuracy": null,
+    "noMatchAccuracy": null,
+    "portionMape": null,
+    "latencyP50Ms": null,
+    "latencyP95Ms": null,
+    "retrievalCacheHitRate": null,
+    "responseCacheHitRate": null,
+    "inputTokens": null,
+    "outputTokens": null,
+    "embeddingTokens": null,
+    "estimatedCostUsd": null
+  },
+  "cases": [],
+  "status": "template — requires EVAL_BACKEND_URL, EVAL_SUPABASE_URL, EVAL_USER_JWT, and LIVE_EVAL_ACK to populate"
+}
