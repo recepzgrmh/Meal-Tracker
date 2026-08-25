@@ -39,9 +39,9 @@ flutterfire configure                      # writes lib/firebase_options.dart
 flutter run --dart-define-from-file=config/app_config.dev.json
 ```
 
-Without that step the app does not compile: `lib/main.dart` imports
-`firebase_options.dart`, and `flutterfire configure` is what writes it along
-with `android/app/google-services.json` and
+A stub `lib/firebase_options.dart` is committed so the app compiles in CI, but
+`flutterfire configure` is what overwrites it with real credentials along with
+`android/app/google-services.json` and
 `ios/Runner/GoogleService-Info.plist`.
 
 `config/app_config.dev.json` is untracked; copy `config/app_config.example.json`
@@ -107,6 +107,11 @@ to the daily overview.
   `delete-account`)
 - `admin-dashboard`: internal React console for AI quality, evals, and catalog
   browsing. Not the product — the product is the Flutter app.
+
+### Data Provenance
+
+The 60k-food catalog is built from multiple data sources, maintaining full traceability.
+For detailed information on sources, licensing, and attribution requirements (including ODbL for Open Food Facts and non-commercial terms for TürKomp), please refer to the [Data Provenance and Licensing](data/sources.json) manifest and the [TürKomp usage notes](data/TURKOMP_SOURCE.md).
 
 Nutrition totals are derived from meal items in both the Flutter domain and the
 database. The database snapshots per-100g values on each logged item for audit
@@ -185,16 +190,16 @@ estimated cost are recorded without putting raw meal text into standard logs.
 
 Two instruments measure different things, and it matters not to confuse them.
 
-**Regression gate (deterministic, free, runs in CI).** A 60-case suite runs
+**Regression gate (deterministic, free, runs in CI).** A 63-case suite runs
 the parsing and reconciliation code against a 3-food fixture catalog with no
-network, no retrieval, and no LLM. It currently passes 60/60 with identity
+network, no retrieval, and no LLM. It currently passes 63/63 with identity
 precision/recall/F1 `1.00`, portion MAPE `0`, and no-match specificity `1.00`.
 Those perfect numbers mean exactly one thing: no regressions in the
 deterministic Turkish parsing path. A 3-food fixture cannot exercise hybrid
 retrieval, embedding quality, or model behavior, so this gate says nothing
 about product accuracy — it exists to catch code changes that break parsing.
 
-**Live eval (paid, product accuracy).** A separate runner sends 20
+**Live eval (paid, product accuracy).** A separate runner sends 26
 Turkish/English hybrid text cases and 4 photo fixtures through the deployed
 analysis function and reports p50/p95 latency, tokens, cache hits, and cost.
 This is the instrument that measures what a user would experience. Results are
@@ -221,8 +226,8 @@ validation; see [`docs/AI_EVAL_REPORT.md`](docs/AI_EVAL_REPORT.md) and
 EatBetter ("EatBetter: AI Food Journal") is the Turkey-first incumbent this
 case study is framed against: roughly 18k ratings on the Turkish App Store, a
 photo-scan core flow, conversational logging via "Betty", a freemium model,
-and a stated claim of USDA-sourced, dietitian-reviewed nutrition data. Its UX
-shows no confidence indicator anywhere, and no barcode scanning is mentioned.
+and a stated claim of USDA-sourced, dietitian-reviewed nutrition data. In its UX,
+no visible confidence indicator was observed in the public iOS listing (reviewed August 2026), and no barcode scanning is mentioned.
 Public reviews repeat a few themes: portion estimates miss in both directions
 (one reviewer: "2 minutes logging, 20 minutes fixing"), calorie counts are
 "sometimes on the lower side", and one report describes logging failing
@@ -244,12 +249,12 @@ disprove them.
 
 ### Worked examples
 
-Real responses from the running backend, not illustrations.
+Illustrative outputs based on the deterministic pipeline. Live results may differ slightly.
 
 **`kanka 2 yumurta ve biraz beyaz peynir yedim`** — 3.4 s
 
 ```
-Yumurta, tavuk, tam        200 g   identity question raised
+Yumurta, tavuk, tam        100 g   identity question raised
 Beyaz Peynir, Tam Yağlı     30 g   portion question raised
 unmatched: []
 ```
