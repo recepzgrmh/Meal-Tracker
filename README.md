@@ -92,6 +92,8 @@ to the daily overview.
 
 ## Architecture
 
+**[View Detailed Architecture Flow](docs/ARCHITECTURE_DIAGRAM.md)** | **[View Simplified Flow](docs/ARCHITECTURE_DIAGRAM_SIMPLE.md)**
+
 - `lib/src/domain`: immutable nutrition, food, draft, and logged-meal models
 - `lib/src/data`: repository contracts and deterministic demo implementations
 - `lib/src/view_models`: flow, daily overview, and detail state (MVVM, no
