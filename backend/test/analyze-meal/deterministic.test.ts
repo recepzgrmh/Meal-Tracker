@@ -356,3 +356,87 @@ test('an equal-priority tie resolves the same way every run', () => {
   // And it still asks, because priority 60 is below the ambiguity threshold.
   assertEquals(analyzeDeterministically('yoğurt', tied).items[0].clarificationReason, 'identity')
 })
+
+test('a count against a mass-only portion is not treated as confident', () => {
+  // The imported catalog gives most foods a reference basis ("100 g"), not a
+  // unit. Multiplying that by a count claimed two eggs weigh 200 g — double,
+  // at 0.98 confidence, with no question asked.
+  const massOnly: CatalogFood[] = [{
+    id: 'egg',
+    canonicalName: 'Yumurta, tavuk, tam',
+    nutritionPer100g: { calories: 143, protein: 12.6, carbs: 1.1, fat: 9.9 },
+    aliases: [{ value: 'yumurta', priority: 100 }],
+    portions: [{ label: '100 g', grams: 100, isDefault: true }],
+  }]
+
+  const result = analyzeDeterministically('2 yumurta', massOnly)
+  assertEquals(result.items[0].needsClarification, true)
+  assertEquals(result.items[0].clarificationReason, 'portion')
+})
+
+test('a count against a real unit portion stays confident', () => {
+  // When the catalog knows what one of the food weighs, the count is exactly
+  // the information needed and there is nothing left to ask.
+  const withUnit: CatalogFood[] = [{
+    id: 'egg',
+    canonicalName: 'Yumurta, tavuk, tam',
+    nutritionPer100g: { calories: 143, protein: 12.6, carbs: 1.1, fat: 9.9 },
+    aliases: [{ value: 'yumurta', priority: 100 }],
+    portions: [{ label: '1 adet', grams: 50, isDefault: true }],
+  }]
+
+  const result = analyzeDeterministically('2 yumurta', withUnit)
+  assertEquals(result.items[0].grams, 100)
+  assertEquals(result.items[0].needsClarification, false)
+})
+
+test('a fake unit label wrapping the mass basis is not a countable unit', () => {
+  // The importer wrote bases as units: "1 portion (100 g)", "1.65 portion
+  // (100 g)", "1 ONZ (28 g)". The parenthetical restates the portion's own
+  // weight, so the label describes a weight, not a thing to count. This is the
+  // row "2 yumurta" actually matched in production, and it read 200 g.
+  const fakeUnit: CatalogFood[] = [{
+    id: 'egg',
+    canonicalName: 'Yumurta',
+    nutritionPer100g: { calories: 143, protein: 12.6, carbs: 1.1, fat: 9.9 },
+    aliases: [{ value: 'yumurta', priority: 100 }],
+    portions: [{ label: '1.65 portion (100 g)', grams: 100, isDefault: true }],
+  }]
+
+  assertEquals(analyzeDeterministically('2 yumurta', fakeUnit).items[0].clarificationReason, 'portion')
+})
+
+test('a parenthetical that does not restate the weight stays a unit', () => {
+  // "1 dilim (orta boy)" is a real unit with a note, not a mass in disguise.
+  const annotated: CatalogFood[] = [{
+    id: 'bread',
+    canonicalName: 'Ekmek, tam buğday unlu',
+    nutritionPer100g: { calories: 258, protein: 9, carbs: 45, fat: 3 },
+    aliases: [{ value: 'ekmek', priority: 100 }],
+    portions: [{ label: '1 dilim (orta boy)', grams: 25, isDefault: true }],
+  }]
+
+  const result = analyzeDeterministically('2 ekmek', annotated)
+  assertEquals(result.items[0].grams, 50)
+  assertEquals(result.items[0].needsClarification, false)
+})
+
+test('a size variant beside the default is not mistaken for a unit', () => {
+  // Simit ships "yarım" (half) alongside "1 adet" (one). Reaching for "the
+  // first portion that is not a mass basis" picked the half, so "1 simit" came
+  // out as 50 g. The default is the catalog's own statement of one serving and
+  // is only overridden when it turns out to be a mass basis.
+  const simit: CatalogFood[] = [{
+    id: 'simit',
+    canonicalName: 'Simit',
+    nutritionPer100g: { calories: 340, protein: 10, carbs: 57, fat: 8 },
+    aliases: [{ value: 'simit', priority: 100 }],
+    portions: [
+      { label: 'yarım', grams: 50, isDefault: false },
+      { label: '1 adet', grams: 100, isDefault: true },
+    ],
+  }]
+
+  assertEquals(analyzeDeterministically('1 simit', simit).items[0].grams, 100)
+  assertEquals(analyzeDeterministically('2 simit', simit).items[0].grams, 200)
+})

@@ -356,6 +356,43 @@ function toAnalysisItem(input: string, match: PhraseMatch, index: number): Analy
   }
 }
 
+/**
+ * True when a portion label states a mass rather than one unit of the food.
+ *
+ * "100 g" and "28 g" are the basis the nutrition is expressed in; "1 adet",
+ * "1 dilim", "1 porsiyon", "1 cup" name a thing you can count. The imported
+ * catalog is overwhelmingly the former — of 120,013 portion rows the most
+ * common labels are "100 g", "1 ONZ (28 g)" and "3 undetermined oz" — so a
+ * counted food usually has nothing countable to multiply.
+ */
+/**
+ * True when a label names a countable unit: a leading quantity and a unit word.
+ *
+ * Distinguishes "1 adet" and "2 dilim" from the size variants that sit beside
+ * them in the same list — "yarım", "az", "fazla" are how much of one, not how
+ * many, and multiplying a count by "yarım" is how "1 simit" became 50 g.
+ */
+function isCountableUnitLabel(label: string): boolean {
+  return /^\s*\d+(?:[.,]\d+)?\s+(?:adet|tane|dilim|porsiyon|piece|pieces|slice|serving)\b/iu
+    .test(label)
+}
+
+function isMassBasisLabel(label: string, grams: number): boolean {
+  if (/^\s*\d+(?:[.,]\d+)?\s*(?:g|gr|gram|ml|mL)\s*$/u.test(label)) return true
+
+  // The importer also wrote mass bases as fake units: "1 portion (100 g)",
+  // "1.65 portion (100 g)", "1 ONZ (28 g)". The parenthetical is the giveaway —
+  // when it restates exactly the portion's own weight, the label is describing
+  // that weight, not a thing you can hold. "1.65 portion" of an egg is not
+  // something anyone counts, and treating it as countable is how "2 yumurta"
+  // became 200 g.
+  const parenthetical = /\(\s*(\d+(?:[.,]\d+)?)\s*(?:g|gr|gram|ml|mL)\s*\)/u.exec(label)
+  if (parenthetical) {
+    return Math.abs(Number(parenthetical[1].replace(',', '.')) - grams) < 0.01
+  }
+  return false
+}
+
 function resolvePortion(input: string, match: PhraseMatch): PortionResolution {
   const before = input.slice(Math.max(0, match.start - 28), match.start).trim()
   const after = input.slice(match.end, Math.min(input.length, match.end + 20)).trim()
@@ -403,11 +440,33 @@ function resolvePortion(input: string, match: PhraseMatch): PortionResolution {
   )
   if (countMatch) {
     const quantity = Number(countMatch[1]) || numberWords[countMatch[1]]
+    // A count asks "how many of one of these", so it multiplies a portion that
+    // means one of them. The default portion is usually the nutrition basis —
+    // catalog rows are imported with "100 g" as their default and any real unit
+    // added alongside it — so taking the default here multiplied the wrong
+    // thing and made two eggs 200 g.
+    // The default is the right answer whenever it is countable — it is the
+    // catalog's own statement of what one serving is. Only when it turns out to
+    // be a mass basis is another portion worth looking for, and even then a
+    // size variant like "yarım" or "az" is not a unit either, so the search is
+    // for a leading quantity followed by a unit word.
+    const countable = !isMassBasisLabel(defaultPortion.label, defaultPortion.grams)
+      ? defaultPortion
+      : match.food.portions.find((portion) => isCountableUnitLabel(portion.label)) ??
+        defaultPortion
     return {
-      label: scalePortionLabel(defaultPortion.label, String(quantity)),
-      grams: defaultPortion.grams * quantity,
+      label: scalePortionLabel(countable.label, String(quantity)),
+      grams: countable.grams * quantity,
       quantity,
-      inferred: false,
+      // A count can only be honoured confidently against a portion that means
+      // *one of the food*. Most imported rows carry only a reference basis like
+      // "100 g", and multiplying that by a count says two eggs weigh 200 g —
+      // wrong by double, presented at 0.98 confidence with no question asked.
+      //
+      // The number still has to be something, so the multiplication stands, but
+      // it is marked inferred so the portion question is raised and the user
+      // corrects it instead of being told a confident wrong answer.
+      inferred: isMassBasisLabel(countable.label, countable.grams),
     }
   }
 
