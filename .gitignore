@@ -12,6 +12,14 @@
 .swiftpm/
 migrate_working_dir/
 
+# Environment files & secrets
+.env
+*.env
+.env.*
+!.env.example
+!backend/.env.example
+
+
 # IntelliJ related
 *.iml
 *.ipr
@@ -87,6 +95,8 @@ tool/catalog/.cache/
 # adds this rule.
 node_modules/
 
-# Presentation deck
+# Presentation deck & scripts
 docs/loom-deck.html
+docs/LOOM_SCRIPT.md
+
 
