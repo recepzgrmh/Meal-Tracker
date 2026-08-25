@@ -66,6 +66,9 @@ Deno.test('embedding provider refuses malformed vectors', async () => {
           }))) as typeof fetch,
       }),
     Error,
-    '1536 dimensions',
+    // Bound to the constant rather than a literal: the dimension is a storage
+    // decision that has already changed once, and the behaviour under test is
+    // "rejects a vector of the wrong width", not "is 1536 wide".
+    `${EMBEDDING_DIMENSIONS} dimensions`,
   )
 })

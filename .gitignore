@@ -80,3 +80,9 @@ tool/catalog/.cache/
 # tool/food_import binaries and are far above hosting size limits; only the
 # small metrics/validation JSON summaries stay in version control.
 /data/**/*.jsonl.gz
+
+# Installed dependencies are reproducible from the lockfiles next to them.
+# tool/food_import/node_modules was committed by accident (149 files of pg and
+# its transitive deps); it is removed from the index in the same change that
+# adds this rule.
+node_modules/

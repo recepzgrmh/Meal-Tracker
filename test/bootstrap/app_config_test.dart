@@ -7,6 +7,7 @@ void main() {
     environment: 'test',
     supabaseUrl: 'https://project-ref.supabase.co',
     supabasePublishableKey: 'sb_publishable_test-only',
+    nodeBackendUrl: 'https://backend.example.com',
   );
 
   group('AppConfig', () {
@@ -20,9 +21,12 @@ void main() {
         environment: 'production',
         supabaseUrl: 'http://example.com',
         supabasePublishableKey: 'replace-with-your-publishable-key',
+        nodeBackendUrl: 'http://backend.example.com',
       );
 
-      expect(config.validationErrors(), hasLength(2));
+      // Three now: placeholder key, non-Supabase URL, and plain http on a
+      // non-loopback backend host.
+      expect(config.validationErrors(), hasLength(3));
       expect(config.validate, throwsA(isA<AppConfigException>()));
     });
 
@@ -31,6 +35,7 @@ void main() {
         environment: 'production',
         supabaseUrl: 'https://project-ref.supabase.co',
         supabasePublishableKey: 'sb_secret_do-not-ship',
+        nodeBackendUrl: 'https://backend.example.com',
       );
 
       expect(

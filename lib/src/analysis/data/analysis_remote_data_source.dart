@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../media/meal_photo_storage.dart';
+import '../../network/node_backend_client.dart';
 
 abstract interface class AnalysisRemoteDataSource {
   Future<Map<String, dynamic>> analyze({
@@ -29,10 +30,10 @@ class AnalysisRemoteException implements Exception {
   final List<String> unmatchedTexts;
 }
 
-class SupabaseAnalysisRemoteDataSource implements AnalysisRemoteDataSource {
-  const SupabaseAnalysisRemoteDataSource(this._client);
+class NodeAnalysisRemoteDataSource implements AnalysisRemoteDataSource {
+  const NodeAnalysisRemoteDataSource(this._backend);
 
-  final SupabaseClient _client;
+  final NodeBackendClient _backend;
 
   @override
   Future<Map<String, dynamic>> analyze({
@@ -43,7 +44,7 @@ class SupabaseAnalysisRemoteDataSource implements AnalysisRemoteDataSource {
     StoredMealPhoto? photo,
   }) async {
     try {
-      final response = await _client.functions.invoke(
+      final response = await _backend.invoke(
         'analyze-meal',
         body: {
           'clientRequestId': clientRequestId,

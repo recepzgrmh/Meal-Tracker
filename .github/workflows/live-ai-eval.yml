@@ -32,10 +32,13 @@ jobs:
     timeout-minutes: 20
     environment: ai-evaluation
     env:
+      EVAL_BACKEND_URL: ${{ secrets.EVAL_BACKEND_URL }}
       EVAL_SUPABASE_URL: ${{ secrets.EVAL_SUPABASE_URL }}
       EVAL_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.EVAL_SUPABASE_PUBLISHABLE_KEY }}
       EVAL_USER_JWT: ${{ secrets.EVAL_USER_JWT }}
       LIVE_EVAL_ACK: I_ACCEPT_PROVIDER_COST
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      EVAL_GIT_REF: ${{ github.sha }}
       EVAL_MAX_CASES: ${{ inputs.max_cases }}
     steps:
       - name: Check out repository
@@ -43,12 +46,20 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Deno
-        uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          deno-version: 2.8.3
-          cache: true
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
 
       - name: Run bounded live evaluation
-        working-directory: supabase
-        run: deno task eval:live "../evals/gold/${{ inputs.dataset }}"
+        working-directory: backend
+        # --persist: this is the only eval that costs money, so it is the
+        # one whose result has to survive the run. Without it a comparison
+        # between two commits needs someone to re-run it by hand.
+        run: npm run eval:live -- "../evals/gold/${{ inputs.dataset }}" --persist

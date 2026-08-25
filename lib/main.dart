@@ -22,6 +22,7 @@ import 'src/local/outbox_dao.dart';
 import 'src/meals/data/cached_meal_repository.dart';
 import 'src/meals/data/supabase_meal_remote_data_source.dart';
 import 'src/media/meal_photo_storage.dart';
+import 'src/network/node_backend_client.dart';
 import 'src/onboarding/data/shared_preferences_onboarding_repository.dart';
 import 'src/onboarding/data/supabase_profile_repository.dart';
 import 'src/sync/outbox_worker.dart';
@@ -51,6 +52,12 @@ Future<void> _startApplication() async {
   try {
     await AppBootstrap.initialize(config);
     final client = Supabase.instance.client;
+    final backend = NodeBackendClient(
+      baseUrl: config.nodeBackendUrl,
+      // getSession() refreshes an expired access token and shares an
+      // in-flight refresh; currentSession would hand over a stale one.
+      accessToken: () async => (await client.auth.getSession())?.accessToken,
+    );
     final database = AppDatabase.defaults();
     final mealDao = MealDao(database);
     final outboxDao = OutboxDao(database);
@@ -60,17 +67,17 @@ Future<void> _startApplication() async {
         onboardingRepository: SharedPreferencesOnboardingRepository(),
         profileRepository: SupabaseProfileRepository(client),
         analysisRepository: SupabaseMealAnalysisRepository(
-          remote: SupabaseAnalysisRemoteDataSource(client),
+          remote: NodeAnalysisRemoteDataSource(backend),
           photoStorage: SupabaseMealPhotoStorage(client),
         ),
-        catalogRepository: SupabaseFoodCatalogRepository(client),
+        catalogRepository: NodeFoodCatalogRepository(backend),
         mealRepository: CachedMealRepository(
           local: mealDao,
           remote: SupabaseMealRemoteDataSource(client),
         ),
         outboxWorker: OutboxWorker(
           outbox: outboxDao,
-          gateway: SupabaseMutationGateway(client),
+          gateway: SupabaseMutationGateway(client, backend),
         ),
         outboxDao: outboxDao,
         ownedDatabase: database,

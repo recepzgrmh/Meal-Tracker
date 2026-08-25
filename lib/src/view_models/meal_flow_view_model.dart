@@ -15,17 +15,27 @@ class MealFlowViewModel extends ChangeNotifier {
     required MealRepository repository,
     FoodCatalogRepository? catalogRepository,
     ManualItemIdFactory? manualItemIdFactory,
+    ManualItemIdFactory? requestIdFactory,
   }) : _repository = repository,
        _catalogRepository = catalogRepository,
-       _manualItemIdFactory = manualItemIdFactory ?? const Uuid().v4;
+       _manualItemIdFactory = manualItemIdFactory ?? const Uuid().v4,
+       // Separate from the manual-item factory on purpose: these ids mean
+       // different things, and sharing one pool made a test that seeds
+       // manual item ids silently hand one of them to a request.
+       _requestIdFactory = requestIdFactory ?? const Uuid().v4;
 
   final MealRepository _repository;
   final FoodCatalogRepository? _catalogRepository;
   final ManualItemIdFactory _manualItemIdFactory;
+  final ManualItemIdFactory _requestIdFactory;
 
   MealFlowStep _step = MealFlowStep.compose;
   MealDraft? _draft;
   MealAnalysisFailureKind? _errorKind;
+
+  /// Stable across retries of the same composed meal; see [analyze].
+  String? _analysisRequestId;
+  String? _analysisIntent;
   bool _manualSearchSuggested = false;
   bool _isSearchingCatalog = false;
   List<CatalogFoodCandidate> _catalogResults = const [];
@@ -54,10 +64,22 @@ class MealFlowViewModel extends ChangeNotifier {
 
   Future<void> analyze(MealAnalysisInput input) async {
     if (input.isEmpty || _step == MealFlowStep.analyzing) return;
+    final text = input.text.trim();
+    // Retrying the same meal must carry the same request id so the server
+    // replays the completed run instead of re-running the whole pipeline at
+    // full provider cost. The id is kept per (text, photo) pair and dropped as
+    // soon as the user composes something else, because a different meal is a
+    // different intent and must not replay the previous answer.
+    final intent = '$text|${input.photo?.hashCode ?? 0}';
+    if (intent != _analysisIntent) {
+      _analysisIntent = intent;
+      _analysisRequestId = _requestIdFactory();
+    }
     final normalized = MealAnalysisInput(
-      text: input.text.trim(),
+      text: text,
       locale: input.locale,
       photo: input.photo,
+      requestId: _analysisRequestId,
     );
     final generation = _analysisGeneration;
     _step = MealFlowStep.analyzing;
@@ -203,9 +225,7 @@ class MealFlowViewModel extends ChangeNotifier {
   ) {
     if (alternativeFoodIds.isEmpty) return results;
     final byId = {for (final candidate in results) candidate.foodId: candidate};
-    final leading = [
-      for (final foodId in alternativeFoodIds) ?byId[foodId],
-    ];
+    final leading = [for (final foodId in alternativeFoodIds) ?byId[foodId]];
     final leadingIds = {for (final candidate in leading) candidate.foodId};
     return [
       ...leading,

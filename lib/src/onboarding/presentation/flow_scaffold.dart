@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../l10n/l10n.dart';
 import '../../theme/app_theme.dart';
+import '../../util/haptics.dart';
 
 /// Chrome shared by the pre-sign-in tour and the post-sign-in setup flow, so
 /// the two read as one journey rather than two screens that happen to follow
@@ -71,9 +72,14 @@ class FlowHeader extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.end,
-                  children: List.generate(
-                    stepCount,
-                    (index) => AnimatedContainer(
+                  // Filled cumulatively rather than highlighting only the
+                  // current dot: on a seven-step form the question a user is
+                  // actually asking is "how much of this is left", and a single
+                  // lit dot answers "where am I" instead — which they already
+                  // know.
+                  children: List.generate(stepCount, (index) {
+                    final reached = index <= step;
+                    return AnimatedContainer(
                       duration: MediaQuery.disableAnimationsOf(context)
                           ? Duration.zero
                           : AppMotion.fast,
@@ -81,11 +87,11 @@ class FlowHeader extends StatelessWidget {
                       height: 5,
                       margin: const EdgeInsets.only(left: 3),
                       decoration: BoxDecoration(
-                        color: index == step ? AppColors.brand : AppColors.line,
+                        color: reached ? AppColors.brand : AppColors.line,
                         borderRadius: BorderRadius.circular(3),
                       ),
-                    ),
-                  ),
+                    );
+                  }),
                 ),
               ),
             ),
@@ -183,7 +189,10 @@ class FlowOptionCard extends StatelessWidget {
           color: selected ? AppColors.selectedSurface : AppColors.surface,
           borderRadius: BorderRadius.circular(AppRadius.compactCard),
           child: InkWell(
-            onTap: onPressed,
+            onTap: () {
+              AppHaptics.selection();
+              onPressed();
+            },
             borderRadius: BorderRadius.circular(AppRadius.compactCard),
             child: Container(
               width: double.infinity,

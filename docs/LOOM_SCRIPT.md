@@ -48,7 +48,7 @@
   perfection means no Turkish-parsing regressions — it is not product
   accuracy."
 - Product accuracy comes from the live eval: bilingual text and photo cases
-  against the deployed function, reporting latency, tokens, and cost per case.
+  against the running backend, reporting latency, tokens, and cost per case.
 - Open the admin dashboard's AI Evals page: runs persist to eval tables, so
   every eval is inspectable after the fact, not a one-off terminal log.
 - Read the numbers as a shape, not a grade: identity exact accuracy `0.55` is

@@ -43,5 +43,17 @@ jobs:
       - name: Apply forward-only migrations
         run: supabase db push --linked
 
+      # Only the two functions that are still the live implementation.
+      #
+      # analyze-meal, commit-meal and search-food-catalog moved to the Node
+      # backend in `backend/`; their Deno copies are kept in the repository as
+      # the pre-migration reference and have since diverged. A bare
+      # `functions deploy` deploys every directory it finds, which would put
+      # that stale fork back in front of users and silently undo the port.
+      #
+      # send-email must stay on Supabase because Supabase Auth calls it from
+      # the internet; delete-account was out of scope for the port.
       - name: Deploy Edge Functions
-        run: supabase functions deploy --project-ref "$SUPABASE_PROJECT_ID"
+        run: |
+          supabase functions deploy send-email --project-ref "$SUPABASE_PROJECT_ID"
+          supabase functions deploy delete-account --project-ref "$SUPABASE_PROJECT_ID"

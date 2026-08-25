@@ -4,11 +4,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../local/app_database.dart';
 import 'mutation_gateway.dart';
+import '../network/node_backend_client.dart';
 
 class SupabaseMutationGateway implements MutationGateway {
-  const SupabaseMutationGateway(this._client);
+  const SupabaseMutationGateway(this._client, this._backend);
 
   final SupabaseClient _client;
+
+  /// Only commit-meal moved to the Node backend; apply_meal_operation is
+  /// still an RPC against Postgres, so this gateway needs both.
+  final NodeBackendClient _backend;
 
   @override
   Future<MutationResult> execute(SyncOperation operation) async {
@@ -41,7 +46,7 @@ class SupabaseMutationGateway implements MutationGateway {
 
   Future<MutationResult> _commitAnalyzedMeal(SyncOperation operation) async {
     try {
-      final response = await _client.functions.invoke(
+      final response = await _backend.invoke(
         'commit-meal',
         body: jsonDecode(operation.payloadJson),
       );

@@ -100,6 +100,9 @@ class MealItem {
     double? confidence,
     String? matchMethod,
     String? analysisItemKey,
+    // Swapping the food identity invalidates the previous food's portions, so
+    // this has to be overridable rather than always carried through.
+    List<FoodPortionOption>? portionOptions,
   }) {
     final name = displayName ?? this.displayName;
     return MealItem(
@@ -119,7 +122,7 @@ class MealItem {
       matchMethod: matchMethod ?? this.matchMethod,
       analysisItemKey: analysisItemKey ?? this.analysisItemKey,
       alternativeFoodIds: alternativeFoodIds,
-      portionOptions: portionOptions,
+      portionOptions: portionOptions ?? this.portionOptions,
     );
   }
 }

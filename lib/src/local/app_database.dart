@@ -30,10 +30,7 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) {
         // v2: AI-estimate provenance. Existing rows read back as null, which
         // the mapper treats as "method unknown" rather than any real method.
-        await migrator.addColumn(
-          localMealItems,
-          localMealItems.matchMethod,
-        );
+        await migrator.addColumn(localMealItems, localMealItems.matchMethod);
       }
     },
     beforeOpen: (_) async {

@@ -59,6 +59,23 @@ class OutboxWorker {
       );
       return SyncRunResult(SyncRunOutcome.succeeded, operationId: operation.id);
     } on SyncFailure catch (failure) {
+      // A conflict on a commit means the server already has this operation:
+      // `commit-meal` answers a genuine replay with 200 and `replayed: true`,
+      // so a 409 is only ever reached after the write landed and the response
+      // was lost. The desired end state — the meal is stored — is already true,
+      // so retrying cannot help and blocking would show the user a sync error
+      // for a meal that saved correctly. The operation is settled instead.
+      //
+      // This holds because the id is minted once per outbox row and persisted
+      // with its payload, so a retry can never carry a different meal under the
+      // same id.
+      if (failure.kind == SyncFailureKind.conflict) {
+        await _outbox.markSucceeded(operation, _clock());
+        return SyncRunResult(
+          SyncRunOutcome.succeeded,
+          operationId: operation.id,
+        );
+      }
       if (failure.isRetryable && operation.attemptCount + 1 < maxAttempts) {
         final nextAttemptAt = _clock().add(_backoff(operation.attemptCount));
         await _outbox.markRetry(

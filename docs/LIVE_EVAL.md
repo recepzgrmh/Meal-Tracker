@@ -19,17 +19,22 @@ Use a short-lived JWT for a dedicated eval user. Never commit it. The explicit
 acknowledgement and case cap prevent accidental unbounded provider spend.
 
 Dataset paths resolve against the repository root, not the working directory,
-so they are written without a leading `../` even though the task runs from
-`supabase/`.
+so they are written without a leading `../` even though the runner starts from
+`backend/`.
+
+`EVAL_BACKEND_URL` is separate from `EVAL_SUPABASE_URL` and both are required:
+analyze-meal moved to the Node backend, while the photo upload and the
+`analysis_runs` read-back still go to Supabase.
 
 ```bash
-cd supabase
+cd backend
+EVAL_BACKEND_URL=http://localhost:8080 \
 EVAL_SUPABASE_URL=https://PROJECT.supabase.co \
 EVAL_SUPABASE_PUBLISHABLE_KEY=... \
 EVAL_USER_JWT=... \
 LIVE_EVAL_ACK=I_ACCEPT_PROVIDER_COST \
 EVAL_MAX_CASES=20 \
-deno task eval:live evals/gold/bilingual_hybrid_v1.jsonl
+npm run eval:live -- evals/gold/bilingual_hybrid_v1.jsonl
 ```
 
 For the photo slice, replace the final path with

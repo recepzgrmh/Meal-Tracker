@@ -37,7 +37,7 @@ const client = createClient(
 )
 const apiKey = requiredEnv('OPENAI_API_KEY')
 const model = Deno.env.get('OPENAI_EMBEDDING_MODEL')?.trim() || DEFAULT_EMBEDDING_MODEL
-const batchSize = Math.max(1, Math.min(100, Number(Deno.env.get('BACKFILL_BATCH_SIZE') ?? 100)))
+const batchSize = Math.max(1, Math.min(500, Number(Deno.env.get('BACKFILL_BATCH_SIZE') ?? 500)))
 
 const { count: total } = await client.from('foods')
   .select('id', { count: 'exact', head: true }).eq('is_active', true)
@@ -48,8 +48,57 @@ let idleRounds = 0
 
 // Stops on two consecutive rounds that changed nothing: one empty round can
 // simply mean the cursor reached the end of the table and wrapped.
+const MAX_CONSECUTIVE_FAILURES = 25
+// Only the provider call carries its own timeout; the PostgREST reads and the
+// vector writes do not, so a stalled HTTP/2 stream would hang the run with no
+// output and no error at all. A round is bounded here instead: rounds are
+// resumable, so abandoning one costs nothing but the work it had not committed.
+const ROUND_TIMEOUT_MS = Math.max(
+  30_000,
+  Number(Deno.env.get('BACKFILL_ROUND_TIMEOUT_MS') ?? 120_000),
+)
+
+function withTimeout<T>(work: Promise<T>, label: string): Promise<T> {
+  return Promise.race([
+    work,
+    new Promise<never>((_, reject) =>
+      setTimeout(
+        () => reject(new Error(`${label} exceeded ${ROUND_TIMEOUT_MS}ms`)),
+        ROUND_TIMEOUT_MS,
+      )
+    ),
+  ])
+}
+let consecutiveFailures = 0
+
 while (idleRounds < 2) {
-  const result = await backfillCatalogEmbeddings(client, { apiKey, model, batchSize })
+  let result
+  try {
+    result = await withTimeout(
+      // The provider default of 8s was sized for a single query embedding; a
+      // round now sends up to 500 documents at once.
+      backfillCatalogEmbeddings(client, { apiKey, model, batchSize, timeoutMs: 60_000 }),
+      'backfill round',
+    )
+    consecutiveFailures = 0
+  } catch (error) {
+    // A statement timeout or a transient provider error must not end a run that
+    // has hours of work behind it. Nothing was half-committed: the cursor only
+    // advances after a round succeeds, and a row counts as done only once its
+    // own hash is stored, so the failed window is simply retried.
+    // Statement timeouts and HTTP/2 stream errors are what writing tens of
+    // thousands of 1536-dimension vectors over PostgREST looks like; they are
+    // noise, not a reason to abandon a run with hours of work behind it. Only a
+    // long unbroken streak means something is actually wrong.
+    consecutiveFailures += 1
+    const detail = error instanceof Error ? error.message : JSON.stringify(error)
+    console.error(`round failed (${consecutiveFailures}/${MAX_CONSECUTIVE_FAILURES}): ${detail}`)
+    if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) throw error
+    await new Promise((resolve) =>
+      setTimeout(resolve, Math.min(30_000, 2_000 * consecutiveFailures))
+    )
+    continue
+  }
   if (!result.locked) {
     console.error('another worker holds the backfill lease; retrying in 5s')
     await new Promise((resolve) => setTimeout(resolve, 5_000))

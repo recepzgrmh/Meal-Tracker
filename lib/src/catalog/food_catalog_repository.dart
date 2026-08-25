@@ -1,4 +1,4 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../network/node_backend_client.dart';
 
 class CatalogFoodCandidate {
   const CatalogFoodCandidate({
@@ -41,17 +41,17 @@ abstract interface class FoodCatalogRepository {
   });
 }
 
-class SupabaseFoodCatalogRepository implements FoodCatalogRepository {
-  const SupabaseFoodCatalogRepository(this._client);
+class NodeFoodCatalogRepository implements FoodCatalogRepository {
+  const NodeFoodCatalogRepository(this._backend);
 
-  final SupabaseClient _client;
+  final NodeBackendClient _backend;
 
   @override
   Future<List<CatalogFoodCandidate>> search({
     required String query,
     required String locale,
   }) async {
-    final response = await _client.functions.invoke(
+    final response = await _backend.invoke(
       'search-food-catalog',
       body: {'query': query.trim(), 'locale': locale, 'limit': 10},
     );

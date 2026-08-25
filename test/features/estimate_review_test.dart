@@ -195,7 +195,9 @@ void main() {
     await pumpReview(tester, catalog: _FakeCatalog());
 
     await tester.ensureVisible(find.byKey(const Key('replace-estimate-est-1')));
-    final size = tester.getSize(find.byKey(const Key('replace-estimate-est-1')));
+    final size = tester.getSize(
+      find.byKey(const Key('replace-estimate-est-1')),
+    );
     expect(size.height, greaterThanOrEqualTo(48));
   });
 
@@ -220,11 +222,7 @@ void main() {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         theme: buildTheme(),
-        home: MealDetailScreen(
-          meal: meal,
-          onUpdate: (_) {},
-          onDelete: () {},
-        ),
+        home: MealDetailScreen(meal: meal, onUpdate: (_) {}, onDelete: () {}),
       ),
     );
     await tester.pumpAndSettle();

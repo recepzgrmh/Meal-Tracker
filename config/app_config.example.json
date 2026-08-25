@@ -1,5 +1,6 @@
 {
   "APP_ENV": "development",
   "SUPABASE_URL": "https://nntxerlndotwgezmlesw.supabase.co",
-  "SUPABASE_PUBLISHABLE_KEY": "replace-with-your-publishable-key"
+  "SUPABASE_PUBLISHABLE_KEY": "replace-with-your-publishable-key",
+  "NODE_BACKEND_URL": "https://replace-with-your-backend-host"
 }

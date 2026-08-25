@@ -500,6 +500,39 @@ class _BodyStepState extends State<_BodyStep> {
 // Step 3 — activity
 // ---------------------------------------------------------------------------
 
+/// Steps that ask exactly one question move on by themselves.
+///
+/// On those steps the answer is the whole step, so the Continue tap that
+/// follows carries no information — it is a second tap to confirm the first
+/// one. Three of the seven steps are like this, so it is three taps of pure
+/// ceremony in a flow people already abandon.
+///
+/// Deliberately not applied to the combined steps (sex+age, height+weight,
+/// goal+target+pace): there the first answer is not the last one, and jumping
+/// away would skip the rest.
+///
+/// Screen-reader users keep the explicit button. Auto-advance moves focus out
+/// from under them without their asking, which is exactly the kind of thing
+/// `accessibleNavigation` exists to suppress.
+Future<void> _selectAndAdvance(
+  BuildContext context,
+  ProfileSetupViewModel viewModel,
+  Future<void> Function() select,
+) async {
+  final accessible = MediaQuery.accessibleNavigationOf(context);
+  final step = viewModel.step;
+  await select();
+  if (accessible || !context.mounted) return;
+  // Long enough that the selected state is seen, short enough not to feel
+  // like lag.
+  await Future<void>.delayed(const Duration(milliseconds: 280));
+  // A second tap during the delay, or a back gesture, already moved the flow.
+  if (!context.mounted || viewModel.step != step || !viewModel.canAdvance) {
+    return;
+  }
+  viewModel.next();
+}
+
 class _ActivityStep extends StatelessWidget {
   const _ActivityStep({required this.viewModel, super.key});
 
@@ -533,7 +566,11 @@ class _ActivityStep extends StatelessWidget {
               title: _title(context, level),
               detail: _detail(context, level),
               selected: viewModel.body.activityLevel == level,
-              onPressed: () => viewModel.selectActivity(level),
+              onPressed: () => _selectAndAdvance(
+                context,
+                viewModel,
+                () => viewModel.selectActivity(level),
+              ),
             ),
         ],
       ),
@@ -830,7 +867,11 @@ class _DietStep extends StatelessWidget {
               title: _title(context, diet),
               detail: _detail(context, diet),
               selected: viewModel.body.dietPattern == diet,
-              onPressed: () => viewModel.selectDiet(diet),
+              onPressed: () => _selectAndAdvance(
+                context,
+                viewModel,
+                () => viewModel.selectDiet(diet),
+              ),
             ),
         ],
       ),
@@ -965,7 +1006,11 @@ class _IntentionStep extends StatelessWidget {
               title: _title(context, intention),
               detail: _detail(context, intention),
               selected: viewModel.draft.intention == intention,
-              onPressed: () => viewModel.selectIntention(intention),
+              onPressed: () => _selectAndAdvance(
+                context,
+                viewModel,
+                () => viewModel.selectIntention(intention),
+              ),
             ),
         ],
       ),

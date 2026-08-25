@@ -43,6 +43,19 @@ class MealFlow extends StatefulWidget {
 }
 
 class _MealFlowState extends State<MealFlow> {
+  /// How many questions are pushed at the user before the review screen.
+  ///
+  /// One, not several. A modal per uncertain item is the pattern that produces
+  /// alert fatigue: the third sheet gets dismissed without being read, and a
+  /// review that is rubber-stamped is worse than no review, because it launders
+  /// a guess into something the user appears to have confirmed.
+  ///
+  /// The remaining questions are not dropped. They stay flagged on the review
+  /// screen, one tap from a fix, and anything still open is raised once more at
+  /// the only irreversible step — logging the meal — which is where a modal
+  /// actually earns its interruption.
+  static const _maxAutoAskedQuestions = 1;
+
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
   late final MealFlowViewModel _viewModel;
@@ -155,16 +168,33 @@ class _MealFlowState extends State<MealFlow> {
   ///
   /// Dismissing a sheet skips that item and moves on: this walks the user
   /// through the questions, it does not trap them behind one.
+  ///
+  /// Only the [_maxAutoAskedQuestions] highest-impact questions are pushed at
+  /// the user. The server flags every item it resolved through the language
+  /// model, so a five-item meal used to open five modal sheets back to back
+  /// before the review screen was ever visible, and the fifth question about a
+  /// 20 kcal garnish arrived with the same urgency as the first about a 400
+  /// kcal main. Impact here is the item's own calorie contribution — the same
+  /// idea as the material-impact policy in AI_ACCURACY_SPEC, applied with the
+  /// numbers the client actually has. Nothing is hidden: every flagged row
+  /// stays marked and tappable on the review screen.
   Future<void> _runClarificationQueue() async {
-    final queued = _viewModel.draft?.items
-        .where(
-          (item) =>
-              item.matchState == MatchState.checkType ||
-              item.matchState == MatchState.checkAmount,
-        )
+    final flagged =
+        _viewModel.draft?.items
+            .where(
+              (item) =>
+                  item.matchState == MatchState.checkType ||
+                  item.matchState == MatchState.checkAmount,
+            )
+            .toList(growable: false) ??
+        const <MealItem>[];
+    final byImpact = [...flagged]
+      ..sort((a, b) => b.nutrition.calories.compareTo(a.nutrition.calories));
+    final queued = byImpact
+        .take(_maxAutoAskedQuestions)
         .map((item) => item.id)
         .toList(growable: false);
-    if (queued == null || queued.isEmpty) return;
+    if (queued.isEmpty) return;
 
     for (final id in queued) {
       if (!mounted) return;
@@ -320,6 +350,126 @@ class _MealFlowState extends State<MealFlow> {
       ),
     );
     if (source != null && mounted) await _pickPhoto(source);
+  }
+
+  /// Logging is the one step that cannot be taken back by tapping again, so it
+  /// is the one that gets a confirmation. Anything the analysis was unsure about
+  /// and the user has not looked at is named here rather than being written
+  /// silently — the review screen flags it, but a flag is easy to walk past.
+  ///
+  /// It is a confirmation, not a block: proceeding is always allowed, and the
+  /// items keep their unreviewed status in the database either way.
+  /// Guards the one button in the app that writes a meal.
+  ///
+  /// Every other async action here already has one (`_isSearchingCatalog`,
+  /// `_isBusy`, `_isDrainingOutbox`); this one did not, so a double tap queued
+  /// two outbox operations with different ids for the same meal. The second
+  /// one loses at the database and used to end up permanently blocked.
+  bool _isLogging = false;
+
+  Future<void> _logMeal() async {
+    final draft = _viewModel.draft;
+    if (draft == null || _isLogging) return;
+    _isLogging = true;
+    try {
+      await _logMealInner(draft);
+    } finally {
+      if (mounted) _isLogging = false;
+    }
+  }
+
+  Future<void> _logMealInner(MealDraft draft) async {
+    final open = draft.items
+        .where((item) => item.matchState != MatchState.matched)
+        .toList(growable: false);
+
+    if (open.isNotEmpty) {
+      final proceed = await _confirmUnreviewed(open);
+      if (proceed != true || !mounted) return;
+    }
+    if (!mounted) return;
+    Navigator.pop(context, _viewModel.draft);
+  }
+
+  Future<bool?> _confirmUnreviewed(List<MealItem> open) {
+    return showModalBottomSheet<bool>(
+      context: context,
+      useSafeArea: true,
+      backgroundColor: AppColors.surface,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.page,
+            AppSpacing.xxs,
+            AppSpacing.page,
+            AppSpacing.x28,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                sheetContext.ota(
+                  'mealUnreviewedTitle',
+                  tr: 'Kontrol edilmemiş noktalar var',
+                  en: 'Some details were not checked',
+                ),
+                style: Theme.of(sheetContext).textTheme.headlineMedium,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                sheetContext.ota(
+                  'mealUnreviewedBody',
+                  tr:
+                      'Bunları yapay zekâ tahmin etti. Kaydedebilirsin, ama '
+                      'kalori ve makrolar bu tahminlere göre hesaplanır.',
+                  en:
+                      'These were guessed by the AI. You can log the meal '
+                      'anyway, but calories and macros are computed from those '
+                      'guesses.',
+                ),
+                style: Theme.of(sheetContext).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              for (final item in open)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.micro),
+                  child: Text(
+                    '· ${item.displayName} — ${item.matchState == MatchState.checkType ? sheetContext.ota('mealCheckType', tr: 'türü', en: 'type') : sheetContext.ota('mealCheckAmount', tr: 'miktarı', en: 'amount')}',
+                    style: Theme.of(sheetContext).textTheme.bodyMedium,
+                  ),
+                ),
+              const SizedBox(height: AppSpacing.md),
+              FilledButton(
+                key: const Key('unreviewed-check'),
+                onPressed: () => Navigator.pop(sheetContext, false),
+                child: Text(
+                  sheetContext.ota(
+                    'mealUnreviewedCheck',
+                    tr: 'Kontrol edeyim',
+                    en: 'Let me check',
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              TextButton(
+                key: const Key('unreviewed-proceed'),
+                onPressed: () => Navigator.pop(sheetContext, true),
+                child: Text(
+                  sheetContext.ota(
+                    'mealUnreviewedProceed',
+                    tr: 'Yine de kaydet',
+                    en: 'Log it anyway',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _reviewItem(MealItem item) async {
@@ -604,26 +754,37 @@ class _MealFlowState extends State<MealFlow> {
     );
   }
 
-  MealItem _applyVariant(MealItem item, CatalogFoodCandidate candidate) =>
-      item.copyWith(
-        foodId: candidate.foodId,
-        canonicalName: candidate.name,
-        displayName: naturalFoodDisplayName(candidate.name),
-        // `nutritionSource` is a database identity ("canonical_v2_lean:cf2_9a15…")
-        // and was being shown to the user verbatim. The catalog row's own name
-        // is the provenance that actually answers "where did this number come
-        // from".
-        sourceName: candidate.name,
-        nutritionPer100g: Nutrition(
-          calories: candidate.caloriesPer100g,
-          protein: candidate.proteinPer100g,
-          carbs: candidate.carbsPer100g,
-          fat: candidate.fatPer100g,
-        ),
-        confidence: candidate.score,
-        matchMethod: 'variant',
-        matchState: MatchState.matched,
-      );
+  MealItem _applyVariant(
+    MealItem item,
+    CatalogFoodCandidate candidate,
+  ) => item.copyWith(
+    foodId: candidate.foodId,
+    canonicalName: candidate.name,
+    displayName: naturalFoodDisplayName(candidate.name),
+    // `nutritionSource` is a database identity ("canonical_v2_lean:cf2_9a15…")
+    // and was being shown to the user verbatim. The catalog row's own name
+    // is the provenance that actually answers "where did this number come
+    // from".
+    sourceName: candidate.name,
+    nutritionPer100g: Nutrition(
+      calories: candidate.caloriesPer100g,
+      protein: candidate.proteinPer100g,
+      carbs: candidate.carbsPer100g,
+      fat: candidate.fatPer100g,
+    ),
+    confidence: candidate.score,
+    matchMethod: 'variant',
+    // Swapping the food invalidates everything about the amount. The previous
+    // grams belonged to a different food, and so did `portionOptions`, so
+    // keeping either would scale the new food's macros by the old food's
+    // portion and then offer the old food's choices to correct it — while the
+    // item claimed to be resolved. Reset to this food's own default and ask,
+    // exactly as the manual-search path already does in `_manualItem`.
+    portionLabel: candidate.defaultPortionLabel ?? '100 g',
+    grams: candidate.defaultGrams ?? 100,
+    portionOptions: const [],
+    matchState: MatchState.checkAmount,
+  );
 
   Future<MealItem?> _showPortionSheet(MealItem item) async {
     final estimated = item.grams.clamp(5, 500).toDouble();
@@ -878,7 +1039,7 @@ class _MealFlowState extends State<MealFlow> {
                       ? () => _showManualSearch(addToDraft: true)
                       : null,
                   onEditEatenAt: _editEatenAt,
-                  onLog: () => Navigator.pop(context, _viewModel.draft),
+                  onLog: _logMeal,
                 ),
               },
             ),

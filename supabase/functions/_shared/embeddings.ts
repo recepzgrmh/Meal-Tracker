@@ -1,8 +1,27 @@
 import type { SupabaseClient } from 'npm:@supabase/supabase-js@2.112.3'
 
 export const DEFAULT_EMBEDDING_MODEL = 'text-embedding-3-small'
-export const EMBEDDING_DIMENSIONS = 1536
+// text-embedding-3-small is a Matryoshka model, so 512 is the same embedding as
+// 1536 truncated and renormalized, not a weaker one. At 1536 a single vector is
+// 6 KB and every catalog row paid an out-of-line TOAST write, which put the
+// 60,003-row catalog over the database's size ceiling on its own.
+export const EMBEDDING_DIMENSIONS = 512
 const EMBEDDING_SCAN_WINDOW = 500
+// Keeps the generated PostgREST URL well inside gateway limits: 100 uuids is
+// roughly 4 KB of query string.
+const ALIAS_QUERY_BATCH_SIZE = 100
+// Rows per apply_catalog_embeddings() call. 100 rows of 512-dimension vectors
+// serialize to roughly 550 KB of JSON, comfortably inside gateway body limits,
+// and the function's per-key updates finish far inside the statement timeout.
+const APPLY_BATCH_SIZE = 100
+
+function chunkIds(ids: string[], size: number): string[][] {
+  const batches: string[][] = []
+  for (let index = 0; index < ids.length; index += size) {
+    batches.push(ids.slice(index, index + size))
+  }
+  return batches
+}
 
 interface FoodRow {
   id: string
@@ -151,18 +170,25 @@ export async function backfillCatalogEmbeddings(
       return { locked: true, scanned: 0, updated: 0, promptTokens: 0, model, cursor: null }
     }
 
-    const ids = typedFoods.map((food) => food.id)
-    const { data: aliases, error: aliasesError } = await client.from('food_aliases')
-      .select('food_id,alias,locale').in('food_id', ids)
-    if (aliasesError) throw aliasesError
-    const typedAliases = (aliases ?? []) as AliasRow[]
+    // PostgREST takes filters in the query string, so 500 ids in one `in()` is
+    // a ~20 KB URL that the gateway rejects outright. The failure surfaced as a
+    // bare "error sending request" and, inside the search path, was swallowed
+    // by the fallback to lexical search — so the backfill could fail on every
+    // call without anything reporting it.
+    const typedAliases: AliasRow[] = []
+    for (const batch of chunkIds(typedFoods.map((food) => food.id), ALIAS_QUERY_BATCH_SIZE)) {
+      const { data: aliases, error: aliasesError } = await client.from('food_aliases')
+        .select('food_id,alias,locale').in('food_id', batch)
+      if (aliasesError) throw aliasesError
+      typedAliases.push(...((aliases ?? []) as AliasRow[]))
+    }
     const documents = await Promise.all(typedFoods.map(async (food) => {
       const document = buildFoodEmbeddingDocument(food, typedAliases)
       return { food, document, hash: await sha256(document) }
     }))
     const stale = documents.filter(({ food, hash }) =>
       food.embedding_model !== model || food.embedding_source_hash !== hash
-    ).slice(0, Math.min(options.batchSize ?? 50, 100))
+    ).slice(0, Math.min(options.batchSize ?? 50, 500))
     const windowExhausted = typedFoods.length < EMBEDDING_SCAN_WINDOW
     if (stale.length === 0) {
       // Nothing left to embed in this window: step past it, or wrap when the
@@ -180,16 +206,25 @@ export async function backfillCatalogEmbeddings(
     }
 
     const embedded = await createEmbeddings(stale.map((row) => row.document), options)
-    const timestamp = new Date().toISOString()
-    for (let index = 0; index < stale.length; index += 1) {
-      const { error } = await client.from('foods').update({
-        embedding: embedded.vectors[index],
-        embedding_model: embedded.model,
-        embedding_source_hash: stale[index].hash,
-        embedding_updated_at: timestamp,
-      }).eq('id', stale[index].food.id)
-      if (error) throw error
+    // One apply_catalog_embeddings() call per chunk, not one PostgREST request
+    // per row: a round's writes cost a handful of round trips instead of
+    // hundreds. The function updates by primary key inside a loop, so the
+    // statement budget goes to index lookups and cannot be lost to a
+    // misplanned join. The vector travels in its text form because that is
+    // what pgvector parses out of jsonb.
+    const rows = stale.map((row, index) => ({
+      id: row.food.id,
+      embedding: `[${embedded.vectors[index].join(',')}]`,
+      model: embedded.model,
+      hash: row.hash,
+    }))
+    for (let start = 0; start < rows.length; start += APPLY_BATCH_SIZE) {
+      const { error: applyError } = await client.rpc('apply_catalog_embeddings', {
+        p_rows: rows.slice(start, start + APPLY_BATCH_SIZE),
+      })
+      if (applyError) throw applyError
     }
+
     // Resume just past the last food actually embedded. Anything still stale
     // behind that point stays in front of the cursor for the next run.
     const nextCursor = stale[stale.length - 1].food.id

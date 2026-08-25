@@ -32,7 +32,10 @@ class SupabaseMealAnalysisRepository implements MealRepository {
   @override
   Future<MealDraft> analyze(MealAnalysisInput request) async {
     try {
-      final requestId = _requestIdFactory();
+      // Reuse the caller's id when it has one: a retry of the same meal must
+      // reach the server's replay path rather than paying for the pipeline
+      // again. Minting one here unconditionally is what made that path dead.
+      final requestId = request.requestId ?? _requestIdFactory();
       final photo = request.photo == null
           ? null
           : await _uploadPhoto(requestId, request.photo!);
@@ -151,7 +154,12 @@ class SupabaseMealAnalysisRepository implements MealRepository {
   MealAnalysisException _mapRemoteFailure(AnalysisRemoteException error) {
     final kind = switch (error.code) {
       'NO_MATCH' => MealAnalysisFailureKind.noMatch,
+      // UNAUTHORIZED_NO_AUTH_HEADER came from the Supabase Edge gateway and can
+      // no longer be emitted; FORBIDDEN is what the Node backend's auth layer
+      // returns. Without it an expired session fell through to `unknown` and
+      // the user was told to check their connection.
       'UNAUTHENTICATED' ||
+      'FORBIDDEN' ||
       'UNAUTHORIZED_NO_AUTH_HEADER' => MealAnalysisFailureKind.unauthenticated,
       'INVALID_REQUEST' => MealAnalysisFailureKind.invalidRequest,
       'RATE_LIMITED' => MealAnalysisFailureKind.rateLimited,

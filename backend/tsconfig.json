@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+
+    // The Deno sources spell every relative import with its `.ts` extension.
+    // Allowing that here is what lets the ported files stay byte-identical to
+    // their originals apart from the runtime-API swaps, which keeps the diff
+    // reviewable. tsx resolves the same specifiers at runtime, so there is no
+    // emit step to disagree with the type checker.
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+
+    "strict": true,
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": false,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "types": ["node"]
+  },
+  "include": ["src", "test", "vitest.config.ts"]
+}

@@ -169,49 +169,54 @@ void main() {
     },
   );
 
-  test('grounded commit keeps foodId and never writes an estimateId key', () async {
-    final meal = _domainMeal(
-      name: 'Kahvaltı',
-      itemId: '018f6a5e-3528-7b52-a47d-2d5efc3b2f71',
-    );
-    const draft = MealDraft(
-      inputText: '2 yumurta',
-      mealName: 'Kahvaltı',
-      analysisRunId: 'analysis-run-3',
-      traceId: 'trace-3',
-      items: [
-        MealItem(
-          id: '018f6a5e-3528-7b52-a47d-2d5efc3b2f71',
-          analysisItemKey: 'item-key-1',
-          foodId: 'food-egg',
-          name: 'Yumurta',
-          sourceText: '2 yumurta',
-          portionLabel: '2 adet',
-          grams: 100,
-          nutritionPer100g: Nutrition(
-            calories: 155,
-            protein: 12.6,
-            carbs: 1.1,
-            fat: 10.6,
+  test(
+    'grounded commit keeps foodId and never writes an estimateId key',
+    () async {
+      final meal = _domainMeal(
+        name: 'Kahvaltı',
+        itemId: '018f6a5e-3528-7b52-a47d-2d5efc3b2f71',
+      );
+      const draft = MealDraft(
+        inputText: '2 yumurta',
+        mealName: 'Kahvaltı',
+        analysisRunId: 'analysis-run-3',
+        traceId: 'trace-3',
+        items: [
+          MealItem(
+            id: '018f6a5e-3528-7b52-a47d-2d5efc3b2f71',
+            analysisItemKey: 'item-key-1',
+            foodId: 'food-egg',
+            name: 'Yumurta',
+            sourceText: '2 yumurta',
+            portionLabel: '2 adet',
+            grams: 100,
+            nutritionPer100g: Nutrition(
+              calories: 155,
+              protein: 12.6,
+              carbs: 1.1,
+              fat: 10.6,
+            ),
+            matchState: MatchState.matched,
           ),
-          matchState: MatchState.matched,
-        ),
-      ],
-    );
+        ],
+      );
 
-    await repository.saveAnalyzedOptimistically(
-      userId: 'user-a',
-      meal: meal,
-      draft: draft,
-      eatenAt: now,
-    );
+      await repository.saveAnalyzedOptimistically(
+        userId: 'user-a',
+        meal: meal,
+        draft: draft,
+        eatenAt: now,
+      );
 
-    final operation = await database.select(database.syncOperations).getSingle();
-    final payload = jsonDecode(operation.payloadJson) as Map<String, dynamic>;
-    final item = (payload['items'] as List).single as Map<String, dynamic>;
-    expect(item['foodId'], 'food-egg');
-    expect(item, isNot(contains('estimateId')));
-  });
+      final operation = await database
+          .select(database.syncOperations)
+          .getSingle();
+      final payload = jsonDecode(operation.payloadJson) as Map<String, dynamic>;
+      final item = (payload['items'] as List).single as Map<String, dynamic>;
+      expect(item['foodId'], 'food-egg');
+      expect(item, isNot(contains('estimateId')));
+    },
+  );
 
   test('refuses to commit an item with neither or both authorities', () async {
     const base = MealItem(
